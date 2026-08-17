@@ -1,6 +1,6 @@
 {
   "name": "@rosettadash/web-components",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "RosettaDash Web Components runtime — typed custom elements with optional tokens.css / styles.css. Storybook catalog: clone github.com/KevinEverywhere/rosettadash (port 6006).",
   "author": "Kevin Ready <kevin@planetkevin.com>",
   "type": "module",

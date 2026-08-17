@@ -1,6 +1,6 @@
 {
   "name": "@rosettadash/angular",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "RosettaDash Angular runtime — same import paths as @rosettadash/web-components. Storybook: github.com/KevinEverywhere/rosettadash (port 6009).",
   "author": "Kevin Ready <kevin@planetkevin.com>",
   "type": "module",
