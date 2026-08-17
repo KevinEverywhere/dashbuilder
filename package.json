@@ -32,6 +32,7 @@
     "generate:angular-runtime": "node scripts/generate-angular-runtime.mjs --write",
     "generate:vue-runtime": "node scripts/generate-vue-runtime.mjs --write",
     "generate:web-components-runtime": "node scripts/generate-web-components-runtime.mjs --write",
+    "publish:npm:frameworks": "npm run pack:consumer && npm publish ./dist/packages/core --access public && npm publish ./dist/packages/react --access public && npm publish ./dist/packages/angular --access public && npm publish ./dist/packages/vue --access public && npm publish ./dist/packages/svelte --access public",
     "publish:npm": "npm run pack:consumer && npm publish ./dist/packages/core --access public && npm publish ./dist/packages/web-components --access public && npm publish ./dist/packages/react --access public && npm publish ./dist/packages/angular --access public && npm publish ./dist/packages/vue --access public && npm publish ./dist/packages/svelte --access public",
     "setup:e2e": "playwright install chromium",
     "e2e:prep": "node scripts/check-e2e-ports.mjs",
