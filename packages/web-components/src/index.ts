@@ -1,32 +1,25 @@
 export * from './domain/index.js';
-export * from './visual/display/index.js';
-export * from './visual/media/index.js';
+export * from './layout/index.js';
+export * from './logic/index.js';
+export * from './visual/index.js';
 export * from './wasm/index.js';
-export * from './layout/accordion/index.js';
-export * from './layout/accordion-link-list/index.js';
-export * from './visual/link-list/index.js';
 export * from './catalog/index.js';
 
 import { registerRosettaDashDomainElements } from './domain/index.js';
-import { registerRosettaDashDisplayElements } from './visual/display/index.js';
-import { registerLayoutAccordion } from './layout/accordion/index.js';
-import { registerLayoutAccordionLinkList } from './layout/accordion-link-list/index.js';
-import { registerVisualLinkList } from './visual/link-list/index.js';
-import { registerRosettaDashMediaElements } from './visual/media/index.js';
+import { registerRosettaDashLayoutElements } from './layout/index.js';
+import { registerRosettaDashLogicElements } from './logic/index.js';
+import { registerRosettaDashVisualElements } from './visual/index.js';
 import { registerRosettaDashWasmElements } from './wasm/index.js';
-
 import { registerRosettaDashCatalogElements } from './catalog/index.js';
 
 import './register-shadow-bases.browser.js';
 
-/** Register all RosettaDash runtime custom elements (layout + domain + media + wasm + catalog). */
+/** Register all RosettaDash runtime custom elements. */
 export function registerRosettaDashElements(): void {
-  registerLayoutAccordion();
-  registerLayoutAccordionLinkList();
-  registerVisualLinkList();
+  registerRosettaDashLayoutElements();
   registerRosettaDashDomainElements();
-  registerRosettaDashDisplayElements();
-  registerRosettaDashMediaElements();
+  registerRosettaDashLogicElements();
+  registerRosettaDashVisualElements();
   registerRosettaDashWasmElements();
   registerRosettaDashCatalogElements();
 }

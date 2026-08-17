@@ -8,6 +8,8 @@ import {
   DESTINATION_ATLAS_RUNTIME_GUIDES,
   DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS,
   DESTINATION_ATLAS_SCREENS,
+  DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
+  DEFAULT_WORLD_EQUIRECT_URL,
   GEO_MAP_PROVIDERS,
   MOCK_DESTINATIONS,
   formatVisitorCount,
@@ -17,11 +19,20 @@ import {
   type GeoMapProvider,
 } from '@destination-atlas';
 
+import {
+  MOCK_NEWS,
+  REGION_OPTIONS,
+  TIME_PRESETS,
+  aggregateVisitorTrend,
+  computeVisitorDelta,
+  filterDestinations,
+  formatRegionLabel,
+  localizedDestinationName,
+} from './atlas-utils.js';
+
 const CURRENT_RUNTIME_ID: DestinationAtlasRuntimeId = 'web-components';
 
-registerRosettaDashElements();
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
+type UserRole = 'viewer' | 'editor' | 'admin';
 
 interface AppState {
   screen: DestinationAtlasScreenId;
@@ -29,6 +40,15 @@ interface AppState {
   selectedId: string;
   locale: string;
   mapProvider: GeoMapProvider;
+  userRole: UserRole;
+  destSearch: string;
+  destRegion: string;
+  timePreset: string;
+  visitPeriodStart: string;
+  visitPeriodEnd: string;
+  newsQuery: string;
+  newsRegion: string;
+  selectedArticleId: string;
 }
 
 const state: AppState = {
@@ -37,161 +57,20 @@ const state: AppState = {
   selectedId: MOCK_DESTINATIONS[0]?.id ?? '',
   locale: 'en',
   mapProvider: 'leaflet',
+  userRole: 'admin',
+  destSearch: '',
+  destRegion: '',
+  timePreset: '5y',
+  visitPeriodStart: '2019-01',
+  visitPeriodEnd: '2024-12',
+  newsQuery: '',
+  newsRegion: '',
+  selectedArticleId: '',
 };
 
-function localizedName(dest: Destination): string {
-  return dest.labels?.[state.locale] ?? dest.name;
-}
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
-function renderGap(
-  title: string,
-  ticket: string,
-  description: string,
-  extra?: string,
-): string {
-  return `
-    <div class="da-gap" data-testid="gap-placeholder">
-      <h3>${title} <small>(${ticket})</small></h3>
-      <p>${description}</p>
-      ${extra ?? ''}
-    </div>
-  `;
-}
-
-function buildMapMarkers(): Array<{ id: string; lat: number; lng: number; label: string }> {
-  return MOCK_DESTINATIONS.map((dest) => ({
-    id: dest.id,
-    lat: dest.lat,
-    lng: dest.lng,
-    label: localizedName(dest),
-  }));
-}
-
-function mapView(): { lat: number; lng: number; zoom: number } {
-  const selected = MOCK_DESTINATIONS.find((dest) => dest.id === state.selectedId);
-  if (selected) {
-    return { lat: selected.lat, lng: selected.lng, zoom: 5 };
-  }
-  return { lat: 20, lng: 0, zoom: 2 };
-}
-
-function renderOverview(): string {
-  const cards = MOCK_DESTINATIONS.map(
-    (d) => `
-      <div class="da-kpi">
-        <span>${localizedName(d)}</span>
-        <strong>${formatVisitorCount(d.visitorsCurrent)}</strong>
-        <small>visitors (2024)</small>
-      </div>
-    `,
-  ).join('');
-
-  return `
-    <section class="da-panel">
-      <h2>Overview</h2>
-      <p>Current visitor KPIs across sample destinations. Framework proof apps add LineChart/BarChart here.</p>
-      <div class="da-grid">${cards}</div>
-    </section>
-  `;
-}
-
-function renderDestinations(): string {
-  const selected = MOCK_DESTINATIONS.find((d) => d.id === state.selectedId);
-  const rows = MOCK_DESTINATIONS.map(
-    (d) =>
-      `<li><button type="button" data-select-dest="${d.id}">${localizedName(d)}</button> — ${d.region}</li>`,
-  ).join('');
-
-  return `
-    <section class="da-panel">
-      <h2>Destinations</h2>
-      <p>Framework apps use DataTable + DetailPanel. WC app uses link-list pattern below.</p>
-      <ul class="da-dest-list">${rows}</ul>
-      ${
-        selected
-          ? `<p><strong>Selected:</strong> ${localizedName(selected)} — ${formatVisitorCount(selected.visitorsCurrent)} visitors</p>
-             <p><strong>Historic:</strong> ${selected.visitorsHistoric.map((h) => `${h.year}: ${formatVisitorCount(h.visitors)}`).join(' · ')}</p>`
-          : ''
-      }
-    </section>
-  `;
-}
-
-function renderMapInner(): string {
-  const providerOptions = GEO_MAP_PROVIDERS.map(
-    (p) => `<option value="${p.id}" ${p.id === state.mapProvider ? 'selected' : ''}>${p.label}</option>`,
-  ).join('');
-  const active = GEO_MAP_PROVIDERS.find((p) => p.id === state.mapProvider);
-  const googleKeyHint =
-    state.mapProvider === 'google-maps' && !GOOGLE_MAPS_API_KEY
-      ? `<p class="da-note">Set <code>VITE_GOOGLE_MAPS_API_KEY</code> in a <code>.env.local</code> file to load Google Maps.</p>`
-      : '';
-
-  return `
-      <p>2D slippy map with developer-selectable provider (<code>visual.display.geo-map</code>).</p>
-      <div class="da-provider-select">
-        <label for="map-provider">Map provider (component prop)</label>
-        <select id="map-provider" data-map-provider>
-          ${providerOptions}
-        </select>
-      </div>
-      ${
-        active
-          ? `<dl class="da-provider-meta">
-              <dt>Cost</dt><dd>${active.costSummary}</dd>
-              <dt>API key</dt><dd>${active.apiKeyRequired ? 'Required' : 'Optional'}</dd>
-              <dt>Notes</dt><dd>${active.notes}</dd>
-            </dl>`
-          : ''
-      }
-      ${googleKeyHint}
-      <rd-geo-map class="da-geo-map" data-ref="geo-map"></rd-geo-map>
-      <p class="da-note">Click a marker to select a destination. Selected: <strong>${state.selectedId || 'none'}</strong></p>
-  `;
-}
-
-function renderMap(): string {
-  return `
-    <section class="da-panel">
-      <h2>Map</h2>
-      ${renderMapInner()}
-    </section>
-  `;
-}
-
-function renderGlobeInner(): string {
-  return renderGap(
-    '3D Geo Globe',
-    'DAS-126 / WC upgrade',
-    'ThreeGeoGlobe is a runtime stub today. WC + Three.js renderer will show textured globe with lat/lng markers.',
-  );
-}
-
-function renderGlobe(): string {
-  return `
-    <section class="da-panel">
-      <h2>Globe</h2>
-      ${renderGlobeInner()}
-    </section>
-  `;
-}
-
-function renderMaps(): string {
-  const panelButtons = (['map', 'globe'] as const)
-    .map(
-      (panel) =>
-        `<button type="button" data-maps-panel="${panel}" aria-current="${state.mapsPanel === panel ? 'page' : 'false'}">${panel === 'map' ? 'Map' : 'Globe'}</button>`,
-    )
-    .join('');
-
-  return `
-    <section class="da-panel">
-      <h2>Maps</h2>
-      <div class="da-maps-panels">${panelButtons}</div>
-      ${state.mapsPanel === 'map' ? renderMapInner() : renderGlobeInner()}
-    </section>
-  `;
-}
+registerRosettaDashElements();
 
 function renderAbout(): string {
   const matrixHead = DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS.map(
@@ -200,195 +79,237 @@ function renderAbout(): string {
 
   const runtimeRows = DESTINATION_ATLAS_RUNTIME_GUIDES.map((runtime) => {
     const isCurrent = runtime.id === CURRENT_RUNTIME_ID;
-    const currentClass = isCurrent ? ' da-about__runtime-card--current' : '';
-    const ariaCurrent = isCurrent ? ' aria-current="true"' : '';
-    const badge = isCurrent
-      ? `<span class="da-about__runtime-current-badge">${DESTINATION_ATLAS_CURRENT_RUNTIME_BADGE}</span>`
-      : '';
-
     return `
-      <li class="da-about__runtime-card${currentClass}"${ariaCurrent}>
+      <li class="da-about__runtime-card${isCurrent ? ' da-about__runtime-card--current' : ''}"${isCurrent ? ' aria-current="true"' : ''}>
         <header>
           <h4>${runtime.label}</h4>
-          <span class="da-about__ticket">${runtime.ticket}</span>
-          ${badge}
+          ${isCurrent ? `<span class="da-about__runtime-current-badge">${DESTINATION_ATLAS_CURRENT_RUNTIME_BADGE}</span>` : ''}
         </header>
         <p>${runtime.summary}</p>
         <div class="da-about__runtime-matrix">
-          <div class="da-about__runtime-matrix-col">
-            <span class="da-about__runtime-matrix-label">${DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS[0].label}</span>
-            <code>${runtime.npmPackage}</code>
-          </div>
-          <div class="da-about__runtime-matrix-col">
-            <span class="da-about__runtime-matrix-label">${DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS[1].label}</span>
-            <code>${runtime.proofCommand}</code>
-            <span class="da-about__port">localhost:${runtime.proofPort}</span>
-            <span class="da-about__path">${runtime.proofPath}</span>
-          </div>
-          <div class="da-about__runtime-matrix-col">
-            <span class="da-about__runtime-matrix-label">${DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS[2].label}</span>
-            <code>${runtime.storybookCommand}</code>
-            <span class="da-about__port">localhost:${runtime.storybookPort}</span>
-          </div>
+          <div class="da-about__runtime-matrix-col"><code>${runtime.npmPackage}</code></div>
+          <div class="da-about__runtime-matrix-col"><code>${runtime.proofCommand}</code></div>
+          <div class="da-about__runtime-matrix-col"><code>${runtime.storybookCommand}</code></div>
         </div>
-      </li>
-    `;
+      </li>`;
   }).join('');
 
   return `
     <section class="da-panel da-panel--about">
       <h2>About Destination Atlas</h2>
-      <div class="da-about">
-        <p class="da-about__lead">${DESTINATION_ATLAS_ABOUT_INTRO.lead}</p>
-
-        <section class="da-about__section">
-          <h3>${DESTINATION_ATLAS_ABOUT_INTRO.title}</h3>
-          <p>${DESTINATION_ATLAS_ABOUT_INTRO.proofPurpose}</p>
-          <p>${DESTINATION_ATLAS_ABOUT_INTRO.consumerInstall}</p>
-        </section>
-
-        <section class="da-about__section">
-          <h3>Runtimes — proof apps &amp; Storybook</h3>
-          <p>
-            Each runtime ships a <strong>proof app</strong> (full Destination Atlas UX) and a
-            <strong>Storybook catalog</strong> (isolated component review). Use the same npm package in your
-            consumer project.
-          </p>
-          <p class="da-about__note">${DESTINATION_ATLAS_ABOUT_INTRO.runtimeCardsNote}</p>
-          <div class="da-about__runtime-matrix-wrap">
-            <div class="da-about__runtime-matrix-head" aria-hidden="true">${matrixHead}</div>
-            <ul class="da-about__runtime-list">${runtimeRows}</ul>
-          </div>
-        </section>
-
-        <section class="da-about__section">
-          <h3>${DESTINATION_ATLAS_ABOUT_INTRO.componentSourceTitle}</h3>
-          <p>${DESTINATION_ATLAS_ABOUT_INTRO.componentSourceBody}</p>
-        </section>
-
-        <section class="da-about__section">
-          <h3>How to work with components</h3>
-          <ol class="da-about__steps">
-            <li>
-              Open <strong>Storybook</strong> for your runtime — browse palette groups, preview bindings, and copy
-              import paths from the catalog.
-            </li>
-            <li>
-              Run the matching <strong>proof app</strong> — see components composed into real screens (framework apps
-              are the reference; this Web Components app uses CE hosts plus gap placeholders on some tabs).
-            </li>
-            <li>
-              On framework proof tabs, read the <strong>Component source</strong> panel — inspect markup, prop names,
-              and how RosettaDash imports nest together.
-            </li>
-            <li>
-              Install packages in your app via npm; wire developer-owned i18n, data, and providers (map tiles, API keys)
-              at the component input level.
-            </li>
-          </ol>
-        </section>
-
-        <section class="da-about__section da-about__section--muted da-about__section--last">
-          <h3>Documentation</h3>
-          <ul class="da-about__doc-links">
-            <li><code>docs/43-destination-atlas-proof-apps.md</code> — screen map and mock data</li>
-            <li><code>docs/38-storybook-component-catalog.md</code> — Storybook ports and sidebar taxonomy</li>
-            <li><code>docs/34-public-component-api.md</code> — import paths and recipes</li>
-          </ul>
-        </section>
+      <p class="da-about__lead">${DESTINATION_ATLAS_ABOUT_INTRO.lead}</p>
+      <div class="da-about__runtime-matrix-wrap">
+        <div class="da-about__runtime-matrix-head" aria-hidden="true">${matrixHead}</div>
+        <ul class="da-about__runtime-list">${runtimeRows}</ul>
       </div>
-    </section>
+    </section>`;
+}
+
+function renderOverview(): string {
+  const kpiCards = MOCK_DESTINATIONS.map(
+    (dest) =>
+      `<rd-kpi-card title="${localizedDestinationName(dest, state.locale)}" value="${formatVisitorCount(dest.visitorsCurrent)}" delta="${computeVisitorDelta(dest)}"></rd-kpi-card>`,
+  ).join('');
+
+  return `
+    <section class="da-panel">
+      <h2>Overview</h2>
+      <p>Current visitor KPIs and historic trends across sample destinations.</p>
+      <div class="da-stack">
+        <rd-grid-layout title="Destination KPIs" columns="3" gap="12">${kpiCards}</rd-grid-layout>
+        <div class="da-stack da-stack--2">
+          <rd-line-chart title="Visitors over time (aggregate trend)"></rd-line-chart>
+          <rd-bar-chart title="2024 visitors by destination"></rd-bar-chart>
+        </div>
+        <rd-role-gate label="Operations metrics" status-text="Admin operations panel" allowed-roles='["admin"]'>
+          <rd-metric-chip chip-label="Avg. stay" chip-value="4.2 nights"></rd-metric-chip>
+          <rd-status-badge status-text="Data freshness: current" tone="success"></rd-status-badge>
+        </rd-role-gate>
+      </div>
+    </section>`;
+}
+
+function renderDestinations(): string {
+  const filtered = filterDestinations(state.locale, state.destSearch, state.destRegion);
+  const rows = filtered.map((dest) => ({
+    id: dest.id,
+    name: localizedDestinationName(dest, state.locale),
+    status: dest.region,
+    amount: dest.visitorsCurrent,
+    date: state.timePreset,
+  }));
+  const selected = MOCK_DESTINATIONS.find((d) => d.id === state.selectedId);
+
+  return `
+    <section class="da-panel">
+      <h2>Destinations</h2>
+      <p>Browse destinations with filters, table selection, and detail panel.</p>
+      <div class="da-stack">
+        <div class="da-filter-row">
+          <rd-input-text label="Search" placeholder="Destination name…" data-ref="dest-search"></rd-input-text>
+          <rd-input-select label="Region" placeholder="All regions" data-ref="dest-region"></rd-input-select>
+          <rd-input-date-range label="Visit period" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}" data-ref="visit-period"></rd-input-date-range>
+        </div>
+        <rd-time-preset label="Historic window" presets='${JSON.stringify(TIME_PRESETS)}' active-preset-id="${state.timePreset}" data-ref="time-preset"></rd-time-preset>
+        <rd-flex-layout direction="row" gap="16">
+          <rd-data-table title="Destinations" rows='${JSON.stringify(rows)}' data-ref="dest-table"></rd-data-table>
+          <rd-detail-panel title="Destination detail" data-ref="dest-detail">
+            ${
+              selected
+                ? `<div class="da-detail-card">
+                    <h3>${localizedDestinationName(selected, state.locale)}</h3>
+                    <p>${formatRegionLabel(selected.region)} · ${formatVisitorCount(selected.visitorsCurrent)} visitors</p>
+                    <ul>${selected.visitorsHistoric.map((h) => `<li>${h.year}: ${formatVisitorCount(h.visitors)}</li>`).join('')}</ul>
+                   </div>`
+                : ''
+            }
+          </rd-detail-panel>
+        </rd-flex-layout>
+      </div>
+    </section>`;
+}
+
+function renderMapPanel(): string {
+  const active = GEO_MAP_PROVIDERS.find((p) => p.id === state.mapProvider);
+  return `
+    <p>2D slippy map with developer-selectable provider.</p>
+    <div class="da-provider-select">
+      <label for="map-provider">Map provider</label>
+      <select id="map-provider" data-map-provider>
+        ${GEO_MAP_PROVIDERS.map((p) => `<option value="${p.id}" ${p.id === state.mapProvider ? 'selected' : ''}>${p.label}</option>`).join('')}
+      </select>
+    </div>
+    ${active ? `<p class="da-note">${active.notes}</p>` : ''}
+    <rd-geo-map class="da-geo-map" data-ref="geo-map"></rd-geo-map>
   `;
+}
+
+function renderGlobePanel(): string {
+  return `
+    <p>Three.js globe with destination markers — click a marker to select.</p>
+    <rd-three-geo-globe title="Destination globe (Three.js)" texture-url="${DEFAULT_WORLD_EQUIRECT_URL}" data-ref="geo-globe"></rd-three-geo-globe>
+    <p class="da-note">${DEFAULT_WORLD_EQUIRECT_ATTRIBUTION}</p>
+  `;
+}
+
+function renderMaps(): string {
+  return `
+    <section class="da-panel">
+      <h2>Maps</h2>
+      <rd-tabs-layout tabs='[{"id":"map","label":"Map"},{"id":"globe","label":"Globe"}]' active-tab-id="${state.mapsPanel}" data-ref="maps-tabs"></rd-tabs-layout>
+      <div class="da-maps-body">${state.mapsPanel === 'map' ? renderMapPanel() : renderGlobePanel()}</div>
+    </section>`;
+}
+
+function renderMedia(): string {
+  return `
+    <section class="da-panel">
+      <h2>Media</h2>
+      <p>YouTube embed and local video source for destination highlights.</p>
+      <rd-input-select label="Destination video" data-ref="media-dest"></rd-input-select>
+      <rd-youtube-embed class="da-youtube" data-ref="youtube-embed"></rd-youtube-embed>
+      <rd-video-source label="Local / file video source" data-ref="video-source"></rd-video-source>
+    </section>`;
 }
 
 function renderAuthoring(): string {
   return `
     <section class="da-panel">
       <h2>Authoring</h2>
-      ${renderGap('360° authoring', 'DAS-122', 'ffmpeg.wasm crop and preview — React proof only.')}
-    </section>
-  `;
+      <p>Upload source video, preview equirect crop, and extract with ffmpeg.wasm.</p>
+      <div class="da-stack">
+        <rd-video-source label="Upload source video" data-ref="authoring-source"></rd-video-source>
+        <rd-equirect-viewport label="Equirect preview" data-ref="equirect-viewport"></rd-equirect-viewport>
+        <rd-wasm-media label="Extract output" data-ref="wasm-media"></rd-wasm-media>
+      </div>
+    </section>`;
+}
+
+function renderIntel(): string {
+  const filtered = MOCK_NEWS.filter((article) => {
+    const q = state.newsQuery.toLowerCase();
+    const matchesQuery =
+      !q ||
+      article.headline.toLowerCase().includes(q) ||
+      article.summary.toLowerCase().includes(q);
+    const matchesRegion = !state.newsRegion || article.region === state.newsRegion;
+    return matchesQuery && matchesRegion;
+  });
+  const selected = filtered.find((a) => a.id === state.selectedArticleId) ?? filtered[0];
+
+  return `
+    <section class="da-panel">
+      <h2>Intel</h2>
+      <p>Regional news discovery with mock headlines.</p>
+      <div class="da-stack">
+        <rd-role-gate label="News editor tools" status-text="Editor access" allowed-roles='["editor","admin"]'>
+          <rd-news-search-box label="Search" placeholder="Search news…" value="${state.newsQuery}" data-ref="news-search"></rd-news-search-box>
+          <rd-news-region-select label="Region" placeholder="All regions" data-ref="news-region"></rd-news-region-select>
+        </rd-role-gate>
+        <rd-flex-layout direction="row" gap="16">
+          <rd-news-results-table title="News results" rows='${JSON.stringify(filtered)}' data-ref="news-table"></rd-news-results-table>
+          <rd-news-article-detail title="${selected?.headline ?? 'Article'}" data-ref="news-detail">
+            ${selected ? `<p>${selected.summary}</p><p><em>${selected.source} · ${selected.published}</em></p>` : ''}
+          </rd-news-article-detail>
+        </rd-flex-layout>
+      </div>
+    </section>`;
+}
+
+function renderPlan(): string {
+  const destOptions = MOCK_DESTINATIONS.map((d) => ({
+    value: d.id,
+    label: localizedDestinationName(d, state.locale),
+  }));
+
+  return `
+    <section class="da-panel">
+      <h2>Plan trip</h2>
+      <p>Trip planning, collaboration, and role-gated editor access.</p>
+      <div class="da-stack">
+        <rd-role-gate label="Trip editor" status-text="Editor workspace unlocked" allowed-roles='["editor","admin"]'>
+          <rd-person-invite email-placeholder="planner@company.com"></rd-person-invite>
+          <rd-role-assign summary="Confirm collaborator access for this itinerary." role-options='[{"value":"viewer","label":"Viewer"},{"value":"editor","label":"Editor"},{"value":"admin","label":"Admin"}]'></rd-role-assign>
+          <rd-input-text label="Trip name" placeholder="Spring heritage tour" data-ref="trip-name"></rd-input-text>
+          <rd-input-select label="Primary destination" placeholder="Select destination…" options='${JSON.stringify(destOptions)}' data-ref="trip-dest"></rd-input-select>
+          <rd-input-date-range label="Trip dates" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}"></rd-input-date-range>
+          <rd-input-number label="Travelers" value="2" min="1"></rd-input-number>
+          <rd-input-checkbox label="Share itinerary with team" default-checked></rd-input-checkbox>
+          <rd-input-textarea label="Notes" placeholder="Visa requirements, rail passes…"></rd-input-textarea>
+        </rd-role-gate>
+        <rd-timer label="Itinerary refresh" tick-count="3"></rd-timer>
+      </div>
+    </section>`;
 }
 
 function renderViews(): string {
   return `
     <section class="da-panel">
       <h2>Views</h2>
-      ${renderGap('Advanced charts', 'DAS-123', 'Journey flows and carousel demos in framework apps.')}
-    </section>
-  `;
-}
-
-function renderMedia(): string {
-  const selected = MOCK_DESTINATIONS.find((d) => d.id === state.selectedId);
-  const options = MOCK_DESTINATIONS.filter((d) => d.youtubeId)
-    .map(
-      (d) =>
-        `<option value="${d.id}" ${d.id === state.selectedId ? 'selected' : ''}>${localizedName(d)}</option>`,
-    )
-    .join('');
-
-  return `
-    <section class="da-panel">
-      <h2>Media</h2>
-      <p>YouTube embed (<code>visual.media.youtube-embed</code>) for destination highlight videos.</p>
-      <div class="da-provider-select">
-        <label for="media-dest">Destination video</label>
-        <select id="media-dest" data-media-dest>${options}</select>
+      <p>Chart placeholders for journey and distribution views.</p>
+      <div class="da-stack da-stack--2">
+        <rd-pie-chart title="Visitor share by region"></rd-pie-chart>
+        <rd-line-chart title="Seasonal trend"></rd-line-chart>
       </div>
-      <rd-youtube-embed class="da-youtube" data-ref="youtube-embed"></rd-youtube-embed>
-      ${
-        !selected?.youtubeId
-          ? '<p class="da-note">Select a destination with a YouTube id.</p>'
-          : ''
-      }
-      <rd-video-source label="Local / file video source"></rd-video-source>
-      <p style="margin-top:1rem"><em>Equirect viewport and wasm-media available in framework proof apps.</em></p>
-    </section>
-  `;
-}
-
-function renderIntel(): string {
-  return `
-    <section class="da-panel">
-      <h2>Intel</h2>
-      <p>News module (region/language selects, search, results table) ships in framework runtimes — not WC CE yet.</p>
-      ${renderGap(
-        'News discovery',
-        'native runtime',
-        'NewsSearchBox, NewsRegionSelect, NewsLanguageSelect (API filter — distinct from app-language-select), NewsResultsTable.',
-      )}
-    </section>
-  `;
-}
-
-function renderPlan(): string {
-  return `
-    <section class="da-panel">
-      <h2>Plan trip</h2>
-      ${renderGap('Collaboration + forms', 'DAS-122–125', 'RoleGate, PersonInvite, RoleAssign, Timer, and form inputs in framework apps.')}
-    </section>
-  `;
+    </section>`;
 }
 
 function renderStack(): string {
   return `
     <section class="da-panel">
       <h2>Stack</h2>
-      <p>Read-only infra demo (EnvConfig, database nodes, server scaffolds) — framework apps only.</p>
-    </section>
-  `;
+      <p class="da-note">Infra panels (EnvConfig, database nodes, server scaffolds) ship in framework runtimes — out of scope for Web Components proof.</p>
+    </section>`;
 }
 
 function renderSettings(): string {
   return `
     <section class="da-panel">
       <h2>Settings</h2>
-      <p>App base locale for developer i18n (<code>domain.i18n.app-language-select</code>). Does not translate RosettaDash chrome.</p>
+      <p>App base locale for developer i18n (<code>domain.i18n.app-language-select</code>).</p>
       <rd-app-language-select data-ref="app-language-select"></rd-app-language-select>
-      <p class="da-note">Demo: destination names on Overview, Destinations, and Map use <code>labels[locale]</code> from mock data when available.</p>
-    </section>
-  `;
+      <p class="da-note">Demo: destination names use <code>labels[locale]</code> from mock data when available.</p>
+    </section>`;
 }
 
 const SCREEN_RENDERERS: Record<DestinationAtlasScreenId, () => string> = {
@@ -405,77 +326,152 @@ const SCREEN_RENDERERS: Record<DestinationAtlasScreenId, () => string> = {
   settings: renderSettings,
 };
 
+function buildMapMarkers(): Array<{ id: string; lat: number; lng: number; label: string }> {
+  return MOCK_DESTINATIONS.map((dest) => ({
+    id: dest.id,
+    lat: dest.lat,
+    lng: dest.lng,
+    label: localizedDestinationName(dest, state.locale),
+  }));
+}
+
+function mapView(): { lat: number; lng: number; zoom: number } {
+  const selected = MOCK_DESTINATIONS.find((dest) => dest.id === state.selectedId);
+  if (selected) {
+    return { lat: selected.lat, lng: selected.lng, zoom: 5 };
+  }
+  return { lat: 20, lng: 0, zoom: 2 };
+}
+
 function wireGeoMap(root: HTMLElement): void {
   const geoMap = root.querySelector('[data-ref="geo-map"]');
-  if (!geoMap) {
-    return;
-  }
-
+  if (!geoMap) return;
   const view = mapView();
   geoMap.setAttribute('provider', state.mapProvider);
   geoMap.setAttribute('center', JSON.stringify({ lat: view.lat, lng: view.lng }));
   geoMap.setAttribute('zoom', String(view.zoom));
   geoMap.setAttribute('markers', JSON.stringify(buildMapMarkers()));
   geoMap.setAttribute('selected-id', state.selectedId);
-
   if (state.mapProvider === 'google-maps' && GOOGLE_MAPS_API_KEY) {
     geoMap.setAttribute('api-key', GOOGLE_MAPS_API_KEY);
-  } else {
-    geoMap.removeAttribute('api-key');
   }
-
   geoMap.addEventListener('marker-select', (event) => {
-    const detail = (event as CustomEvent<{ id: string }>).detail;
-    state.selectedId = detail.id;
-    geoMap.setAttribute('selected-id', detail.id);
-    root.querySelector('.da-note strong')?.replaceChildren(detail.id);
+    state.selectedId = (event as CustomEvent<{ id: string }>).detail.id;
+    render();
   });
 }
 
-function wireAppLanguageSelect(root: HTMLElement): void {
-  const languageSelect = root.querySelector('[data-ref="app-language-select"]');
-  if (!languageSelect) {
-    return;
-  }
+function wireGlobe(root: HTMLElement): void {
+  const globe = root.querySelector('[data-ref="geo-globe"]');
+  if (!globe) return;
+  globe.setAttribute('markers', JSON.stringify(buildMapMarkers()));
+  globe.setAttribute('selected-id', state.selectedId);
+  globe.addEventListener('marker-select', (event) => {
+    state.selectedId = (event as CustomEvent<{ id: string }>).detail.id;
+    render();
+  });
+}
 
+function wireMapsTabs(root: HTMLElement): void {
+  root.querySelector('[data-ref="maps-tabs"]')?.addEventListener('tab-change', (event) => {
+    state.mapsPanel = (event as CustomEvent<{ tabId: 'map' | 'globe' }>).detail.tabId;
+    render();
+  });
+}
+
+function wireDestinations(root: HTMLElement): void {
+  const search = root.querySelector('[data-ref="dest-search"]');
+  search?.addEventListener('value-change', (event) => {
+    state.destSearch = (event as CustomEvent<{ value: string }>).detail.value;
+    render();
+  });
+
+  const region = root.querySelector('[data-ref="dest-region"]');
+  region?.setAttribute('options', JSON.stringify([{ value: '', label: 'All regions' }, ...REGION_OPTIONS]));
+  region?.setAttribute('value', state.destRegion);
+  region?.addEventListener('value-change', (event) => {
+    state.destRegion = (event as CustomEvent<{ value: string }>).detail.value;
+    render();
+  });
+
+  root.querySelector('[data-ref="time-preset"]')?.addEventListener('preset-change', (event) => {
+    state.timePreset = (event as CustomEvent<{ presetId: string }>).detail.presetId;
+    render();
+  });
+
+  root.querySelector('[data-ref="dest-table"]')?.addEventListener('row-select', (event) => {
+    state.selectedId = (event as CustomEvent<{ id: string }>).detail.id;
+    render();
+  });
+}
+
+function wireIntel(root: HTMLElement): void {
+  root.querySelector('[data-ref="news-search"]')?.addEventListener('search', (event) => {
+    state.newsQuery = (event as CustomEvent<{ query: string }>).detail.query;
+    render();
+  });
+
+  const region = root.querySelector('[data-ref="news-region"]');
+  region?.setAttribute('options', JSON.stringify([{ value: '', label: 'All regions' }, ...REGION_OPTIONS]));
+  region?.setAttribute('value', state.newsRegion);
+  region?.addEventListener('value-change', (event) => {
+    state.newsRegion = (event as CustomEvent<{ value: string }>).detail.value;
+    render();
+  });
+
+  root.querySelector('[data-ref="news-table"]')?.addEventListener('row-select', (event) => {
+    state.selectedArticleId = (event as CustomEvent<{ id: string }>).detail.id;
+    render();
+  });
+}
+
+function wireMedia(root: HTMLElement): void {
+  const select = root.querySelector('[data-ref="media-dest"]');
+  const withVideo = MOCK_DESTINATIONS.filter((d) => d.youtubeId);
+  select?.setAttribute(
+    'options',
+    JSON.stringify(withVideo.map((d) => ({ value: d.id, label: localizedDestinationName(d, state.locale) }))),
+  );
+  select?.setAttribute('value', state.selectedId);
+  select?.addEventListener('value-change', (event) => {
+    state.selectedId = (event as CustomEvent<{ value: string }>).detail.value;
+    render();
+  });
+
+  const embed = root.querySelector('[data-ref="youtube-embed"]');
+  const selected = MOCK_DESTINATIONS.find((d) => d.id === state.selectedId);
+  if (embed && selected?.youtubeId) {
+    embed.setAttribute('video-id', selected.youtubeId);
+    embed.setAttribute('embed-title', `${localizedDestinationName(selected, state.locale)} — destination video`);
+  }
+}
+
+function wireSettings(root: HTMLElement): void {
+  const languageSelect = root.querySelector('[data-ref="app-language-select"]');
+  if (!languageSelect) return;
   languageSelect.setAttribute('locales', JSON.stringify(DEFAULT_APP_LOCALES));
   languageSelect.setAttribute('value', state.locale);
   languageSelect.setAttribute('label', 'App language');
   languageSelect.setAttribute('placeholder', 'Select language…');
-
   languageSelect.addEventListener('locale-change', (event) => {
     state.locale = (event as CustomEvent<{ locale: string }>).detail.locale;
     render();
   });
 }
 
-function wireYoutubeEmbed(root: HTMLElement): void {
-  const embed = root.querySelector('[data-ref="youtube-embed"]');
-  if (!embed) {
-    return;
-  }
-
-  const selected = MOCK_DESTINATIONS.find((dest) => dest.id === state.selectedId);
-  if (selected?.youtubeId) {
-    embed.setAttribute('video-id', selected.youtubeId);
-    embed.setAttribute('embed-title', `${localizedName(selected)} — destination video`);
-  } else {
-    embed.removeAttribute('video-id');
-    embed.setAttribute('embed-title', 'Destination video');
-  }
-}
-
 function render(): void {
   const root = document.getElementById('app');
-  if (!root) {
-    return;
-  }
+  if (!root) return;
 
   const nav = DESTINATION_ATLAS_SCREENS.flatMap((s) => {
     if (s.id === 'settings') {
       return [
-        `<button type="button" data-open-scout aria-current="false">Scout</button>`,
-        `<button type="button" data-screen="${s.id}" aria-current="${state.screen === s.id ? 'page' : 'false'}">${s.label}</button>`,
+        `<button type="button" data-screen="settings">Settings</button>`,
+        `<select data-role aria-label="User role">
+          <option value="viewer" ${state.userRole === 'viewer' ? 'selected' : ''}>Viewer</option>
+          <option value="editor" ${state.userRole === 'editor' ? 'selected' : ''}>Editor</option>
+          <option value="admin" ${state.userRole === 'admin' ? 'selected' : ''}>Admin</option>
+        </select>`,
       ];
     }
     return [
@@ -487,10 +483,10 @@ function render(): void {
     <div class="da-shell">
       <header class="da-header">
         <h1>Destination Atlas</h1>
-        <p>Current and historic information about world locations — Web Components proof (DAS-121)</p>
+        <p>Web Components proof — full Destination Atlas UX with <code>&lt;rd-*&gt;</code> custom elements</p>
         <div class="da-locale-bar">
-          <span>App locale: <strong>${state.locale}</strong></span>
-          <span>Map provider: <strong>${state.mapProvider}</strong></span>
+          <span>Locale: <strong>${state.locale}</strong></span>
+          <span>Role: <strong>${state.userRole}</strong></span>
           <span>Selected: <strong>${state.selectedId || 'none'}</strong></span>
         </div>
       </header>
@@ -499,58 +495,32 @@ function render(): void {
     </div>
   `;
 
-  root.querySelectorAll('[data-open-scout]').forEach((el) => {
-    el.addEventListener('click', () => {
-      state.screen = 'settings';
-      render();
-    });
-  });
-
   root.querySelectorAll('[data-screen]').forEach((el) => {
     el.addEventListener('click', () => {
-      const id = (el as HTMLElement).dataset.screen as DestinationAtlasScreenId;
-      state.screen = id;
+      state.screen = (el as HTMLElement).dataset.screen as DestinationAtlasScreenId;
       render();
     });
   });
 
-  root.querySelectorAll('[data-select-dest]').forEach((el) => {
-    el.addEventListener('click', () => {
-      state.selectedId = (el as HTMLElement).dataset.selectDest ?? '';
-      render();
-    });
-  });
-
-  root.querySelectorAll('[data-maps-panel]').forEach((el) => {
-    el.addEventListener('click', () => {
-      state.mapsPanel = (el as HTMLElement).dataset.mapsPanel as 'map' | 'globe';
-      render();
-    });
-  });
-
-  const mapSelect = root.querySelector<HTMLSelectElement>('[data-map-provider]');
-  mapSelect?.addEventListener('change', () => {
-    state.mapProvider = (mapSelect.value as GeoMapProvider) ?? 'leaflet';
+  root.querySelector('[data-role]')?.addEventListener('change', (event) => {
+    state.userRole = (event.target as HTMLSelectElement).value as UserRole;
     render();
   });
 
-  const mediaSelect = root.querySelector<HTMLSelectElement>('[data-media-dest]');
-  mediaSelect?.addEventListener('change', () => {
-    state.selectedId = mediaSelect.value;
+  root.querySelector('[data-map-provider]')?.addEventListener('change', (event) => {
+    state.mapProvider = (event.target as HTMLSelectElement).value as GeoMapProvider;
     render();
   });
 
-  if (state.screen === 'maps' && state.mapsPanel === 'map') {
-    wireGeoMap(root);
+  if (state.screen === 'maps') {
+    wireMapsTabs(root);
+    if (state.mapsPanel === 'map') wireGeoMap(root);
+    else wireGlobe(root);
   }
-
-  if (state.screen === 'settings') {
-    wireAppLanguageSelect(root);
-  }
-
-  if (state.screen === 'media') {
-    wireYoutubeEmbed(root);
-  }
+  if (state.screen === 'destinations') wireDestinations(root);
+  if (state.screen === 'intel') wireIntel(root);
+  if (state.screen === 'media') wireMedia(root);
+  if (state.screen === 'settings') wireSettings(root);
 }
 
 render();

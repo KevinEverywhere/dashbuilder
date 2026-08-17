@@ -17,6 +17,50 @@
       "import": "./src/index.js",
       "default": "./src/index.js"
     },
+    "./browser/media": {
+      "import": "./browser/media.js",
+      "default": "./browser/media.js"
+    },
+    "./catalog": {
+      "types": "./src/catalog/index.d.ts",
+      "import": "./src/catalog/index.js",
+      "default": "./src/catalog/index.js"
+    },
+    "./catalog/component-spec": {
+      "types": "./src/catalog/component-spec/index.d.ts",
+      "import": "./src/catalog/component-spec/index.js",
+      "default": "./src/catalog/component-spec/index.js"
+    },
+    "./catalog/palette-catalog": {
+      "types": "./src/catalog/palette-catalog/index.d.ts",
+      "import": "./src/catalog/palette-catalog/index.js",
+      "default": "./src/catalog/palette-catalog/index.js"
+    },
+    "./domain/i18n/app-language-select": {
+      "types": "./src/domain/i18n/app-language-select/index.d.ts",
+      "import": "./src/domain/i18n/app-language-select/index.js",
+      "default": "./src/domain/i18n/app-language-select/index.js"
+    },
+    "./domain/person-invite": {
+      "types": "./src/domain/person-invite/index.d.ts",
+      "import": "./src/domain/person-invite/index.js",
+      "default": "./src/domain/person-invite/index.js"
+    },
+    "./domain/role-assign": {
+      "types": "./src/domain/role-assign/index.d.ts",
+      "import": "./src/domain/role-assign/index.js",
+      "default": "./src/domain/role-assign/index.js"
+    },
+    "./domain/role-gate": {
+      "types": "./src/domain/role-gate/index.d.ts",
+      "import": "./src/domain/role-gate/index.js",
+      "default": "./src/domain/role-gate/index.js"
+    },
+    "./domain/time-preset": {
+      "types": "./src/domain/time-preset/index.d.ts",
+      "import": "./src/domain/time-preset/index.js",
+      "default": "./src/domain/time-preset/index.js"
+    },
     "./layout/accordion": {
       "types": "./src/layout/accordion/index.d.ts",
       "import": "./src/layout/accordion/index.js",
@@ -27,72 +71,236 @@
       "import": "./src/layout/accordion-link-list/index.js",
       "default": "./src/layout/accordion-link-list/index.js"
     },
-    "./visual/link-list": {
-      "types": "./src/visual/link-list/index.d.ts",
-      "import": "./src/visual/link-list/index.js",
-      "default": "./src/visual/link-list/index.js"
+    "./layout/collapsible": {
+      "types": "./src/layout/collapsible/index.d.ts",
+      "import": "./src/layout/collapsible/index.js",
+      "default": "./src/layout/collapsible/index.js"
+    },
+    "./layout/flex": {
+      "types": "./src/layout/flex/index.d.ts",
+      "import": "./src/layout/flex/index.js",
+      "default": "./src/layout/flex/index.js"
+    },
+    "./layout/grid": {
+      "types": "./src/layout/grid/index.d.ts",
+      "import": "./src/layout/grid/index.js",
+      "default": "./src/layout/grid/index.js"
+    },
+    "./layout/modal": {
+      "types": "./src/layout/modal/index.d.ts",
+      "import": "./src/layout/modal/index.js",
+      "default": "./src/layout/modal/index.js"
+    },
+    "./layout/tabs": {
+      "types": "./src/layout/tabs/index.d.ts",
+      "import": "./src/layout/tabs/index.js",
+      "default": "./src/layout/tabs/index.js"
+    },
+    "./logic/timer": {
+      "types": "./src/logic/timer/index.d.ts",
+      "import": "./src/logic/timer/index.js",
+      "default": "./src/logic/timer/index.js"
     },
     "./media": {
       "types": "./src/visual/media/index.d.ts",
       "import": "./src/visual/media/index.js",
       "default": "./src/visual/media/index.js"
     },
-    "./wasm": {
-      "types": "./src/wasm/index.d.ts",
-      "import": "./src/wasm/index.js",
-      "default": "./src/wasm/index.js"
+    "./visual/chart/bar": {
+      "types": "./src/visual/chart/bar/index.d.ts",
+      "import": "./src/visual/chart/bar/index.js",
+      "default": "./src/visual/chart/bar/index.js"
     },
-    "./catalog": {
-      "types": "./src/catalog/index.d.ts",
-      "import": "./src/catalog/index.js",
-      "default": "./src/catalog/index.js"
+    "./visual/chart/line": {
+      "types": "./src/visual/chart/line/index.d.ts",
+      "import": "./src/visual/chart/line/index.js",
+      "default": "./src/visual/chart/line/index.js"
     },
-    "./catalog/palette-catalog": {
-      "types": "./src/catalog/index.d.ts",
-      "import": "./src/catalog/index.js",
-      "default": "./src/catalog/index.js"
+    "./visual/chart/pie": {
+      "types": "./src/visual/chart/pie/index.d.ts",
+      "import": "./src/visual/chart/pie/index.js",
+      "default": "./src/visual/chart/pie/index.js"
     },
-    "./catalog/component-spec": {
-      "types": "./src/catalog/component-spec/index.d.ts",
-      "import": "./src/catalog/component-spec/index.js",
-      "default": "./src/catalog/component-spec/index.js"
+    "./visual/detail": {
+      "types": "./src/visual/detail/index.d.ts",
+      "import": "./src/visual/detail/index.js",
+      "default": "./src/visual/detail/index.js"
     },
-    "./visual/media/video-source": {
-      "types": "./src/visual/media/video-source/index.d.ts",
-      "import": "./src/visual/media/video-source/index.js",
-      "default": "./src/visual/media/video-source/index.js"
+    "./visual/display/3d-bar-chart": {
+      "types": "./src/visual/display/3d-bar-chart/index.d.ts",
+      "import": "./src/visual/display/3d-bar-chart/index.js",
+      "default": "./src/visual/display/3d-bar-chart/index.js"
     },
-    "./visual/media/equirect-viewport": {
-      "types": "./src/visual/media/equirect-viewport/index.d.ts",
-      "import": "./src/visual/media/equirect-viewport/index.js",
-      "default": "./src/visual/media/equirect-viewport/index.js"
+    "./visual/display/3d-geo-globe": {
+      "types": "./src/visual/display/3d-geo-globe/index.d.ts",
+      "import": "./src/visual/display/3d-geo-globe/index.js",
+      "default": "./src/visual/display/3d-geo-globe/index.js"
     },
-    "./visual/media/youtube-embed": {
-      "types": "./src/visual/media/youtube-embed/index.d.ts",
-      "import": "./src/visual/media/youtube-embed/index.js",
-      "default": "./src/visual/media/youtube-embed/index.js"
+    "./visual/display/3d-gltf-model": {
+      "types": "./src/visual/display/3d-gltf-model/index.d.ts",
+      "import": "./src/visual/display/3d-gltf-model/index.js",
+      "default": "./src/visual/display/3d-gltf-model/index.js"
     },
-    "./domain/i18n/app-language-select": {
-      "types": "./src/domain/i18n/app-language-select/index.d.ts",
-      "import": "./src/domain/i18n/app-language-select/index.js",
-      "default": "./src/domain/i18n/app-language-select/index.js"
+    "./visual/display/3d-scatter": {
+      "types": "./src/visual/display/3d-scatter/index.d.ts",
+      "import": "./src/visual/display/3d-scatter/index.js",
+      "default": "./src/visual/display/3d-scatter/index.js"
+    },
+    "./visual/display/3d-scene": {
+      "types": "./src/visual/display/3d-scene/index.d.ts",
+      "import": "./src/visual/display/3d-scene/index.js",
+      "default": "./src/visual/display/3d-scene/index.js"
     },
     "./visual/display/geo-map": {
       "types": "./src/visual/display/geo-map/index.d.ts",
       "import": "./src/visual/display/geo-map/index.js",
       "default": "./src/visual/display/geo-map/index.js"
     },
+    "./visual/input/checkbox": {
+      "types": "./src/visual/input/checkbox/index.d.ts",
+      "import": "./src/visual/input/checkbox/index.js",
+      "default": "./src/visual/input/checkbox/index.js"
+    },
+    "./visual/input/date-range": {
+      "types": "./src/visual/input/date-range/index.d.ts",
+      "import": "./src/visual/input/date-range/index.js",
+      "default": "./src/visual/input/date-range/index.js"
+    },
+    "./visual/input/number": {
+      "types": "./src/visual/input/number/index.d.ts",
+      "import": "./src/visual/input/number/index.js",
+      "default": "./src/visual/input/number/index.js"
+    },
+    "./visual/input/select": {
+      "types": "./src/visual/input/select/index.d.ts",
+      "import": "./src/visual/input/select/index.js",
+      "default": "./src/visual/input/select/index.js"
+    },
+    "./visual/input/text": {
+      "types": "./src/visual/input/text/index.d.ts",
+      "import": "./src/visual/input/text/index.js",
+      "default": "./src/visual/input/text/index.js"
+    },
+    "./visual/input/textarea": {
+      "types": "./src/visual/input/textarea/index.d.ts",
+      "import": "./src/visual/input/textarea/index.js",
+      "default": "./src/visual/input/textarea/index.js"
+    },
+    "./visual/kpi": {
+      "types": "./src/visual/kpi/index.d.ts",
+      "import": "./src/visual/kpi/index.js",
+      "default": "./src/visual/kpi/index.js"
+    },
+    "./visual/link-list": {
+      "types": "./src/visual/link-list/index.d.ts",
+      "import": "./src/visual/link-list/index.js",
+      "default": "./src/visual/link-list/index.js"
+    },
+    "./visual/media/equirect-viewport": {
+      "types": "./src/visual/media/equirect-viewport/index.d.ts",
+      "import": "./src/visual/media/equirect-viewport/index.js",
+      "default": "./src/visual/media/equirect-viewport/index.js"
+    },
+    "./visual/media/live-capture": {
+      "types": "./src/visual/media/live-capture/index.d.ts",
+      "import": "./src/visual/media/live-capture/index.js",
+      "default": "./src/visual/media/live-capture/index.js"
+    },
+    "./visual/media/video-source": {
+      "types": "./src/visual/media/video-source/index.d.ts",
+      "import": "./src/visual/media/video-source/index.js",
+      "default": "./src/visual/media/video-source/index.js"
+    },
+    "./visual/media/youtube-embed": {
+      "types": "./src/visual/media/youtube-embed/index.d.ts",
+      "import": "./src/visual/media/youtube-embed/index.js",
+      "default": "./src/visual/media/youtube-embed/index.js"
+    },
+    "./visual/news/article-detail": {
+      "types": "./src/visual/news/article-detail/index.d.ts",
+      "import": "./src/visual/news/article-detail/index.js",
+      "default": "./src/visual/news/article-detail/index.js"
+    },
+    "./visual/news/language-select": {
+      "types": "./src/visual/news/language-select/index.d.ts",
+      "import": "./src/visual/news/language-select/index.js",
+      "default": "./src/visual/news/language-select/index.js"
+    },
+    "./visual/news/region-select": {
+      "types": "./src/visual/news/region-select/index.d.ts",
+      "import": "./src/visual/news/region-select/index.js",
+      "default": "./src/visual/news/region-select/index.js"
+    },
+    "./visual/news/results-table": {
+      "types": "./src/visual/news/results-table/index.d.ts",
+      "import": "./src/visual/news/results-table/index.js",
+      "default": "./src/visual/news/results-table/index.js"
+    },
+    "./visual/news/search-box": {
+      "types": "./src/visual/news/search-box/index.d.ts",
+      "import": "./src/visual/news/search-box/index.js",
+      "default": "./src/visual/news/search-box/index.js"
+    },
+    "./visual/news/type-select": {
+      "types": "./src/visual/news/type-select/index.d.ts",
+      "import": "./src/visual/news/type-select/index.js",
+      "default": "./src/visual/news/type-select/index.js"
+    },
+    "./visual/plugin/metric-chip": {
+      "types": "./src/visual/plugin/metric-chip/index.d.ts",
+      "import": "./src/visual/plugin/metric-chip/index.js",
+      "default": "./src/visual/plugin/metric-chip/index.js"
+    },
+    "./visual/plugin/status-badge": {
+      "types": "./src/visual/plugin/status-badge/index.d.ts",
+      "import": "./src/visual/plugin/status-badge/index.js",
+      "default": "./src/visual/plugin/status-badge/index.js"
+    },
+    "./visual/skeleton": {
+      "types": "./src/visual/skeleton/index.d.ts",
+      "import": "./src/visual/skeleton/index.js",
+      "default": "./src/visual/skeleton/index.js"
+    },
+    "./visual/svg/icon": {
+      "types": "./src/visual/svg/icon/index.d.ts",
+      "import": "./src/visual/svg/icon/index.js",
+      "default": "./src/visual/svg/icon/index.js"
+    },
+    "./visual/svg/inline": {
+      "types": "./src/visual/svg/inline/index.d.ts",
+      "import": "./src/visual/svg/inline/index.js",
+      "default": "./src/visual/svg/inline/index.js"
+    },
+    "./visual/table": {
+      "types": "./src/visual/table/index.d.ts",
+      "import": "./src/visual/table/index.js",
+      "default": "./src/visual/table/index.js"
+    },
     "./visual/wasm/media": {
       "types": "./src/visual/wasm/media/index.d.ts",
       "import": "./src/visual/wasm/media/index.js",
       "default": "./src/visual/wasm/media/index.js"
     },
-    "./browser/media": {
-      "import": "./browser/media.js",
-      "default": "./browser/media.js"
+    "./visual/wasm/module": {
+      "types": "./src/visual/wasm/module/index.d.ts",
+      "import": "./src/visual/wasm/module/index.js",
+      "default": "./src/visual/wasm/module/index.js"
     },
-    "./tokens.css": "./styles/tokens.css",
-    "./styles.css": "./styles/styles.css"
+    "./visual/wasm/worker-host": {
+      "types": "./src/visual/wasm/worker-host/index.d.ts",
+      "import": "./src/visual/wasm/worker-host/index.js",
+      "default": "./src/visual/wasm/worker-host/index.js"
+    },
+    "./wasm": {
+      "types": "./src/wasm/index.d.ts",
+      "import": "./src/wasm/index.js",
+      "default": "./src/wasm/index.js"
+    },
+    "./wasm/wasm-media": {
+      "types": "./src/wasm/wasm-media/index.d.ts",
+      "import": "./src/wasm/wasm-media/index.js",
+      "default": "./src/wasm/wasm-media/index.js"
+    }
   },
   "files": [
     "src",
@@ -107,7 +315,8 @@
     "@ffmpeg/util": ">=0.12.0",
     "@googlemaps/js-api-loader": ">=1.16.0",
     "leaflet": ">=1.9.0",
-    "maplibre-gl": ">=4.0.0"
+    "maplibre-gl": ">=4.0.0",
+    "three": ">=0.170.0"
   },
   "peerDependenciesMeta": {
     "@ffmpeg/ffmpeg": {
@@ -124,10 +333,13 @@
     },
     "maplibre-gl": {
       "optional": true
+    },
+    "three": {
+      "optional": true
     }
   },
   "dependencies": {
-    "@rosettadash/core": "0.1.1",
+    "@rosettadash/core": "0.1.2",
     "tslib": "^2.3.0"
   },
   "publishConfig": {

@@ -43,7 +43,7 @@ Shared mock data and screen definitions: **`libs/destination-atlas/`**.
 
 ### WC vs framework parity
 
-Most palette atoms are **native runtime** components today. The WC npm package ships layout recipes, media CE hosts, wasm, and catalog elements. `proof-web-components` uses available CEs plus **gap placeholders** until 0.1.2 WC expansion. Framework proof apps use the full generated taxonomy.
+The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-map, media, wasm, i18n) and catalog meta elements. `proof-web-components` uses `<rd-*>` custom elements across all Destination Atlas screens except Stack (infra out of scope). Regenerate atoms: `npm run generate:web-components-runtime`.
 
 ## Screens
 
