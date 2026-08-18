@@ -53,18 +53,14 @@
             class="preview__node"
             data-testid="preview-node"
             [class.preview__node--selected]="state.isNodeSelected(node.id)"
+            [class.preview__node--fullscreen]="isFullscreenNode(node)"
             [style.left.px]="node.layout?.x ?? 24"
             [style.top.px]="node.layout?.y ?? 24"
             [style.width.px]="node.layout?.width ?? 220"
-            [style.minHeight.px]="node.layout?.height ?? 72"
+            [style.height.px]="node.layout?.height ?? 72"
             [style.zIndex]="sortedPreviewNodes().length - index"
           >
-            <div class="preview__node-frame">
-              <header class="preview__node-namebar" data-testid="preview-node-header">{{ node.label }}</header>
-              <div class="preview__node-body">
-                <app-preview-node [node]="node" />
-              </div>
-            </div>
+            <app-preview-node [node]="node" />
           </div>
         }
       </div>

@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { buildEquirectExtractFilter, type ComponentNode } from '@rosettadash/core';
+import { buildEquirectExtractFilter, parseVideoDisplaySize, type ComponentNode } from '@rosettadash/core';
 import type { ComponentPreviewTemplateId } from './component-preview-adapter.registry';
 import { PreviewThreeVisualComponent } from './preview-three-visual.component';
 import { NgStyle } from '@angular/common';
@@ -48,6 +48,14 @@ export class PreviewPluginComponent {
     this.sanitizer.bypassSecurityTrustHtml(this.readString('markup')),
   );
 
+  protected readonly videoDisplayLabel = computed(() => {
+    if (this.readBoolean('fullscreen')) {
+      return 'Fullscreen';
+    }
+    const size = parseVideoDisplaySize(this.node().properties['displaySize']);
+    return size ? `${size.width}×${size.height}` : '640×360';
+  });
+
   protected readonly equirectCropStyle = computed(() => {
     const sourceWidth = Math.max(1, this.readNumber('sourceWidth', 4096));
     const sourceHeight = Math.max(1, this.readNumber('sourceHeight', 2048));
@@ -55,13 +63,34 @@ export class PreviewPluginComponent {
     const cropY = this.readNumber('cropY', 664);
     const cropWidth = this.readNumber('cropWidth', 1080);
     const cropHeight = this.readNumber('cropHeight', 720);
+    return this.cropRectStyle(sourceWidth, sourceHeight, cropX, cropY, cropWidth, cropHeight);
+  });
+
+  protected readonly flatCropStyle = computed(() => {
+    const sourceWidth = Math.max(1, this.readNumber('sourceWidth', 4096));
+    const sourceHeight = Math.max(1, this.readNumber('sourceHeight', 2048));
+    const cropX = this.readNumber('cropX', 1508);
+    const cropY = this.readNumber('cropY', 664);
+    const cropWidth = this.readNumber('cropWidth', 1080);
+    const cropHeight = this.readNumber('cropHeight', 720);
+    return this.cropRectStyle(sourceWidth, sourceHeight, cropX, cropY, cropWidth, cropHeight);
+  });
+
+  private cropRectStyle(
+    sourceWidth: number,
+    sourceHeight: number,
+    cropX: number,
+    cropY: number,
+    cropWidth: number,
+    cropHeight: number,
+  ): Record<string, string> {
     return {
       left: `${(cropX / sourceWidth) * 100}%`,
       top: `${(cropY / sourceHeight) * 100}%`,
       width: `${(cropWidth / sourceWidth) * 100}%`,
       height: `${(cropHeight / sourceHeight) * 100}%`,
     };
-  });
+  }
 
   protected readonly equirectOutputLabel = computed(
     () =>

@@ -1,5 +1,6 @@
 import type { ComponentPlugin } from './component-plugin';
 import { DEFAULT_EQUIRECT_FLAT_CROP, DEFAULT_EQUIRECT_SOURCE } from '../media/equirect-filter';
+import { MEDIA_DISPLAY_SIZE_PROPERTIES } from '../presentation/presentation-layout';
 
 /** Media authoring plugins for equirectangular pipelines (DAS-82). */
 export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
@@ -20,8 +21,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
         { key: 'label', label: 'Label', type: 'string', default: 'Video source' },
         { key: 'accept', label: 'Accept MIME/types', type: 'string', default: 'video/*' },
         { key: 'url', label: 'Remote URL', type: 'string', default: '' },
-        { key: 'sourceWidth', label: 'Source width (px)', type: 'number', default: DEFAULT_EQUIRECT_SOURCE.width },
-        { key: 'sourceHeight', label: 'Source height (px)', type: 'number', default: DEFAULT_EQUIRECT_SOURCE.height },
+        ...MEDIA_DISPLAY_SIZE_PROPERTIES,
       ],
     },
     metadata: {
@@ -41,18 +41,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
       outputs: [{ id: 'crop-region', name: 'cropRegion', dataType: 'row' }],
       properties: [
         { key: 'label', label: 'Label', type: 'string', default: 'Equirect viewport' },
-        {
-          key: 'sourceWidth',
-          label: 'Source width (px)',
-          type: 'number',
-          default: DEFAULT_EQUIRECT_SOURCE.width,
-        },
-        {
-          key: 'sourceHeight',
-          label: 'Source height (px)',
-          type: 'number',
-          default: DEFAULT_EQUIRECT_SOURCE.height,
-        },
+        ...MEDIA_DISPLAY_SIZE_PROPERTIES,
         { key: 'cropX', label: 'Crop X', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropX },
         { key: 'cropY', label: 'Crop Y', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropY },
         {
@@ -99,6 +88,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
       outputs: [{ id: 'camera-state', name: 'cameraState', dataType: 'row' }],
       properties: [
         { key: 'label', label: 'Label', type: 'string', default: 'Equirect sphere viewport' },
+        ...MEDIA_DISPLAY_SIZE_PROPERTIES,
         { key: 'flipInterior', label: 'Flip interior', type: 'boolean', default: true },
         { key: 'yaw', label: 'Yaw', type: 'number', default: 0 },
         { key: 'pitch', label: 'Pitch', type: 'number', default: -8 },
@@ -126,18 +116,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
       outputs: [{ id: 'crop-region', name: 'cropRegion', dataType: 'row' }],
       properties: [
         { key: 'label', label: 'Label', type: 'string', default: 'Flat video viewport' },
-        {
-          key: 'sourceWidth',
-          label: 'Source width (px)',
-          type: 'number',
-          default: DEFAULT_EQUIRECT_SOURCE.width,
-        },
-        {
-          key: 'sourceHeight',
-          label: 'Source height (px)',
-          type: 'number',
-          default: DEFAULT_EQUIRECT_SOURCE.height,
-        },
+        ...MEDIA_DISPLAY_SIZE_PROPERTIES,
         { key: 'cropX', label: 'Crop X', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropX },
         { key: 'cropY', label: 'Crop Y', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropY },
         {

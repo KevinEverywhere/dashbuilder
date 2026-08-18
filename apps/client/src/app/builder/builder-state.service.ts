@@ -21,6 +21,8 @@ import {
   normalizeDomainContext,
   slugifyDomainId,
   suggestionsForSelectedNode,
+  resolvePresentationDimensions,
+  shouldSyncLayoutOnPropertyChange,
   type AiBuilderAction,
   type PlacementPrompt,
 } from '@rosettadash/core';
@@ -258,14 +260,14 @@ export class BuilderStateService {
       this.recordHistory();
     }
     const node = defaultComponentRegistry.createNode(definition.type, {
-      layout: {
+      layout: this.resolveInitialLayout(definition.type, {
         x: snapToCanvasGrid(options?.layout?.x ?? 24),
         y: snapToCanvasGrid(
           options?.layout?.y ?? this.nodes().length * CANVAS_GRID_SIZE * 6 + 24,
         ),
-        width: clampCanvasNodeWidth(options?.layout?.width ?? 220),
-        height: clampCanvasNodeHeight(options?.layout?.height ?? 72),
-      },
+        width: options?.layout?.width,
+        height: options?.layout?.height,
+      }),
     });
     this.nodes.update((nodes) => [...nodes, node]);
     this.selectedNodeIds.set([node.id]);
@@ -327,7 +329,43 @@ export class BuilderStateService {
           : node,
       ),
     );
+    if (current && shouldSyncLayoutOnPropertyChange(current.type, key)) {
+      const updated = {
+        ...current,
+        properties: { ...current.properties, [key]: value },
+      };
+      this.syncPresentationLayout(updated);
+    }
     this.markDirty();
+  }
+
+  private resolveInitialLayout(
+    type: string,
+    partial: { x: number; y: number; width?: number; height?: number },
+  ): NodeLayout {
+    const defaults = defaultComponentRegistry.createNode(type);
+    const presentation = resolvePresentationDimensions(defaults);
+    return {
+      x: partial.x,
+      y: partial.y,
+      width: clampCanvasNodeWidth(partial.width ?? presentation?.width ?? 220),
+      height: clampCanvasNodeHeight(partial.height ?? presentation?.height ?? 72),
+    };
+  }
+
+  private syncPresentationLayout(node: ComponentNode): void {
+    const presentation = resolvePresentationDimensions(node);
+    if (!presentation) {
+      return;
+    }
+    this.updateNodeLayout(
+      node.id,
+      {
+        width: presentation.width,
+        height: presentation.height,
+      },
+      { skipHistory: true },
+    );
   }
 
   removeNode(nodeId: string): void {

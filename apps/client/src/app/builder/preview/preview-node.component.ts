@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CurrencyPipe, JsonPipe } from '@angular/common';
-import { ComponentNode, isNumericFieldKey, parseRoleGateAllowedRoles, resolveRoleOptions, roleGateAllowsRole } from '@rosettadash/core';
+import { ComponentNode, isNumericFieldKey, parseRoleGateAllowedRoles, readFormFieldLabel, resolveRoleOptions, roleGateAllowsRole } from '@rosettadash/core';
 import { PreviewNewsRow, PreviewRow, PRESET_LABELS } from '@rosettadash/ui-primitives';
 import { AppSelectComponent } from '../../shared/app-select/app-select.component';
 import { AppCollapsibleComponent } from '../../shared/app-collapsible/app-collapsible.component';
@@ -303,6 +303,14 @@ export class PreviewNodeComponent {
   protected readonly roleAssignSelectOptions = computed(() =>
     this.roleAssignOptions().map((role) => ({ value: role.id, label: role.name })),
   );
+
+  protected readFieldLabel(fallback = ''): string {
+    return readFormFieldLabel(this.node().properties, this.node().label || fallback);
+  }
+
+  protected showsFieldLabel(): boolean {
+    return this.readFieldLabel().length > 0;
+  }
 
   protected readString(key: string, fallback = ''): string {
     const value = this.node().properties[key];

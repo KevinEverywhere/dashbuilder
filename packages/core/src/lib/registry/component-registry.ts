@@ -1,4 +1,5 @@
 import type { ComponentDefinition, ComponentNode, Port } from '../model/types';
+import { enrichComponentProperties } from '../presentation/presentation-layout';
 import type { ComponentPlugin } from './component-plugin';
 import { EXTENSION_COMPONENT_PLUGINS } from './extension-component-plugins';
 import { NEWS_COMPONENT_PLUGINS } from './news-component-plugins';
@@ -75,7 +76,10 @@ export class ComponentRegistry {
       id: overrides.id ?? crypto.randomUUID(),
       type: definition.type,
       label: overrides.label ?? definition.label,
-      properties: { ...properties, ...overrides.properties },
+      properties: enrichComponentProperties(definition.type, {
+        ...properties,
+        ...overrides.properties,
+      }),
       ports: {
         inputs: definition.inputs.map((p) => ({ ...p })),
         outputs: definition.outputs.map((p) => ({ ...p })),

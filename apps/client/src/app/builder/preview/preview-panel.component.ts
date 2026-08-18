@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Binding, ComponentNode, DomainContext } from '@rosettadash/core';
+import { resolvePresentationDimensions } from '@rosettadash/core';
 import { AppSelectComponent } from '../../shared/app-select/app-select.component';
 import { computeCanvasContentBounds } from '../canvas/canvas-viewport';
 import { BuilderStateService } from '../builder-state.service';
@@ -22,9 +23,13 @@ const PREVIEW_TYPE_MIN_HEIGHT: Record<string, number> = {
 };
 
 function estimatePreviewNodeHeight(node: ComponentNode): number {
+  const presentation = resolvePresentationDimensions(node);
+  if (presentation) {
+    return presentation.height;
+  }
   const layoutHeight = node.layout?.height ?? 72;
   const typeMinimum = PREVIEW_TYPE_MIN_HEIGHT[node.type] ?? layoutHeight;
-  return Math.max(layoutHeight, typeMinimum) + 36;
+  return Math.max(layoutHeight, typeMinimum);
 }
 
 interface PreviewNodePayload {
@@ -136,6 +141,10 @@ export class PreviewPanelComponent {
 
   protected updatePreviewRole(roleId: string): void {
     this.state.setPreviewRoleId(roleId);
+  }
+
+  protected isFullscreenNode(node: ComponentNode): boolean {
+    return resolvePresentationDimensions(node)?.fullscreen === true;
   }
 
   private buildPreviewLoadPayload(): PreviewLoadPayload {

@@ -11,6 +11,8 @@ export type ComponentPreviewTemplateId =
   | 'wasm-media'
   | 'media-video-source'
   | 'media-equirect-viewport'
+  | 'media-flat-video-viewport'
+  | 'media-equirect-sphere-viewport'
   | 'media-live-capture'
   | '3d-bar-chart'
   | '3d-scatter'
@@ -51,6 +53,8 @@ export function registerDefaultComponentPreviewAdapters(
   registry.register('visual.wasm.media', 'wasm-media');
   registry.register('visual.media.video-source', 'media-video-source');
   registry.register('visual.media.equirect-viewport', 'media-equirect-viewport');
+  registry.register('visual.media.flat-video-viewport', 'media-flat-video-viewport');
+  registry.register('visual.media.equirect-sphere-viewport', 'media-equirect-sphere-viewport');
   registry.register('visual.media.live-capture', 'media-live-capture');
   registry.register('visual.display.3d-bar-chart', '3d-bar-chart');
   registry.register('visual.display.3d-scatter', '3d-scatter');

@@ -15,4 +15,23 @@ describe('media component plugins', () => {
     expect(viewport?.properties.find((p) => p.key === 'cropWidth')?.default).toBe(1080);
     expect(viewport?.properties.find((p) => p.key === 'outputWidth')?.default).toBe(720);
   });
+
+  it('exposes page display size for video source (not equirect source dimensions)', () => {
+    const videoSource = defaultComponentRegistry.get('visual.media.video-source');
+    expect(videoSource?.properties.find((p) => p.key === 'displaySize')?.default).toBe('640x360');
+    expect(videoSource?.properties.find((p) => p.key === 'fullscreen')?.default).toBe(false);
+    expect(videoSource?.properties.some((p) => p.key === 'sourceWidth')).toBe(false);
+  });
+
+  it('exposes display size for equirect and flat video viewports', () => {
+    for (const type of [
+      'visual.media.equirect-viewport',
+      'visual.media.flat-video-viewport',
+      'visual.media.equirect-sphere-viewport',
+    ]) {
+      const definition = defaultComponentRegistry.get(type);
+      expect(definition?.properties.find((p) => p.key === 'displaySize')?.default).toBe('640x360');
+      expect(definition?.properties.some((p) => p.key === 'sourceWidth')).toBe(false);
+    }
+  });
 });

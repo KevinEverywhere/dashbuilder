@@ -10,6 +10,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     inputs: [],
     outputs: [{ id: 'value', name: 'value', dataType: 'string' }],
     properties: [
+      { key: 'label', label: 'Label', type: 'string', default: '' },
       { key: 'placeholder', label: 'Placeholder', type: 'string', default: '' },
       { key: 'required', label: 'Required', type: 'boolean', default: false },
     ],
@@ -23,6 +24,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     inputs: [{ id: 'options', name: 'options', dataType: 'rowset' }],
     outputs: [{ id: 'value', name: 'value', dataType: 'string' }],
     properties: [
+      { key: 'label', label: 'Label', type: 'string', default: '' },
       { key: 'placeholder', label: 'Placeholder', type: 'string', default: 'Select…' },
     ],
   },
@@ -35,6 +37,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     inputs: [],
     outputs: [{ id: 'value', name: 'value', dataType: 'number' }],
     properties: [
+      { key: 'label', label: 'Label', type: 'string', default: '' },
       { key: 'placeholder', label: 'Placeholder', type: 'string', default: '' },
       { key: 'required', label: 'Required', type: 'boolean', default: false },
       { key: 'min', label: 'Minimum', type: 'number', default: 0 },
@@ -64,6 +67,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     inputs: [],
     outputs: [{ id: 'value', name: 'value', dataType: 'string' }],
     properties: [
+      { key: 'label', label: 'Label', type: 'string', default: '' },
       { key: 'placeholder', label: 'Placeholder', type: 'string', default: '' },
       { key: 'required', label: 'Required', type: 'boolean', default: false },
       { key: 'rows', label: 'Rows', type: 'number', default: 4 },

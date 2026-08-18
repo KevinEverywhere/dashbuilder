@@ -1,7 +1,9 @@
 @switch (node().type) {
   @case ('visual.input.text') {
     <label class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <input
         type="text"
         class="preview-input"
@@ -14,7 +16,9 @@
   }
   @case ('visual.input.select') {
     <div class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <app-select
         class="preview-input"
         testId="preview-select"
@@ -25,7 +29,9 @@
   }
   @case ('visual.input.number') {
     <label class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <input
         type="number"
         class="preview-input"
@@ -55,7 +61,9 @@
   }
   @case ('visual.input.textarea') {
     <label class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <textarea
         class="preview-input preview-textarea"
         data-testid="preview-textarea"
@@ -68,7 +76,9 @@
   }
   @case ('visual.input.date-range') {
     <div class="preview-date-range" data-testid="preview-date-range">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <div class="preview-date-range__controls">
         <input type="date" class="preview-input" value="2026-08-01" readonly />
         <span class="preview-date-range__sep">to</span>
