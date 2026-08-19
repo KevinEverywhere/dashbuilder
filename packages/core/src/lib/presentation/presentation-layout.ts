@@ -8,9 +8,12 @@ export const VIDEO_DISPLAY_SIZE_OPTIONS = [
   { label: 'Medium (640×360)', value: '640x360', width: 640, height: 360 },
   { label: 'Large (960×540)', value: '960x540', width: 960, height: 540 },
   { label: 'Extra large (1280×720)', value: '1280x720', width: 1280, height: 720 },
+  { label: 'Custom', value: 'custom', width: 0, height: 0 },
 ] as const;
 
 export type VideoDisplaySizeValue = (typeof VIDEO_DISPLAY_SIZE_OPTIONS)[number]['value'];
+
+export const CUSTOM_VIDEO_DISPLAY_SIZE = 'custom' as const;
 
 export const DEFAULT_VIDEO_DISPLAY_SIZE: VideoDisplaySizeValue = '640x360';
 
@@ -76,37 +79,99 @@ const LAYOUT_SYNC_PROPERTY_KEYS: Record<string, readonly string[]> = {
 };
 
 export function parseVideoDisplaySize(value: unknown): PresentationDimensions | null {
-  if (typeof value !== 'string') {
+  if (typeof value !== 'string' || value === CUSTOM_VIDEO_DISPLAY_SIZE) {
     return null;
   }
   const match = VIDEO_DISPLAY_SIZE_OPTIONS.find((option) => option.value === value);
-  if (!match) {
+  if (!match || match.value === CUSTOM_VIDEO_DISPLAY_SIZE) {
     return null;
   }
   return { width: match.width, height: match.height };
 }
 
-export function readFormFieldLabel(
+export function readCustomDisplayDimensions(
   properties: Record<string, unknown>,
-  nodeLabel: string,
-): string {
-  const propertyLabel = properties['label'];
-  if (typeof propertyLabel === 'string' && propertyLabel.trim().length > 0) {
-    return propertyLabel.trim();
+  fallback: PresentationDimensions = { width: 640, height: 360 },
+): PresentationDimensions {
+  const width =
+    typeof properties['customWidth'] === 'number' ? properties['customWidth'] : fallback.width;
+  const height =
+    typeof properties['customHeight'] === 'number' ? properties['customHeight'] : fallback.height;
+  return { width, height };
+}
+
+export function layoutMatchesDisplayPreset(
+  layout: { width: number; height: number },
+  displaySize: unknown,
+): boolean {
+  const preset = parseVideoDisplaySize(displaySize);
+  return preset !== null && preset.width === layout.width && preset.height === layout.height;
+}
+
+export function syncMediaDisplayPropertiesFromLayout(
+  type: string,
+  layout: { width: number; height: number },
+  properties: Record<string, unknown>,
+  previousLayout?: { width: number; height: number },
+): Record<string, unknown> {
+  if (!MEDIA_VIEWPORT_TYPES.has(type)) {
+    return properties;
   }
-  return nodeLabel.trim();
+
+  const sizeChanged =
+    previousLayout !== undefined &&
+    (previousLayout.width !== layout.width || previousLayout.height !== layout.height);
+
+  if (!sizeChanged && layoutMatchesDisplayPreset(layout, properties['displaySize'])) {
+    return properties;
+  }
+
+  if (!sizeChanged && properties['displaySize'] !== CUSTOM_VIDEO_DISPLAY_SIZE) {
+    return properties;
+  }
+
+  if (layoutMatchesDisplayPreset(layout, properties['displaySize'])) {
+    return {
+      ...properties,
+      customWidth: layout.width,
+      customHeight: layout.height,
+    };
+  }
+
+  return {
+    ...properties,
+    displaySize: CUSTOM_VIDEO_DISPLAY_SIZE,
+    customWidth: layout.width,
+    customHeight: layout.height,
+  };
+}
+
+export function readFormFieldLabel(properties: Record<string, unknown>, key = 'label'): string {
+  const propertyLabel = properties[key];
+  if (typeof propertyLabel !== 'string') {
+    return '';
+  }
+  return propertyLabel.trim();
 }
 
 export function formFieldShowsLabel(
   properties: Record<string, unknown>,
-  nodeLabel: string,
+  key = 'label',
 ): boolean {
-  return readFormFieldLabel(properties, nodeLabel).length > 0;
+  return readFormFieldLabel(properties, key).length > 0;
 }
 
 function resolveMediaDisplayDimensions(
   properties: Record<string, unknown>,
 ): PresentationDimensions {
+  if (properties['displaySize'] === CUSTOM_VIDEO_DISPLAY_SIZE) {
+    const custom = readCustomDisplayDimensions(properties);
+    return {
+      ...custom,
+      fullscreen: properties['fullscreen'] === true,
+    };
+  }
+
   const base = parseVideoDisplaySize(properties['displaySize']) ?? {
     width: 640,
     height: 360,
@@ -130,14 +195,14 @@ export function resolvePresentationDimensions(
     case 'visual.input.select':
     case 'visual.input.number':
     case 'visual.input.date-range': {
-      const showsLabel = formFieldShowsLabel(node.properties, node.label);
+      const showsLabel = formFieldShowsLabel(node.properties);
       const height = showsLabel
         ? DEFAULT_FORM_FIELD_HEIGHT
         : INPUT_HEIGHT + FORM_FIELD_PADDING * 2;
       return { width: DEFAULT_FORM_FIELD_WIDTH, height };
     }
     case 'visual.input.textarea': {
-      const showsLabel = formFieldShowsLabel(node.properties, node.label);
+      const showsLabel = formFieldShowsLabel(node.properties);
       const rows =
         typeof node.properties['rows'] === 'number' && node.properties['rows'] > 0
           ? node.properties['rows']
@@ -164,11 +229,13 @@ export function shouldSyncLayoutOnPropertyChange(type: string, key: string): boo
 const MEDIA_DISPLAY_DEFAULTS = {
   displaySize: DEFAULT_VIDEO_DISPLAY_SIZE,
   fullscreen: false,
+  customWidth: 640,
+  customHeight: 360,
 } as const;
 
 export function defaultPropertiesForMediaVideoSource(): Record<string, unknown> {
   return {
-    label: 'Video source',
+    label: '',
     accept: 'video/*',
     url: '',
     ...MEDIA_DISPLAY_DEFAULTS,

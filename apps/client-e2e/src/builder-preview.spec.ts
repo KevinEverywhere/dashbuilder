@@ -77,7 +77,6 @@ test.describe('Builder preview', () => {
     await waitForPreviewData(page);
 
     await expect(page.getByTestId('preview-detail')).toBeVisible();
-    await expect(page.getByTestId('preview-binding-hint')).toContainText('Table row selection');
 
     const firstRow = page.getByTestId('preview-table').locator('tbody tr').first();
     await firstRow.click();

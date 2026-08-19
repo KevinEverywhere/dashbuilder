@@ -22,6 +22,8 @@ export class PreviewDataService {
   readonly selectedTableRow = signal<PreviewRow | null>(null);
   readonly selectedNewsRow = signal<PreviewNewsRow | null>(null);
   readonly selectedTimePreset = signal<string | null>(null);
+  /** Ephemeral preview-only values for interactive form fields (not persisted to composite). */
+  readonly fieldValues = signal<Record<string, string>>({});
 
   readonly nodeSlices = computed(() => this.bundle().nodes);
 
@@ -54,6 +56,26 @@ export class PreviewDataService {
 
   selectTimePreset(preset: string): void {
     this.selectedTimePreset.set(preset);
+  }
+
+  readFieldValue(nodeId: string, key = 'value'): string {
+    return this.fieldValues()[this.fieldKey(nodeId, key)] ?? '';
+  }
+
+  hasFieldValue(nodeId: string, key = 'value'): boolean {
+    return this.fieldKey(nodeId, key) in this.fieldValues();
+  }
+
+  setFieldValue(nodeId: string, value: string, key = 'value'): void {
+    const fieldKey = this.fieldKey(nodeId, key);
+    this.fieldValues.update((current) => ({
+      ...current,
+      [fieldKey]: value,
+    }));
+  }
+
+  private fieldKey(nodeId: string, key: string): string {
+    return key === 'value' ? nodeId : `${nodeId}:${key}`;
   }
 
   sliceForNode(nodeId: string): NodePreviewSlice | undefined {

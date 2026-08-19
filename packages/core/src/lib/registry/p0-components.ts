@@ -170,7 +170,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
       { id: 'elapsed', name: 'elapsed', dataType: 'number' },
     ],
     properties: [
-      { key: 'label', label: 'Label', type: 'string', default: 'Timer' },
+      { key: 'label', label: 'Label', type: 'string', default: '' },
       {
         key: 'mode',
         label: 'Mode',

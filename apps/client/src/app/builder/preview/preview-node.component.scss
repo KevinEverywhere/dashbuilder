@@ -486,10 +486,13 @@
 
 .preview-tabs__tab {
   padding: 0.25rem 0.5rem;
+  border: none;
   border-radius: 0.25rem;
   background: var(--db-surface);
+  font: inherit;
   font-size: 0.75rem;
   color: var(--db-text-muted);
+  cursor: pointer;
 
   &--active {
     background: var(--db-accent-soft);

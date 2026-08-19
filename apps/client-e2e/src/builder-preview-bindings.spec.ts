@@ -28,9 +28,6 @@ test.describe('Builder preview binding flow', () => {
 
     await expect(page.getByTestId('preview-table').first()).toBeVisible();
     await expect(page.getByTestId('preview-line-chart')).toBeVisible();
-    await expect(page.getByTestId('preview-binding-hint').first()).toContainText(
-      'Filtered by date range',
-    );
   });
 
   test('filters table from time preset bindings in preview', async ({ page }) => {
@@ -49,9 +46,6 @@ test.describe('Builder preview binding flow', () => {
 
     await expect(page.getByTestId('preview-time-preset')).toBeVisible();
     await expect(page.getByTestId('preview-table').first()).toBeVisible();
-    await expect(page.getByTestId('preview-binding-hint').first()).toContainText(
-      'Filtered by date range',
-    );
 
     await page.getByRole('button', { name: 'Last 30 days' }).click();
     await waitForPreviewData(page);

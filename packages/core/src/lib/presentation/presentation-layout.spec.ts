@@ -3,6 +3,7 @@ import {
   parseVideoDisplaySize,
   resolvePresentationDimensions,
   shouldSyncLayoutOnPropertyChange,
+  syncMediaDisplayPropertiesFromLayout,
 } from './presentation-layout';
 
 describe('presentation-layout', () => {
@@ -53,5 +54,35 @@ describe('presentation-layout', () => {
       true,
     );
     expect(shouldSyncLayoutOnPropertyChange('visual.input.text', 'placeholder')).toBe(false);
+  });
+
+  it('resolves custom display size from stored dimensions', () => {
+    expect(
+      resolvePresentationDimensions({
+        type: 'visual.media.video-source',
+        label: 'Video Source',
+        properties: {
+          displaySize: 'custom',
+          customWidth: 512,
+          customHeight: 288,
+          fullscreen: false,
+        },
+      }),
+    ).toEqual({ width: 512, height: 288, fullscreen: false });
+  });
+
+  it('marks media display as custom when canvas size diverges from preset', () => {
+    expect(
+      syncMediaDisplayPropertiesFromLayout(
+        'visual.media.video-source',
+        { width: 704, height: 400 },
+        { displaySize: '640x360' },
+        { width: 640, height: 360 },
+      ),
+    ).toEqual({
+      displaySize: 'custom',
+      customWidth: 704,
+      customHeight: 400,
+    });
   });
 });

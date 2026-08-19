@@ -1,7 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { buildEquirectExtractFilter, parseVideoDisplaySize, type ComponentNode } from '@rosettadash/core';
+import { buildEquirectExtractFilter, type ComponentNode } from '@rosettadash/core';
 import type { ComponentPreviewTemplateId } from './component-preview-adapter.registry';
+import { PreviewDataService } from './preview-data.service';
 import { PreviewThreeVisualComponent } from './preview-three-visual.component';
 import { NgStyle } from '@angular/common';
 
@@ -16,6 +17,7 @@ export class PreviewPluginComponent {
   readonly templateId = input.required<ComponentPreviewTemplateId>();
 
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly previewData = inject(PreviewDataService);
 
   protected readonly svgInlineMarkup = computed(() => {
     const mode = this.readString('sourceMode', 'inline');
@@ -48,13 +50,9 @@ export class PreviewPluginComponent {
     this.sanitizer.bypassSecurityTrustHtml(this.readString('markup')),
   );
 
-  protected readonly videoDisplayLabel = computed(() => {
-    if (this.readBoolean('fullscreen')) {
-      return 'Fullscreen';
-    }
-    const size = parseVideoDisplaySize(this.node().properties['displaySize']);
-    return size ? `${size.width}×${size.height}` : '640×360';
-  });
+  protected showsOptionalLabel(): boolean {
+    return this.readString('label').trim().length > 0;
+  }
 
   protected readonly equirectCropStyle = computed(() => {
     const sourceWidth = Math.max(1, this.readNumber('sourceWidth', 4096));
@@ -129,6 +127,29 @@ export class PreviewPluginComponent {
   protected readBoolean(key: string, fallback = false): boolean {
     const value = this.node().properties[key];
     return typeof value === 'boolean' ? value : fallback;
+  }
+
+  protected videoUploadLabel(): string {
+    const fileName = this.previewData.readFieldValue(this.node().id, 'fileName');
+    return fileName || 'Choose video file';
+  }
+
+  protected onVideoFileSelected(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    const file = target.files?.[0];
+    this.previewData.setFieldValue(this.node().id, file?.name ?? '', 'fileName');
+  }
+
+  protected liveCaptureActive(): boolean {
+    return this.previewData.readFieldValue(this.node().id, 'capturing') === 'true';
+  }
+
+  protected toggleLiveCapture(): void {
+    const next = this.liveCaptureActive() ? 'false' : 'true';
+    this.previewData.setFieldValue(this.node().id, next, 'capturing');
   }
 }
 

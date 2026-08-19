@@ -23,6 +23,9 @@ import {
   suggestionsForSelectedNode,
   resolvePresentationDimensions,
   shouldSyncLayoutOnPropertyChange,
+  syncMediaDisplayPropertiesFromLayout,
+  CUSTOM_VIDEO_DISPLAY_SIZE,
+  readCustomDisplayDimensions,
   type AiBuilderAction,
   type PlacementPrompt,
 } from '@rosettadash/core';
@@ -198,7 +201,13 @@ export class BuilderStateService {
         if (patch.height !== undefined) {
           next.height = clampCanvasNodeHeight(patch.height);
         }
-        return { ...node, layout: next };
+        const properties = syncMediaDisplayPropertiesFromLayout(
+          node.type,
+          next,
+          node.properties,
+          current,
+        );
+        return { ...node, layout: next, properties };
       }),
     );
     this.markDirty();
@@ -329,7 +338,9 @@ export class BuilderStateService {
           : node,
       ),
     );
-    if (current && shouldSyncLayoutOnPropertyChange(current.type, key)) {
+    if (current && key === 'displaySize' && value === CUSTOM_VIDEO_DISPLAY_SIZE) {
+      this.seedCustomDisplayFromLayout(nodeId);
+    } else if (current && shouldSyncLayoutOnPropertyChange(current.type, key)) {
       const updated = {
         ...current,
         properties: { ...current.properties, [key]: value },
@@ -337,6 +348,28 @@ export class BuilderStateService {
       this.syncPresentationLayout(updated);
     }
     this.markDirty();
+  }
+
+  private seedCustomDisplayFromLayout(nodeId: string): void {
+    const node = this.nodes().find((item) => item.id === nodeId);
+    if (!node?.layout) {
+      return;
+    }
+    this.nodes.update((nodes) =>
+      nodes.map((item) =>
+        item.id === nodeId
+          ? {
+              ...item,
+              properties: {
+                ...item.properties,
+                displaySize: CUSTOM_VIDEO_DISPLAY_SIZE,
+                customWidth: node.layout!.width,
+                customHeight: node.layout!.height,
+              },
+            }
+          : item,
+      ),
+    );
   }
 
   private resolveInitialLayout(

@@ -92,6 +92,82 @@
           }
         </section>
 
+        @if (canEditPlacement()) {
+          <section
+            class="inspector__group"
+            [class.inspector__group--expanded]="isSectionExpanded('placement')"
+            data-testid="inspector-group-placement"
+          >
+            <button
+              type="button"
+              class="inspector__group-header"
+              data-testid="inspector-group-toggle-placement"
+              [attr.aria-expanded]="isSectionExpanded('placement')"
+              (click)="toggleSection('placement')"
+            >
+              <span class="inspector__group-chevron" aria-hidden="true"></span>
+              <span class="inspector__group-label">Placement</span>
+            </button>
+            @if (isSectionExpanded('placement')) {
+              <div class="inspector__group-panel" data-testid="inspector-group-panel-placement">
+                <p class="inspector__placement-hint">
+                  Position and size on the canvas grid ({{ canvasGridSize }}px cells).
+                </p>
+                <div class="inspector__placement-grid">
+                  <div class="inspector__field">
+                    <label for="layout-x">X (px)</label>
+                    <input
+                      id="layout-x"
+                      type="number"
+                      [attr.step]="canvasGridSize"
+                      min="0"
+                      data-testid="inspector-layout-x"
+                      [value]="nodeLayout()?.x ?? 0"
+                      (input)="updateLayoutField('x', $any($event.target).value)"
+                    />
+                  </div>
+                  <div class="inspector__field">
+                    <label for="layout-y">Y (px)</label>
+                    <input
+                      id="layout-y"
+                      type="number"
+                      [attr.step]="canvasGridSize"
+                      min="0"
+                      data-testid="inspector-layout-y"
+                      [value]="nodeLayout()?.y ?? 0"
+                      (input)="updateLayoutField('y', $any($event.target).value)"
+                    />
+                  </div>
+                  <div class="inspector__field">
+                    <label for="layout-width">Width (px)</label>
+                    <input
+                      id="layout-width"
+                      type="number"
+                      [attr.step]="canvasGridSize"
+                      [attr.min]="canvasMinNodeWidth"
+                      data-testid="inspector-layout-width"
+                      [value]="nodeLayout()?.width ?? 0"
+                      (input)="updateLayoutField('width', $any($event.target).value)"
+                    />
+                  </div>
+                  <div class="inspector__field">
+                    <label for="layout-height">Height (px)</label>
+                    <input
+                      id="layout-height"
+                      type="number"
+                      [attr.step]="canvasGridSize"
+                      [attr.min]="canvasMinNodeHeight"
+                      data-testid="inspector-layout-height"
+                      [value]="nodeLayout()?.height ?? 0"
+                      (input)="updateLayoutField('height', $any($event.target).value)"
+                    />
+                  </div>
+                </div>
+              </div>
+            }
+          </section>
+        }
+
         @if (isEditingNode() && nodeSuggestions().length) {
           <section
             class="inspector__group"

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   Binding,
   DefaultSuggestion,
+  NodeLayout,
   PropertySchema,
   defaultComponentRegistry,
   parseRoleGateAllowedRoles,
@@ -13,6 +14,7 @@ import {
   AppSelectComponent,
   AppSelectOption,
 } from '../../shared/app-select/app-select.component';
+import { CANVAS_GRID_SIZE, CANVAS_MIN_NODE_HEIGHT, CANVAS_MIN_NODE_WIDTH } from '../canvas/canvas-layout';
 import { BuilderStateService } from '../builder-state.service';
 import { BuilderWorkspaceLayoutService } from '../builder-workspace-layout.service';
 import { DomainContextPanelComponent } from './domain-context-panel.component';
@@ -57,6 +59,13 @@ export class InspectorComponent {
   protected readonly hasSelection = computed(() => this.definition() !== null);
   protected readonly hasComposite = computed(() => this.state.composite() !== null);
   protected readonly isEditingNode = computed(() => this.node() !== null);
+  protected readonly canEditPlacement = computed(
+    () => this.node()?.layout !== undefined && this.state.selectedNodeIds().length === 1,
+  );
+  protected readonly nodeLayout = computed(() => this.node()?.layout ?? null);
+  protected readonly canvasGridSize = CANVAS_GRID_SIZE;
+  protected readonly canvasMinNodeWidth = CANVAS_MIN_NODE_WIDTH;
+  protected readonly canvasMinNodeHeight = CANVAS_MIN_NODE_HEIGHT;
   protected readonly isRoleGateNode = computed(() => this.node()?.type === 'domain.role-gate');
   protected readonly roleGateOptions = computed(() =>
     resolveRoleOptions(this.state.domainContext()?.roles),
@@ -130,6 +139,18 @@ export class InspectorComponent {
     this.state.updateNodeProperty(node.id, schema.key, value);
   }
 
+  protected updateLayoutField(field: keyof NodeLayout, value: number | string | null): void {
+    const node = this.node();
+    if (!node?.layout) {
+      return;
+    }
+    const parsed = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(parsed)) {
+      return;
+    }
+    this.state.updateNodeLayout(node.id, { [field]: parsed });
+  }
+
   protected selectOptions(schema: PropertySchema): readonly AppSelectOption[] {
     return (schema.options ?? []).map((option) => ({
       label: option.label,
@@ -200,6 +221,9 @@ export class InspectorComponent {
     const def = this.definition();
 
     if (node) {
+      if (node.layout) {
+        next.add('placement');
+      }
       if (this.editableProperties().length) {
         next.add('properties');
       }

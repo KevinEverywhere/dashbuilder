@@ -10,7 +10,8 @@
         data-testid="preview-text-input"
         [placeholder]="readString('placeholder')"
         [attr.required]="readBoolean('required') ? true : null"
-        readonly
+        [value]="previewFieldValue()"
+        (input)="updatePreviewFieldValue($event)"
       />
     </label>
   }
@@ -24,6 +25,8 @@
         testId="preview-select"
         [placeholder]="readString('placeholder', 'Select…')"
         [options]="selectOptions()"
+        [ngModel]="previewSelectValue()"
+        (ngModelChange)="updatePreviewSelectValue($event)"
       />
     </div>
   }
@@ -41,7 +44,8 @@
         [attr.max]="readNumber('max', 100)"
         [attr.step]="readNumber('step', 1)"
         [attr.required]="readBoolean('required') ? true : null"
-        readonly
+        [value]="previewFieldValue()"
+        (input)="updatePreviewFieldValue($event)"
       />
     </label>
   }
@@ -51,12 +55,12 @@
         type="checkbox"
         class="preview-checkbox"
         data-testid="preview-checkbox"
-        [checked]="readBoolean('defaultChecked')"
-        disabled
+        [checked]="previewCheckboxChecked()"
+        (change)="updatePreviewCheckbox($event)"
       />
-      <span class="preview-field__label">{{
-        readString('label') || node().label
-      }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
     </label>
   }
   @case ('visual.input.textarea') {
@@ -70,7 +74,8 @@
         [placeholder]="readString('placeholder')"
         [attr.rows]="readNumber('rows', 4)"
         [attr.required]="readBoolean('required') ? true : null"
-        readonly
+        [value]="previewFieldValue()"
+        (input)="updatePreviewFieldValue($event)"
       ></textarea>
     </label>
   }
@@ -80,9 +85,21 @@
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
       <div class="preview-date-range__controls">
-        <input type="date" class="preview-input" value="2026-08-01" readonly />
+        <input
+          type="date"
+          class="preview-input"
+          data-testid="preview-date-range-start"
+          [value]="previewDateStart()"
+          (input)="updatePreviewDateStart($event)"
+        />
         <span class="preview-date-range__sep">to</span>
-        <input type="date" class="preview-input" value="2026-08-08" readonly />
+        <input
+          type="date"
+          class="preview-input"
+          data-testid="preview-date-range-end"
+          [value]="previewDateEnd()"
+          (input)="updatePreviewDateEnd($event)"
+        />
       </div>
       <span class="preview-date-range__preset">{{ dateRangeLabel() }}</span>
     </div>
@@ -106,14 +123,6 @@
   }
   @case ('visual.table') {
     <div class="preview-table" data-testid="preview-table">
-      <div class="preview-table__header">
-        <span>{{ node().label }}</span>
-        @if (bindingHint()) {
-          <span class="preview-chip" data-testid="preview-binding-hint">{{ bindingHint() }}</span>
-        } @else if (readBoolean('filterable')) {
-          <span class="preview-chip">Filterable</span>
-        }
-      </div>
       <table>
         <thead>
           <tr>
@@ -144,9 +153,6 @@
     <div class="preview-detail" data-testid="preview-detail">
       <div class="preview-detail__header">
         <span class="preview-detail__title">{{ readString('title', 'Details') }}</span>
-        @if (linkedToTable()) {
-          <span class="preview-chip" data-testid="preview-binding-hint">Table row selection</span>
-        }
       </div>
       @if (detailRow(); as row) {
         <dl class="preview-detail__fields">
@@ -189,15 +195,16 @@
         }
       </div>
     } @else {
-      <div class="preview-skeleton__loaded" data-testid="preview-skeleton-loaded">Content loaded</div>
+      <div class="preview-skeleton__loaded" data-testid="preview-skeleton-loaded" aria-hidden="true"></div>
     }
   }
   @case ('logic.timer') {
     <div class="preview-timer" data-testid="preview-timer">
-      <div class="preview-timer__header">
-        <span class="preview-field__label">{{ readString('label', 'Timer') }}</span>
-        <span class="preview-chip">{{ readString('mode', 'interval') }}</span>
-      </div>
+      @if (showsFieldLabel()) {
+        <div class="preview-timer__header">
+          <span class="preview-field__label">{{ readFieldLabel() }}</span>
+        </div>
+      }
       @if (readString('mode', 'interval') === 'countdown') {
         <span class="preview-timer__value" data-testid="preview-timer-remaining">
           {{ timerRemaining() }}s remaining
@@ -220,9 +227,6 @@
     <div class="preview-chart" data-testid="preview-line-chart">
       <div class="preview-chart__header">
         <span class="preview-chart__title">{{ readString('title', 'Chart') }}</span>
-        @if (bindingHint()) {
-          <span class="preview-chip" data-testid="preview-binding-hint">{{ bindingHint() }}</span>
-        }
       </div>
       <svg viewBox="0 0 240 96" class="preview-chart__svg" aria-hidden="true">
         <polyline class="preview-chart__line" [attr.points]="lineChartPoints()" />
@@ -233,9 +237,6 @@
     <div class="preview-chart" data-testid="preview-bar-chart">
       <div class="preview-chart__header">
         <span class="preview-chart__title">{{ readString('title', 'Chart') }}</span>
-        @if (bindingHint()) {
-          <span class="preview-chip" data-testid="preview-binding-hint">{{ bindingHint() }}</span>
-        }
       </div>
       <div class="preview-chart__bars">
         @for (point of chartPoints(); track point.label) {
@@ -254,9 +255,6 @@
     <div class="preview-chart" data-testid="preview-pie-chart">
       <div class="preview-chart__header">
         <span class="preview-chart__title">{{ readString('title', 'Chart') }}</span>
-        @if (bindingHint()) {
-          <span class="preview-chip" data-testid="preview-binding-hint">{{ bindingHint() }}</span>
-        }
       </div>
       <div
         class="preview-chart__pie"
@@ -275,21 +273,19 @@
   }
   @case ('layout.grid') {
     <div class="preview-layout" data-testid="preview-grid">
-      <span class="preview-layout__title">{{ node().label }}</span>
       <div
         class="preview-layout__grid"
         [style.gridTemplateColumns]="'repeat(' + readNumber('columns', 12) + ', 1fr)'"
         [style.gap.px]="readNumber('gap', 16)"
       >
         @for (slot of [1, 2, 3]; track slot) {
-          <div class="preview-layout__slot">Slot {{ slot }}</div>
+          <div class="preview-layout__slot"></div>
         }
       </div>
     </div>
   }
   @case ('layout.flex') {
     <div class="preview-layout" data-testid="preview-flex">
-      <span class="preview-layout__title">{{ node().label }}</span>
       <div
         class="preview-layout__flex"
         [class.preview-layout__flex--column]="readString('direction', 'row') === 'column'"
@@ -297,20 +293,27 @@
         [style.alignItems]="readString('align', 'stretch')"
       >
         @for (slot of [1, 2, 3]; track slot) {
-          <div class="preview-layout__slot">Item {{ slot }}</div>
+          <div class="preview-layout__slot"></div>
         }
       </div>
     </div>
   }
   @case ('layout.tabs') {
     <div class="preview-layout" data-testid="preview-tabs">
-      <span class="preview-layout__title">{{ node().label }}</span>
       <div class="preview-tabs">
-        <span class="preview-tabs__tab preview-tabs__tab--active">Tab 1</span>
-        <span class="preview-tabs__tab">Tab 2</span>
-        <span class="preview-tabs__tab">Tab 3</span>
+        @for (tab of [1, 2, 3]; track tab) {
+          <button
+            type="button"
+            class="preview-tabs__tab"
+            [class.preview-tabs__tab--active]="isPreviewTabActive(tab)"
+            [attr.data-testid]="'preview-tab-' + tab"
+            (click)="selectPreviewTab(tab)"
+          >
+            Tab {{ tab }}
+          </button>
+        }
       </div>
-      <div class="preview-layout__slot">Tab panel content</div>
+      <div class="preview-layout__slot"></div>
     </div>
   }
   @case ('layout.modal') {
@@ -330,26 +333,13 @@
     >
       <span appCollapsibleTitle>{{ readString('title', 'Section') }}</span>
       <span appCollapsibleSummary>{{ readString('summary', 'Collapsible panel') }}</span>
-      <div class="preview-layout__slot">Slot content</div>
+      <div class="preview-layout__slot"></div>
     </app-collapsible>
   }
   @case ('domain.role-gate') {
-    <div
-      class="preview-role-gate"
-      data-testid="preview-role-gate"
-      [class.preview-role-gate--hidden]="!roleGateVisible()"
-    >
-      <span class="preview-field__label">{{ node().label }}</span>
-      @if (roleGateVisible()) {
-        <p class="preview-role-gate__status" data-testid="preview-role-gate-visible">Visible</p>
-        <p class="preview-role-gate__hint">Allowed roles:</p>
-        <code>{{ roleGateAllowedRoles() | json }}</code>
-      } @else {
-        <p class="preview-role-gate__status preview-role-gate__status--hidden" data-testid="preview-role-gate-hidden">
-          Hidden for current preview role
-        </p>
-      }
-    </div>
+    @if (roleGateVisible()) {
+      <div class="preview-role-gate" data-testid="preview-role-gate"></div>
+    }
   }
   @case ('domain.person-invite') {
     <div class="preview-onboarding" data-testid="preview-person-invite">
@@ -359,7 +349,8 @@
         class="preview-input"
         data-testid="preview-person-invite-email"
         [placeholder]="readString('emailPlaceholder', 'name@company.com')"
-        readonly
+        [value]="previewFieldValue()"
+        (input)="updatePreviewFieldValue($event)"
       />
       <button type="button" class="preview-onboarding__button" data-testid="preview-person-invite-submit">
         {{ readString('submitLabel', 'Send invite') }}
@@ -374,6 +365,8 @@
         class="preview-input"
         testId="preview-role-assign-select"
         [options]="roleAssignSelectOptions()"
+        [ngModel]="previewSelectValue()"
+        (ngModelChange)="updatePreviewSelectValue($event)"
       />
       <button type="button" class="preview-onboarding__button" data-testid="preview-role-assign-confirm">
         {{ readString('confirmLabel', 'Confirm access') }}
@@ -382,47 +375,62 @@
   }
   @case ('visual.news.language-select') {
     <div class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <app-select
         class="preview-input"
         testId="preview-news-language-select"
         [placeholder]="readString('placeholder', 'Language')"
         [options]="newsSelectOptions()"
+        [ngModel]="previewSelectValue()"
+        (ngModelChange)="updatePreviewSelectValue($event)"
       />
     </div>
   }
   @case ('visual.news.region-select') {
     <div class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <app-select
         class="preview-input"
         testId="preview-news-region-select"
         [placeholder]="readString('placeholder', 'Region')"
         [options]="newsSelectOptions()"
+        [ngModel]="previewSelectValue()"
+        (ngModelChange)="updatePreviewSelectValue($event)"
       />
     </div>
   }
   @case ('visual.news.type-select') {
     <div class="preview-field">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <app-select
         class="preview-input"
         testId="preview-news-type-select"
         [placeholder]="readString('placeholder', 'News type')"
         [options]="newsSelectOptions()"
+        [ngModel]="previewSelectValue()"
+        (ngModelChange)="updatePreviewSelectValue($event)"
       />
     </div>
   }
   @case ('visual.news.search-box') {
     <div class="preview-field preview-search">
-      <span class="preview-field__label">{{ node().label }}</span>
+      @if (showsFieldLabel()) {
+        <span class="preview-field__label">{{ readFieldLabel() }}</span>
+      }
       <div class="preview-search__row">
         <input
           type="search"
           class="preview-input preview-search__input"
           data-testid="preview-news-search-input"
           [placeholder]="readString('placeholder', 'Search news…')"
-          readonly
+          [value]="previewFieldValue()"
+          (input)="updatePreviewFieldValue($event)"
         />
         <button type="button" class="preview-search__button" data-testid="preview-news-search-button">
           {{ readString('buttonLabel', 'Search') }}
@@ -470,9 +478,6 @@
     <div class="preview-detail" data-testid="preview-news-article-detail">
       <div class="preview-detail__header">
         <span class="preview-detail__title">Article</span>
-        @if (linkedToTable()) {
-          <span class="preview-chip" data-testid="preview-binding-hint">Results row selection</span>
-        }
       </div>
       @if (newsArticleRow(); as row) {
         <dl class="preview-detail__fields">
@@ -492,10 +497,7 @@
     @if (pluginTemplateId(); as templateId) {
       <app-preview-plugin [node]="node()" [templateId]="templateId" />
     } @else {
-    <div class="preview-fallback" data-testid="preview-fallback">
-      <span>{{ node().label }}</span>
-      <code>{{ node().type }}</code>
-    </div>
+      <div class="preview-fallback" data-testid="preview-fallback" aria-hidden="true"></div>
     }
   }
 }

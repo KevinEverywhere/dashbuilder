@@ -72,89 +72,83 @@
   }
   @case ('media-video-source') {
     <div
-      class="preview-media preview-media--source"
+      class="preview-media preview-media--source preview-media--app"
       [class.preview-media--fullscreen]="readBoolean('fullscreen')"
       data-testid="preview-plugin-media-video-source"
     >
-      <header class="preview-media__header">
-        <span class="preview-media__label">{{ readString('label', 'Video source') }}</span>
-        <span class="preview-media__meta">{{ videoDisplayLabel() }}</span>
-      </header>
-      <div class="preview-media__stage">
-        <label class="preview-media__upload">
-          <span>Choose video file</span>
-          <input type="file" [attr.accept]="readString('accept', 'video/*')" disabled />
-        </label>
-      </div>
+      @if (showsOptionalLabel()) {
+        <span class="preview-media__label">{{ readString('label') }}</span>
+      }
+      <label class="preview-media__upload preview-media__upload--app">
+        <span>{{ videoUploadLabel() }}</span>
+        <input
+          type="file"
+          data-testid="preview-video-file-input"
+          [attr.accept]="readString('accept', 'video/*')"
+          (change)="onVideoFileSelected($event)"
+        />
+      </label>
     </div>
   }
   @case ('media-equirect-viewport') {
     <div
-      class="preview-media preview-media--viewport"
+      class="preview-media preview-media--viewport preview-media--app"
       [class.preview-media--fullscreen]="readBoolean('fullscreen')"
       data-testid="preview-plugin-media-equirect-viewport"
     >
-      <header class="preview-media__header">
-        <span class="preview-media__label">{{ readString('label', 'Equirect viewport') }}</span>
-        <span class="preview-media__meta">{{ videoDisplayLabel() }}</span>
-      </header>
+      @if (showsOptionalLabel()) {
+        <span class="preview-media__label">{{ readString('label') }}</span>
+      }
       <div class="preview-media__stage">
         <div class="preview-media__equirect-frame">
           <div class="preview-media__crop-rect" [ngStyle]="equirectCropStyle()"></div>
         </div>
       </div>
-      <p class="preview-media__meta">
-        Crop → {{ readNumber('cropWidth', 1080) }}×{{ readNumber('cropHeight', 720) }}
-        · Output {{ equirectOutputLabel() }}
-      </p>
     </div>
   }
   @case ('media-flat-video-viewport') {
     <div
-      class="preview-media preview-media--viewport preview-media--flat"
+      class="preview-media preview-media--viewport preview-media--flat preview-media--app"
       [class.preview-media--fullscreen]="readBoolean('fullscreen')"
       data-testid="preview-plugin-media-flat-video-viewport"
     >
-      <header class="preview-media__header">
-        <span class="preview-media__label">{{ readString('label', 'Flat video viewport') }}</span>
-        <span class="preview-media__meta">{{ videoDisplayLabel() }}</span>
-      </header>
+      @if (showsOptionalLabel()) {
+        <span class="preview-media__label">{{ readString('label') }}</span>
+      }
       <div class="preview-media__stage">
         <div class="preview-media__flat-frame">
           <div class="preview-media__crop-rect" [ngStyle]="flatCropStyle()"></div>
         </div>
       </div>
-      <p class="preview-media__meta">
-        Crop → {{ readNumber('cropWidth', 1080) }}×{{ readNumber('cropHeight', 720) }}
-        · Output {{ equirectOutputLabel() }}
-      </p>
     </div>
   }
   @case ('media-equirect-sphere-viewport') {
     <div
-      class="preview-media preview-media--viewport preview-media--sphere"
+      class="preview-media preview-media--viewport preview-media--sphere preview-media--app"
       [class.preview-media--fullscreen]="readBoolean('fullscreen')"
       data-testid="preview-plugin-media-equirect-sphere-viewport"
     >
-      <header class="preview-media__header">
-        <span class="preview-media__label">{{ readString('label', 'Equirect sphere viewport') }}</span>
-        <span class="preview-media__meta">{{ videoDisplayLabel() }}</span>
-      </header>
+      @if (showsOptionalLabel()) {
+        <span class="preview-media__label">{{ readString('label') }}</span>
+      }
       <div class="preview-media__stage preview-media__stage--sphere">
         <div class="preview-media__sphere-placeholder" aria-hidden="true"></div>
       </div>
-      <p class="preview-media__meta">
-        Output {{ readNumber('outputWidth', 1280) }}×{{ readNumber('outputHeight', 720) }}
-      </p>
     </div>
   }
   @case ('media-live-capture') {
-    <div class="preview-media preview-media--capture" data-testid="preview-plugin-media-live-capture">
-      <span class="preview-media__label">{{ readString('label', 'Live capture') }}</span>
-      <button type="button" class="preview-media__capture-btn" disabled>Start camera</button>
-      <span class="preview-media__meta">
-        {{ readBoolean('includeInExport', false) ? 'Included in export' : 'Authoring only' }}
-      </span>
+    <div class="preview-media preview-media--capture preview-media--app" data-testid="preview-plugin-media-live-capture">
+      @if (showsOptionalLabel()) {
+        <span class="preview-media__label">{{ readString('label') }}</span>
+      }
+      <button
+        type="button"
+        class="preview-media__capture-btn"
+        data-testid="preview-live-capture-toggle"
+        (click)="toggleLiveCapture()"
+      >
+        {{ liveCaptureActive() ? 'Stop camera' : 'Start camera' }}
+      </button>
     </div>
   }
   @case ('3d-bar-chart') {

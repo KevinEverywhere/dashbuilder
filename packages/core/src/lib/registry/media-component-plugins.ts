@@ -18,7 +18,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
         { id: 'metadata', name: 'metadata', dataType: 'row' },
       ],
       properties: [
-        { key: 'label', label: 'Label', type: 'string', default: 'Video source' },
+        { key: 'label', label: 'Label', type: 'string', default: '' },
         { key: 'accept', label: 'Accept MIME/types', type: 'string', default: 'video/*' },
         { key: 'url', label: 'Remote URL', type: 'string', default: '' },
         ...MEDIA_DISPLAY_SIZE_PROPERTIES,
@@ -40,7 +40,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
       inputs: [{ id: 'metadata', name: 'metadata', dataType: 'row' }],
       outputs: [{ id: 'crop-region', name: 'cropRegion', dataType: 'row' }],
       properties: [
-        { key: 'label', label: 'Label', type: 'string', default: 'Equirect viewport' },
+        { key: 'label', label: 'Label', type: 'string', default: '' },
         ...MEDIA_DISPLAY_SIZE_PROPERTIES,
         { key: 'cropX', label: 'Crop X', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropX },
         { key: 'cropY', label: 'Crop Y', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropY },
@@ -87,7 +87,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
       inputs: [{ id: 'metadata', name: 'metadata', dataType: 'row' }],
       outputs: [{ id: 'camera-state', name: 'cameraState', dataType: 'row' }],
       properties: [
-        { key: 'label', label: 'Label', type: 'string', default: 'Equirect sphere viewport' },
+        { key: 'label', label: 'Label', type: 'string', default: '' },
         ...MEDIA_DISPLAY_SIZE_PROPERTIES,
         { key: 'flipInterior', label: 'Flip interior', type: 'boolean', default: true },
         { key: 'yaw', label: 'Yaw', type: 'number', default: 0 },
@@ -115,7 +115,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
       inputs: [{ id: 'metadata', name: 'metadata', dataType: 'row' }],
       outputs: [{ id: 'crop-region', name: 'cropRegion', dataType: 'row' }],
       properties: [
-        { key: 'label', label: 'Label', type: 'string', default: 'Flat video viewport' },
+        { key: 'label', label: 'Label', type: 'string', default: '' },
         ...MEDIA_DISPLAY_SIZE_PROPERTIES,
         { key: 'cropX', label: 'Crop X', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropX },
         { key: 'cropY', label: 'Crop Y', type: 'number', default: DEFAULT_EQUIRECT_FLAT_CROP.cropY },
@@ -165,7 +165,7 @@ export const MEDIA_COMPONENT_PLUGINS: ComponentPlugin[] = [
         { id: 'preview-url', name: 'previewUrl', dataType: 'string' },
       ],
       properties: [
-        { key: 'label', label: 'Label', type: 'string', default: 'Live capture' },
+        { key: 'label', label: 'Label', type: 'string', default: '' },
         { key: 'includeInExport', label: 'Include in export', type: 'boolean', default: false },
         {
           key: 'facingMode',

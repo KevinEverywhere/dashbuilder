@@ -17,9 +17,9 @@ test.describe('Builder role visibility', () => {
 
     await page.getByTestId('mode-preview').click();
     await selectAppOption(page, 'preview-role-select', 'viewer');
-    await expect(page.getByTestId('preview-role-gate-hidden')).toBeVisible();
+    await expect(page.getByTestId('preview-role-gate')).toHaveCount(0);
 
     await selectAppOption(page, 'preview-role-select', 'admin');
-    await expect(page.getByTestId('preview-role-gate-visible')).toBeVisible();
+    await expect(page.getByTestId('preview-role-gate')).toBeVisible();
   });
 });

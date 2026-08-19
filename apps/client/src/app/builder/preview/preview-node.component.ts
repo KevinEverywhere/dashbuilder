@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { CurrencyPipe, JsonPipe } from '@angular/common';
-import { ComponentNode, isNumericFieldKey, parseRoleGateAllowedRoles, readFormFieldLabel, resolveRoleOptions, roleGateAllowsRole } from '@rosettadash/core';
+import { CurrencyPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ComponentNode, isNumericFieldKey, parseRoleGateAllowedRoles, resolveRoleOptions, roleGateAllowsRole } from '@rosettadash/core';
 import { PreviewNewsRow, PreviewRow, PRESET_LABELS } from '@rosettadash/ui-primitives';
 import { AppSelectComponent } from '../../shared/app-select/app-select.component';
 import { AppCollapsibleComponent } from '../../shared/app-collapsible/app-collapsible.component';
@@ -11,7 +12,13 @@ import { PreviewPluginComponent } from './preview-plugin.component';
 
 @Component({
   selector: 'app-preview-node',
-  imports: [CurrencyPipe, JsonPipe, PreviewPluginComponent, AppSelectComponent, AppCollapsibleComponent],
+  imports: [
+    CurrencyPipe,
+    FormsModule,
+    PreviewPluginComponent,
+    AppSelectComponent,
+    AppCollapsibleComponent,
+  ],
   templateUrl: './preview-node.component.html',
   styleUrl: './preview-node.component.scss',
 })
@@ -304,12 +311,85 @@ export class PreviewNodeComponent {
     this.roleAssignOptions().map((role) => ({ value: role.id, label: role.name })),
   );
 
-  protected readFieldLabel(fallback = ''): string {
-    return readFormFieldLabel(this.node().properties, this.node().label || fallback);
+  protected readFieldLabel(): string {
+    return this.readString('label');
   }
 
   protected showsFieldLabel(): boolean {
     return this.readFieldLabel().length > 0;
+  }
+
+  protected previewFieldValue(): string {
+    return this.previewData.readFieldValue(this.node().id);
+  }
+
+  protected updatePreviewFieldValue(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+      return;
+    }
+    this.previewData.setFieldValue(this.node().id, target.value);
+  }
+
+  protected previewSelectValue(): string {
+    return this.previewData.readFieldValue(this.node().id);
+  }
+
+  protected updatePreviewSelectValue(value: string): void {
+    this.previewData.setFieldValue(this.node().id, value);
+  }
+
+  protected previewCheckboxChecked(): boolean {
+    if (this.previewData.hasFieldValue(this.node().id, 'checked')) {
+      return this.previewData.readFieldValue(this.node().id, 'checked') === 'true';
+    }
+    return this.readBoolean('defaultChecked');
+  }
+
+  protected updatePreviewCheckbox(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    this.previewData.setFieldValue(this.node().id, target.checked ? 'true' : 'false', 'checked');
+  }
+
+  protected previewDateStart(): string {
+    return this.previewData.readFieldValue(this.node().id, 'start') || '2026-08-01';
+  }
+
+  protected previewDateEnd(): string {
+    return this.previewData.readFieldValue(this.node().id, 'end') || '2026-08-08';
+  }
+
+  protected updatePreviewDateStart(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    this.previewData.setFieldValue(this.node().id, target.value, 'start');
+  }
+
+  protected updatePreviewDateEnd(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    this.previewData.setFieldValue(this.node().id, target.value, 'end');
+  }
+
+  protected previewActiveTab(): number {
+    const stored = this.previewData.readFieldValue(this.node().id, 'tab');
+    const parsed = Number.parseInt(stored, 10);
+    return Number.isFinite(parsed) && parsed >= 1 && parsed <= 3 ? parsed : 1;
+  }
+
+  protected selectPreviewTab(tab: number): void {
+    this.previewData.setFieldValue(this.node().id, String(tab), 'tab');
+  }
+
+  protected isPreviewTabActive(tab: number): boolean {
+    return this.previewActiveTab() === tab;
   }
 
   protected readString(key: string, fallback = ''): string {

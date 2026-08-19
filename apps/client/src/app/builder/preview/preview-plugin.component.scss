@@ -129,11 +129,25 @@
   font-size: 0.8125rem;
 }
 
-.preview-media--source {
-  padding: 0.75rem;
-  border: 1px solid var(--db-border);
+.preview-media--app {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  gap: 0.5rem;
+}
+
+.preview-media--app .preview-media__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.preview-media__upload--app {
   border-radius: 0.5rem;
-  background: var(--db-panel-bg);
+}
+
+.preview-media--viewport.preview-media--app .preview-media__stage {
+  min-height: 0;
 }
 
 .preview-media--fullscreen {

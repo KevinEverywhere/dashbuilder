@@ -241,6 +241,19 @@
   color: var(--db-text-muted);
 }
 
+.inspector__placement-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--db-text-muted);
+}
+
+.inspector__placement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
 .inspector__dl {
   display: grid;
   grid-template-columns: 1fr;
