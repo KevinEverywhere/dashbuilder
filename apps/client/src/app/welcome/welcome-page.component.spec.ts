@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import {
   ACTIVE_STACK_KEY,
   BUILDER_SESSION_KEY,
@@ -24,6 +26,7 @@ function selectReact(fixture: ComponentFixture<WelcomePageComponent>): void {
 describe('WelcomePageComponent', () => {
   let fixture: ComponentFixture<WelcomePageComponent>;
   let router: Router;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     sessionStorage.clear();
@@ -35,16 +38,20 @@ describe('WelcomePageComponent', () => {
           { path: '', component: WelcomePageComponent },
           { path: 'builder', component: WelcomePageComponent },
         ]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(WelcomePageComponent);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
   });
 
   afterEach(() => {
     sessionStorage.clear();
+    httpMock.verify();
   });
 
   it('starts with collapsed stack sections and no pre-selected labels', () => {
@@ -394,5 +401,106 @@ describe('WelcomePageComponent', () => {
       true,
     );
     expect(fixture.nativeElement.querySelector('[data-testid="stack-section-panel-ui"]')).toBeTruthy();
+  });
+
+  describe('stack change target dialog', () => {
+    function seedReturningUser(): void {
+      sessionStorage.setItem(
+        BUILDER_SESSION_KEY,
+        JSON.stringify({ projectId: 'p1', compositeId: 'c1' }),
+      );
+      sessionStorage.setItem(
+        ACTIVE_STACK_KEY,
+        JSON.stringify({
+          ui: 'react',
+          server: 'next',
+          database: 'postgresql',
+          styling: {
+            foundation: ['tailwind'],
+            authoring: ['css-modules'],
+            inlineStyles: true,
+          },
+        }),
+      );
+    }
+
+    it('asks once for "existing project" then applies and persists subsequent changes silently', () => {
+      seedReturningUser();
+      fixture = TestBed.createComponent(WelcomePageComponent);
+      fixture.detectChanges();
+
+      expandSection(fixture, 'ui');
+      fixture.nativeElement.querySelector('[data-testid="stack-ui-vue"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeTruthy();
+      fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-current"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeFalsy();
+      httpMock.expectOne('/api/projects/p1').flush({});
+
+      expandSection(fixture, 'database');
+      fixture.nativeElement.querySelector('[data-testid="stack-database-none"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeFalsy();
+      httpMock.expectOne('/api/projects/p1').flush({});
+
+      expandSection(fixture, 'server');
+      fixture.nativeElement.querySelector('[data-testid="stack-server-none"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeFalsy();
+      httpMock.expectOne('/api/projects/p1').flush({});
+    });
+
+    it('asks once for "start fresh" then applies subsequent changes silently without persisting', () => {
+      seedReturningUser();
+      fixture = TestBed.createComponent(WelcomePageComponent);
+      fixture.detectChanges();
+
+      expandSection(fixture, 'ui');
+      fixture.nativeElement.querySelector('[data-testid="stack-ui-vue"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeTruthy();
+      fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-new-project"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeFalsy();
+      httpMock.expectNone('/api/projects/p1');
+
+      expandSection(fixture, 'database');
+      fixture.nativeElement.querySelector('[data-testid="stack-database-none"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeFalsy();
+      httpMock.expectNone('/api/projects/p1');
+    });
+
+    it('shows the dialog again on a fresh page visit', () => {
+      seedReturningUser();
+      fixture = TestBed.createComponent(WelcomePageComponent);
+      fixture.detectChanges();
+
+      expandSection(fixture, 'ui');
+      fixture.nativeElement.querySelector('[data-testid="stack-ui-vue"]').click();
+      fixture.detectChanges();
+      fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-current"]').click();
+      fixture.detectChanges();
+      httpMock.expectOne('/api/projects/p1').flush({});
+
+      // Simulate a new page visit: a fresh component instance re-reads the
+      // (unchanged) active stack profile from session storage.
+      fixture = TestBed.createComponent(WelcomePageComponent);
+      fixture.detectChanges();
+
+      expandSection(fixture, 'ui');
+      fixture.nativeElement.querySelector('[data-testid="stack-ui-svelte"]').click();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-dialog"]')).toBeTruthy();
+    });
   });
 });

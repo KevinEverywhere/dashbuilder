@@ -38,6 +38,11 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# Local secrets (Jira API keys, etc.) — never commit real credentials
+.env
+.env.local
+.env.*.local
+
 # npm pack artifacts (DAS-99 consumer tarballs)
 *.tgz
 

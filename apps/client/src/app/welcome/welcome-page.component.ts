@@ -402,6 +402,12 @@ export class WelcomePageComponent implements OnInit {
       return;
     }
 
+    if (this.stackChangeTarget === 'current') {
+      mutate();
+      void this.persistStackToCurrentProject();
+      return;
+    }
+
     const snapshot = this.buildProfile();
     mutate();
     if (
