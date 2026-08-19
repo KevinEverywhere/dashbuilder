@@ -30,6 +30,37 @@ describe('BuilderStateService', () => {
     expect(service.selectedNode()?.properties['title']).toBe('Revenue');
   });
 
+  it('renames a node label, trims it, and rejects empty/unchanged values', () => {
+    const definition = defaultComponentRegistry.getOrThrow('visual.kpi');
+    const node = service.addNodeFromDefinition(definition);
+    const originalLabel = node.label;
+
+    service.updateNodeLabel(node.id, '  Monthly Revenue  ');
+    expect(service.selectedNode()?.label).toBe('Monthly Revenue');
+
+    service.updateNodeLabel(node.id, '   ');
+    expect(service.selectedNode()?.label).toBe('Monthly Revenue');
+
+    service.updateNodeLabel(node.id, originalLabel);
+    expect(service.selectedNode()?.label).toBe(originalLabel);
+  });
+
+  it('supports undo/redo for a node rename', () => {
+    const definition = defaultComponentRegistry.getOrThrow('visual.kpi');
+    const node = service.addNodeFromDefinition(definition);
+    const originalLabel = node.label;
+
+    service.updateNodeLabel(node.id, 'Renamed KPI');
+    expect(service.selectedNode()?.label).toBe('Renamed KPI');
+    expect(service.canUndo()).toBe(true);
+
+    service.undo();
+    expect(service.nodes().find((item) => item.id === node.id)?.label).toBe(originalLabel);
+
+    service.redo();
+    expect(service.nodes().find((item) => item.id === node.id)?.label).toBe('Renamed KPI');
+  });
+
   it('builds composite payload from current nodes and bindings', () => {
     service.setProjectContext(
       {

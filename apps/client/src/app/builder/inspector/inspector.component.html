@@ -85,6 +85,22 @@
             <div class="inspector__group-panel" data-testid="inspector-group-panel-overview">
               <h3 class="inspector__title">{{ def.label }}</h3>
               <p class="inspector__type">{{ def.type }}</p>
+              @if (node(); as selectedNode) {
+                <div class="inspector__field">
+                  <label for="node-label">Name</label>
+                  <input
+                    id="node-label"
+                    type="text"
+                    data-testid="inspector-node-label"
+                    [value]="labelDraft()"
+                    (focus)="onLabelFocus()"
+                    (input)="onLabelInput($any($event.target).value)"
+                    (blur)="commitNodeLabel(selectedNode.id)"
+                    (keydown.enter)="commitNodeLabel(selectedNode.id)"
+                    (keydown.escape)="cancelNodeLabelEdit($event)"
+                  />
+                </div>
+              }
               @if (def.description) {
                 <p class="inspector__description">{{ def.description }}</p>
               }

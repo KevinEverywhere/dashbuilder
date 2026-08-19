@@ -142,7 +142,29 @@
                 (pointermove)="onHeaderPointerMove($event)"
                 (pointerup)="onHeaderPointerUp($event)"
               >
-                <span class="canvas__node-name">{{ node.label }}</span>
+                @if (renamingNodeId() === node.id) {
+                  <input
+                    #renameInput
+                    type="text"
+                    class="canvas__node-name-input"
+                    data-testid="canvas-node-rename-input"
+                    [value]="renameDraft()"
+                    (input)="renameDraft.set($any($event.target).value)"
+                    (pointerdown)="onRenameInputEvent($event)"
+                    (click)="onRenameInputEvent($event)"
+                    (blur)="commitRename(node.id)"
+                    (keydown.enter)="commitRename(node.id)"
+                    (keydown.escape)="cancelRename($event)"
+                    (keydown.space)="onRenameInputEvent($event)"
+                  />
+                } @else {
+                  <span
+                    class="canvas__node-name"
+                    data-testid="canvas-node-name"
+                    title="Double-click to rename"
+                    (dblclick)="startRename(node, $event)"
+                  >{{ node.label }}</span>
+                }
                 <button
                   type="button"
                   class="canvas__node-close"

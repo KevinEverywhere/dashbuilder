@@ -78,6 +78,27 @@ describe('buildExportIR', () => {
     ]);
   });
 
+  it('carries a custom instance label through to the IR component (DAS-149)', () => {
+    const text = registry.createNode('visual.input.text', {
+      id: 'n1',
+      label: 'Customer Search Box',
+    });
+
+    const ir = buildExportIR(
+      {
+        id: 'c1',
+        name: 'Renamed Component Dashboard',
+        nodes: [text],
+        bindings: [],
+        version: 1,
+      },
+      registry,
+    );
+
+    expect(ir.components).toHaveLength(1);
+    expect(ir.components[0]?.label).toBe('Customer Search Box');
+  });
+
   it('includes normalized domain context on the export IR', () => {
     const text = registry.createNode('visual.input.text', { id: 'n1' });
 

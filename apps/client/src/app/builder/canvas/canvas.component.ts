@@ -56,12 +56,17 @@ export class CanvasComponent implements AfterViewInit {
   private dragState: DragState | null = null;
   private resizeState: ResizeState | null = null;
 
+  @ViewChild('renameInput') private renameInputRef?: ElementRef<HTMLInputElement>;
+
   protected readonly viewportScroll = signal<CanvasViewport>({
     left: 0,
     top: 0,
     width: 800,
     height: 600,
   });
+
+  protected readonly renamingNodeId = signal<string | null>(null);
+  protected readonly renameDraft = signal('');
 
   protected readonly visibleCanvasNodes = computed(() =>
     filterVisibleCanvasNodes(
@@ -175,6 +180,35 @@ export class CanvasComponent implements AfterViewInit {
   protected removeNode(nodeId: string, event: Event): void {
     event.stopPropagation();
     this.state.removeNode(nodeId);
+  }
+
+  protected startRename(node: ComponentNode, event: Event): void {
+    event.stopPropagation();
+    this.renamingNodeId.set(node.id);
+    this.renameDraft.set(node.label);
+    setTimeout(() => {
+      const input = this.renameInputRef?.nativeElement;
+      input?.focus();
+      input?.select();
+    });
+  }
+
+  protected onRenameInputEvent(event: Event): void {
+    // Keep clicks/pointerdowns inside the rename input from reselecting/dragging the node.
+    event.stopPropagation();
+  }
+
+  protected commitRename(nodeId: string): void {
+    if (this.renamingNodeId() !== nodeId) {
+      return;
+    }
+    this.state.updateNodeLabel(nodeId, this.renameDraft());
+    this.renamingNodeId.set(null);
+  }
+
+  protected cancelRename(event: Event): void {
+    event.stopPropagation();
+    this.renamingNodeId.set(null);
   }
 
   protected stopHeaderEvent(event: Event): void {

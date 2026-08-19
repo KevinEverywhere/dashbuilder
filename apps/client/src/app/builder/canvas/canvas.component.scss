@@ -145,10 +145,35 @@
 }
 
 .canvas__node-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--db-text);
   line-height: 1.2;
+  cursor: text;
+}
+
+.canvas__node-name-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--db-text);
+  line-height: 1.2;
+  background: var(--db-panel-bg);
+  border: 1px solid var(--db-accent);
+  border-radius: 0.25rem;
+  padding: 0.0625rem 0.25rem;
+  cursor: text;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .canvas__node-body {

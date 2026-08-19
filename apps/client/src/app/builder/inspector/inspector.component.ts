@@ -38,6 +38,9 @@ export class InspectorComponent {
   private readonly expandedSectionIds = signal<ReadonlySet<string>>(new Set());
   private selectionKey = '';
 
+  protected readonly labelDraft = signal('');
+  private readonly labelFieldFocused = signal(false);
+
   protected readonly definition = computed(() => {
     const selected = this.state.selectedDefinition();
     if (selected) {
@@ -102,6 +105,16 @@ export class InspectorComponent {
       this.selectionKey = key;
       this.expandedSectionIds.set(this.defaultExpandedSections());
     });
+
+    // Mirror the instance label into the draft field whenever it's not being actively edited
+    // here — keeps this in sync with renames made via canvas double-click without fighting
+    // in-progress typing in this field.
+    effect(() => {
+      const label = this.node()?.label ?? '';
+      if (!this.labelFieldFocused()) {
+        this.labelDraft.set(label);
+      }
+    });
   }
 
   protected isSectionExpanded(sectionId: string): boolean {
@@ -137,6 +150,27 @@ export class InspectorComponent {
       return;
     }
     this.state.updateNodeProperty(node.id, schema.key, value);
+  }
+
+  protected onLabelFocus(): void {
+    this.labelFieldFocused.set(true);
+  }
+
+  protected onLabelInput(value: string): void {
+    this.labelDraft.set(value);
+  }
+
+  protected commitNodeLabel(nodeId: string): void {
+    this.state.updateNodeLabel(nodeId, this.labelDraft());
+    this.labelFieldFocused.set(false);
+  }
+
+  protected cancelNodeLabelEdit(event: Event): void {
+    this.labelFieldFocused.set(false);
+    this.labelDraft.set(this.node()?.label ?? '');
+    if (event.target instanceof HTMLInputElement) {
+      event.target.blur();
+    }
   }
 
   protected updateLayoutField(field: keyof NodeLayout, value: number | string | null): void {

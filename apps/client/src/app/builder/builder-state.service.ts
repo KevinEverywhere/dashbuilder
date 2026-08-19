@@ -350,6 +350,22 @@ export class BuilderStateService {
     this.markDirty();
   }
 
+  /** Rename a placed component instance (double-click on canvas, or the Inspector overview field). */
+  updateNodeLabel(nodeId: string, label: string): void {
+    const trimmed = label.trim();
+    const current = this.nodes().find((node) => node.id === nodeId);
+    if (!current || trimmed.length === 0 || current.label === trimmed) {
+      return;
+    }
+    if (!this.historySuspended) {
+      this.recordHistory();
+    }
+    this.nodes.update((nodes) =>
+      nodes.map((node) => (node.id === nodeId ? { ...node, label: trimmed } : node)),
+    );
+    this.markDirty();
+  }
+
   private seedCustomDisplayFromLayout(nodeId: string): void {
     const node = this.nodes().find((item) => item.id === nodeId);
     if (!node?.layout) {
