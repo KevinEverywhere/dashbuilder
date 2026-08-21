@@ -35,6 +35,7 @@ test.describe('Builder defaults engine', () => {
 
     await tableNode.click();
     await expect(page.getByTestId('inspector-suggestions')).toBeVisible();
+    await expandInspectorSection(page, 'suggestions');
     await expect(page.locator('[data-testid^="inspector-suggestion-add-date-range:"]')).toBeVisible();
   });
 });

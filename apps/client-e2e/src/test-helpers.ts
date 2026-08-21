@@ -66,16 +66,9 @@ export async function selectCanvasNodeHeader(
 ): Promise<void> {
   await dismissCompactPanelsIfOpen(page);
   const header = node.getByTestId('canvas-node-header');
-  if (options?.shiftKey) {
-    await page.keyboard.down('Shift');
-    try {
-      await header.click();
-    } finally {
-      await page.keyboard.up('Shift');
-    }
-    return;
-  }
-  await header.click();
+  await header.click({
+    modifiers: options?.shiftKey ? ['Shift'] : [],
+  });
 }
 
 export async function expandInspectorSection(page: Page, sectionId: string): Promise<void> {

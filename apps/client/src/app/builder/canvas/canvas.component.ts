@@ -214,6 +214,11 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected onNamePointerDown(node: ComponentNode, event: PointerEvent): void {
     event.stopPropagation();
+    // Label fills the header; Shift+click must multi-select, not start rename.
+    if (event.shiftKey) {
+      this.state.selectNode(node.id, { additive: true });
+      return;
+    }
     if (!this.state.selectedNodeIdsSet().has(node.id)) {
       this.state.selectNode(node.id);
     }
