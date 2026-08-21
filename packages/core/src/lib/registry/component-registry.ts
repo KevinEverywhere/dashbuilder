@@ -70,16 +70,27 @@ export class ComponentRegistry {
 
   createNode(type: string, overrides: Partial<Pick<ComponentNode, 'id' | 'label' | 'properties' | 'layout'>> = {}): ComponentNode {
     const definition = this.getOrThrow(type);
-    const properties = this.defaultProperties(definition);
+    const nodeId = overrides.id ?? crypto.randomUUID();
+    const properties = enrichComponentProperties(definition.type, {
+      ...this.defaultProperties(definition),
+      ...overrides.properties,
+    });
+
+    if (
+      definition.properties.some((schema) => schema.key === 'id') &&
+      (typeof properties['id'] !== 'string' || properties['id'].trim().length === 0)
+    ) {
+      const typeSlug = definition.type.includes('.')
+        ? definition.type.slice(definition.type.lastIndexOf('.') + 1)
+        : definition.type;
+      properties['id'] = `${typeSlug}-${nodeId.slice(0, 8)}`;
+    }
 
     return {
-      id: overrides.id ?? crypto.randomUUID(),
+      id: nodeId,
       type: definition.type,
       label: overrides.label ?? definition.label,
-      properties: enrichComponentProperties(definition.type, {
-        ...properties,
-        ...overrides.properties,
-      }),
+      properties,
       ports: {
         inputs: definition.inputs.map((p) => ({ ...p })),
         outputs: definition.outputs.map((p) => ({ ...p })),

@@ -48,6 +48,19 @@ export function pascalCase(value: string): string {
     .join('');
 }
 
+/** Root composed page name from composite title (preserves PascalCase like CustomObject). */
+export function rootComponentName(compositeName: string): string {
+  const trimmed = compositeName.trim() || 'Dashboard';
+  if (/^[A-Z][A-Za-z0-9]*$/.test(trimmed)) {
+    return trimmed;
+  }
+  let name = pascalCase(trimmed) || 'Dashboard';
+  if (!/^[A-Za-z_]/.test(name)) {
+    name = `Custom${name}`;
+  }
+  return name;
+}
+
 export function componentExportName(component: IRComponent, usedNames: Set<string>): string {
   const fromLabel = pascalCase(component.label);
   const base = fromLabel || DEFAULT_NAMES[component.type] || pascalCase(component.id);

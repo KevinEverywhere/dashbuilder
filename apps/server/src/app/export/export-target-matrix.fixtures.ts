@@ -75,7 +75,7 @@ export function buildPostgresqlBundleComposite(
 
   return {
     id: 'matrix-pg',
-    name: 'Matrix export',
+    name: 'Dashboard',
     version: 1,
     exportTargets: { ui, server, database: 'postgresql' },
     nodes: [pg, table, serverNode],
@@ -106,7 +106,7 @@ export function buildDatabaseLayerBundleComposite(
 
     return {
       id: 'matrix-mongo',
-      name: 'Matrix export',
+      name: 'Dashboard',
       version: 1,
       exportTargets: { ui, server: 'nest', database: 'mongodb' },
       nodes: [mongo, table, serverNode],
@@ -134,7 +134,7 @@ export function buildDatabaseLayerBundleComposite(
 
     return {
       id: 'matrix-supabase',
-      name: 'Matrix export',
+      name: 'Dashboard',
       version: 1,
       exportTargets: { ui, server: 'nest', database: 'supabase' },
       nodes: [supabase, table, serverNode],
@@ -157,7 +157,7 @@ export function buildDatabaseLayerBundleComposite(
 
   return {
     id: 'matrix-mysql',
-    name: 'Matrix export',
+    name: 'Dashboard',
     version: 1,
     exportTargets: { ui, server: 'nest', database: 'mysql' },
     nodes: [mysql, table, serverNode],

@@ -41,43 +41,45 @@
         @if (creationWizard.showWelcomeBanner()) {
           <aside class="canvas__welcome-banner" data-testid="creation-welcome-banner">
             <p class="canvas__welcome-lead">
-              New here? Choose guided steps or explore with the tips already in the palette and
-              inspector — no modal required.
+              New here? Choose how you want help while building — most people prefer the
+              inspector on the right. You can change How it works anytime from the toolbar.
             </p>
             <div class="canvas__welcome-actions">
               <button
                 type="button"
                 class="canvas__welcome-primary"
-                data-testid="creation-welcome-guided"
-                (click)="creationWizard.openGuidedWizard()"
+                data-testid="creation-welcome-inspector-only"
+                (click)="creationWizard.chooseInspectorOnlyFromBanner()"
               >
-                Guided creation
+                Inspector only
               </button>
               <button
                 type="button"
                 class="canvas__welcome-secondary"
-                data-testid="creation-welcome-explore"
-                (click)="creationWizard.startSelfExplorationFromBanner()"
+                data-testid="creation-welcome-how-it-works"
+                (click)="creationWizard.enableHowItWorksFromBanner()"
               >
-                Explore on my own
+                Show How it works tips
               </button>
+            </div>
+            <div class="canvas__welcome-links">
               <button
                 type="button"
                 class="canvas__welcome-link"
                 data-testid="creation-welcome-open-guide"
                 (click)="creationWizard.openWizard()"
               >
-                See both options
+                Open creation guide
+              </button>
+              <button
+                type="button"
+                class="canvas__welcome-dismiss"
+                data-testid="creation-welcome-dismiss"
+                (click)="creationWizard.dismissWelcomeBanner(true)"
+              >
+                Don’t show again
               </button>
             </div>
-            <button
-              type="button"
-              class="canvas__welcome-dismiss"
-              data-testid="creation-welcome-dismiss"
-              (click)="creationWizard.dismissWelcomeBanner(true)"
-            >
-              Don’t show again
-            </button>
           </aside>
         }
       </div>
@@ -109,6 +111,7 @@
 
       <div
         class="canvas__nodes"
+        [class.canvas__nodes--arranging]="creationWizard.phase() === 'arrange'"
         [style.minWidth.px]="canvasContentBounds().width"
         [style.minHeight.px]="canvasContentBounds().height"
       >
@@ -118,6 +121,7 @@
             data-testid="canvas-node"
             role="button"
             tabindex="0"
+            [attr.data-node-id]="node.id"
             [class.canvas__node--selected]="state.selectedNodeIdsSet().has(node.id)"
             [attr.data-selected]="state.selectedNodeIdsSet().has(node.id) ? 'true' : 'false'"
             [style.left.px]="node.layout?.x ?? 24"
@@ -125,70 +129,75 @@
             [style.width.px]="node.layout?.width ?? 220"
             [style.height.px]="nodeHeight(node)"
             (click)="selectNode(node.id, $event)"
+            (keydown)="onNodeKeydown(node, $event)"
             (keydown.enter)="selectNode(node.id, $event)"
             (keydown.space)="selectNode(node.id, $event)"
           >
-            <div class="canvas__node-frame">
-              <header
-                class="canvas__node-namebar"
-                data-testid="canvas-node-header"
-                role="group"
-                tabindex="0"
-                [attr.aria-label]="node.label + ' component'"
-                (click)="stopHeaderEvent($event)"
-                (keydown.enter)="stopHeaderEvent($event)"
-                (keydown.space)="stopHeaderEvent($event)"
-                (pointerdown)="onHeaderPointerDown(node.id, $event)"
-                (pointermove)="onHeaderPointerMove($event)"
-                (pointerup)="onHeaderPointerUp($event)"
-              >
-                @if (renamingNodeId() === node.id) {
-                  <input
-                    #renameInput
-                    type="text"
-                    class="canvas__node-name-input"
-                    data-testid="canvas-node-rename-input"
-                    [value]="renameDraft()"
-                    (input)="renameDraft.set($any($event.target).value)"
-                    (pointerdown)="onRenameInputEvent($event)"
-                    (click)="onRenameInputEvent($event)"
-                    (blur)="commitRename(node.id)"
-                    (keydown.enter)="commitRename(node.id)"
-                    (keydown.escape)="cancelRename($event)"
-                    (keydown.space)="onRenameInputEvent($event)"
-                  />
-                } @else {
-                  <span
-                    class="canvas__node-name"
-                    data-testid="canvas-node-name"
-                    title="Double-click to rename"
-                    (dblclick)="startRename(node, $event)"
-                  >{{ node.label }}</span>
-                }
-                <button
-                  type="button"
-                  class="canvas__node-close"
-                  [attr.data-testid]="'canvas-node-remove-' + node.id"
-                  [attr.aria-label]="'Remove ' + node.label + ' from canvas'"
-                  (pointerdown)="stopHeaderEvent($event)"
-                  (click)="removeNode(node.id, $event)"
+            <div class="canvas__node-shell">
+              <div class="canvas__node-frame">
+                <header
+                  class="canvas__node-namebar"
+                  data-testid="canvas-node-header"
+                  role="group"
+                  tabindex="0"
+                  [attr.aria-label]="node.label + ' component'"
+                  (click)="stopHeaderEvent($event)"
+                  (keydown.enter)="stopHeaderEvent($event)"
+                  (keydown.space)="stopHeaderEvent($event)"
+                  (pointerdown)="onHeaderPointerDown(node.id, $event)"
+                  (pointermove)="onHeaderPointerMove($event)"
+                  (pointerup)="onHeaderPointerUp($event)"
                 >
-                  ×
-                </button>
-              </header>
-
-              <div class="canvas__node-body">
-                <div class="canvas__node-meta">
-                  <code class="canvas__node-type">{{ node.type }}</code>
-                  @if (nodeSubtitle(node); as subtitle) {
-                    <p class="canvas__node-subtitle">{{ subtitle }}</p>
+                  @if (renamingNodeId() === node.id) {
+                    <input
+                      #renameInput
+                      type="text"
+                      class="canvas__node-name-input"
+                      data-testid="canvas-node-rename-input"
+                      data-builder-tab="name"
+                      [value]="renameDraft()"
+                      (input)="renameDraft.set($any($event.target).value)"
+                      (pointerdown)="onRenameInputEvent($event)"
+                      (click)="onRenameInputEvent($event)"
+                      (blur)="commitRename(node.id)"
+                      (keydown)="onRenameKeydown(node, $event)"
+                    />
+                  } @else {
+                    <button
+                      type="button"
+                      class="canvas__node-name"
+                      data-testid="canvas-node-name"
+                      data-builder-tab="name"
+                      title="Click to edit label"
+                      (pointerdown)="onNamePointerDown(node, $event)"
+                      (click)="onNameClick(node, $event)"
+                    >
+                      {{ node.label }}
+                    </button>
                   }
-                  @if (nodeDataSource(node); as dataSource) {
-                    <p class="canvas__node-datasource">{{ dataSource }}</p>
-                  }
-                </div>
+                  <button
+                    type="button"
+                    class="canvas__node-close"
+                    data-builder-tab="close"
+                    [attr.data-testid]="'canvas-node-remove-' + node.id"
+                    [attr.aria-label]="'Remove ' + node.label + ' from canvas'"
+                    (pointerdown)="stopHeaderEvent($event)"
+                    (keydown)="onCloseKeydown(node.id, $event)"
+                    (click)="removeNode(node.id, $event)"
+                  >
+                    ×
+                  </button>
+                </header>
 
-                <div class="canvas__node-ports">
+                <div class="canvas__node-body">
+                  <div
+                    class="canvas__node-preview"
+                    (pointerdown)="stopPreviewEvent($event)"
+                  >
+                    <app-preview-node [node]="node" [builderMode]="true" />
+                  </div>
+
+                  <div class="canvas__node-ports">
               <ul class="canvas__ports canvas__ports--inputs">
                 @for (port of node.ports.inputs; track port.id) {
                   <li>
@@ -225,7 +234,8 @@
                   </li>
                 }
               </ul>
-            </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -245,6 +255,7 @@
       </div>
 
       @if (state.placementPrompt(); as prompt) {
+        @if (assistance.howItWorksEnabled()) {
         <aside
           class="canvas__placement-prompt"
           data-testid="canvas-placement-prompt"
@@ -309,6 +320,7 @@
             }
           </ul>
         </aside>
+        }
       }
     }
 

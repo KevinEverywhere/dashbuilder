@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { addFromPalette, openBuilder, selectCanvasNode } from './test-helpers';
+import { addFromPalette, expandInspectorSection, openBuilder, selectCanvasNode } from './test-helpers';
 
 test.describe('Builder placement inspector', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,6 +12,7 @@ test.describe('Builder placement inspector', () => {
     await selectCanvasNode(page, node);
 
     await expect(page.getByTestId('inspector-group-placement')).toBeVisible();
+    await expandInspectorSection(page, 'placement');
     await expect(page.getByTestId('inspector-layout-x')).toHaveValue('32');
     await expect(page.getByTestId('inspector-layout-y')).toHaveValue('32');
     await expect(page.getByTestId('inspector-layout-width')).toHaveValue('288');
@@ -23,6 +24,7 @@ test.describe('Builder placement inspector', () => {
     const node = page.getByTestId('canvas-node');
     await selectCanvasNode(page, node);
 
+    await expandInspectorSection(page, 'placement');
     await page.getByTestId('inspector-layout-x').fill('64');
     await page.getByTestId('inspector-layout-y').fill('48');
     await page.getByTestId('inspector-layout-width').fill('320');
@@ -49,7 +51,9 @@ test.describe('Builder placement inspector', () => {
     await page.mouse.move(box.x + box.width / 2 + 96, box.y + box.height / 2 + 64);
     await page.mouse.up();
 
+    await expandInspectorSection(page, 'placement');
     await expect(page.getByTestId('inspector-layout-width')).not.toHaveValue('640');
+    await expandInspectorSection(page, 'properties');
     await expect(page.getByTestId('inspector-prop-displaySize')).toContainText('Custom');
   });
 });

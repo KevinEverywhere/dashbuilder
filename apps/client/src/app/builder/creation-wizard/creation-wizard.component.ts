@@ -13,6 +13,9 @@ export class CreationWizardComponent {
   protected readonly wizard = inject(CreationWizardService);
 
   readonly aiAssistRequested = output<string>();
+  readonly saveRequested = output<void>();
+  readonly saveToLibraryRequested = output<void>();
+  readonly exportRequested = output<void>();
 
   protected readonly stepColor = computed(() => {
     const groupId = this.wizard.highlightGroupId();
@@ -31,6 +34,8 @@ export class CreationWizardComponent {
         return 'Extend your dashboard';
       case 'steps':
         return this.wizard.activeGoal()?.label ?? 'Creation guide';
+      case 'arrange':
+        return 'Arrange & save';
       case 'ai-choice':
         return 'Optional AI assist';
       default:
@@ -49,5 +54,21 @@ export class CreationWizardComponent {
   protected enableAi(): void {
     this.wizard.chooseAiAssist(true);
     this.aiAssistRequested.emit(this.wizard.aiPromptForGoal());
+  }
+
+  protected requestSave(): void {
+    this.wizard.applyMetaComponentName(this.wizard.metaComponentName());
+    this.saveRequested.emit();
+  }
+
+  protected requestSaveToLibrary(): void {
+    this.wizard.applyMetaComponentName(this.wizard.metaComponentName());
+    this.saveToLibraryRequested.emit();
+  }
+
+  protected requestExport(): void {
+    this.wizard.applyMetaComponentName(this.wizard.metaComponentName());
+    this.wizard.finishArrangeAndClose();
+    this.exportRequested.emit();
   }
 }

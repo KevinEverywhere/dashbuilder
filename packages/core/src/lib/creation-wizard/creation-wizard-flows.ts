@@ -27,7 +27,10 @@ export interface CreationGoalDefinition {
   description: string;
   aiPromptHint: string;
   steps: CreationWizardStep[];
-  /** Optional starter template applied when the flow begins */
+  /**
+   * Optional starter template — for the Template picker only.
+   * Guided creation never auto-applies this; users build piece by piece.
+   */
   templateId?: string;
 }
 
@@ -52,7 +55,6 @@ export const CREATION_GOAL_DEFINITIONS: CreationGoalDefinition[] = [
     label: 'Full dashboard',
     description: 'Filters, KPIs, tables, and charts wired together',
     aiPromptHint: 'Build a dashboard with a date filter, KPI cards, a data table, and a trend chart.',
-    templateId: 'analytics-overview',
     steps: [
       step({
         id: 'filter',
@@ -94,7 +96,6 @@ export const CREATION_GOAL_DEFINITIONS: CreationGoalDefinition[] = [
     label: 'Filter → table → chart',
     description: 'Classic analytics slice: filter data, list rows, visualize trends',
     aiPromptHint: 'Add a date range filter, bind it to a table and a line chart.',
-    templateId: 'analytics-overview',
     steps: [
       step({
         id: 'filter',

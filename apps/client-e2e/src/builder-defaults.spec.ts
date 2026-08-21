@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { addFromPalette, openBuilder } from './test-helpers';
+import { addFromPalette, expandInspectorSection, openBuilder } from './test-helpers';
 
 test.describe('Builder defaults engine', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,11 +11,13 @@ test.describe('Builder defaults engine', () => {
     await expect(page.getByTestId('canvas-node')).toHaveCount(1);
 
     await expect(page.getByTestId('inspector-suggestions')).toBeVisible();
+    await expandInspectorSection(page, 'suggestions');
     const postgresSuggestion = page.locator('[data-testid^="inspector-suggestion-postgres-table:"]');
     await expect(postgresSuggestion).toBeVisible();
 
     await page.locator('[data-testid^="apply-suggestion-postgres-table:"]').click();
 
+    await expandInspectorSection(page, 'properties');
     await expect(page.getByTestId('inspector-prop-table')).toHaveValue('records');
     await expect(postgresSuggestion).toBeHidden();
   });

@@ -6,7 +6,7 @@ import { generateComponentFile } from './component-templates';
 import { generateEquirectFilterHelperFile } from './media-component-templates';
 import type { GeneratedFile, ReactExportOptions } from './types';
 import { ReactExportError } from './types';
-import { componentExportName, joinLines, pascalFromId } from './utils';
+import { componentExportName, joinLines, pascalFromId, rootComponentName } from './utils';
 
 export function generateReactUiFiles(
   ir: ExportIR,
@@ -105,16 +105,18 @@ export function generateReactUiFiles(
     );
   }
 
+  const rootName = rootComponentName(ir.meta.compositeName);
+
   files.push({
-    path: `${root}/Dashboard.tsx`,
-    content: generateDashboardFile(ir, exportNames, componentImports),
+    path: `${root}/${rootName}.tsx`,
+    content: generateDashboardFile(ir, exportNames, componentImports, rootName),
     encoding: 'utf-8',
-    description: 'Composed dashboard page wired from ExportIR bindings',
+    description: `Composed ${rootName} page wired from ExportIR bindings`,
   });
 
   files.push({
     path: 'README.export.md',
-    content: generateReadme(ir),
+    content: generateReadme(ir, rootName),
     encoding: 'utf-8',
     description: 'Setup notes for exported React UI fragment',
   });
@@ -312,6 +314,7 @@ function generateDashboardFile(
   ir: ExportIR,
   exportNames: Map<string, string>,
   componentImports: string[],
+  rootName: string,
 ): string {
   const context = buildDashboardContext(ir, exportNames);
   const hookImportLines = context.hookImports.map(
@@ -335,7 +338,7 @@ function generateDashboardFile(
     ...componentImportLines,
     ...hookImportLines,
     ``,
-    `export default function Dashboard() {`,
+    `export default function ${rootName}() {`,
     ...context.stateDeclarations,
     ...context.hookCalls,
     ``,
@@ -352,7 +355,7 @@ function generateDashboardFile(
   ]);
 }
 
-function generateReadme(ir: ExportIR): string {
+function generateReadme(ir: ExportIR, rootName: string): string {
   const envLines =
     ir.envVars.length === 0
       ? ['No environment variables required for the UI fragment.']
@@ -365,7 +368,7 @@ function generateReadme(ir: ExportIR): string {
     ``,
     `## Files`,
     ``,
-    `- \`src/Dashboard.tsx\` — composed page wired from builder bindings`,
+    `- \`src/${rootName}.tsx\` — composed page wired from builder bindings`,
     `- \`src/components/*.tsx\` — P0 visual components`,
     `- \`src/hooks/*.ts\` — data hooks targeting exported API routes`,
     `- \`src/auth/*.ts\` — role definitions and current-role stub (when role gates exist)`,
@@ -378,7 +381,7 @@ function generateReadme(ir: ExportIR): string {
     `## Next steps`,
     ``,
     `1. Copy the generated \`src/\` folder into your React or Next.js app.`,
-    `2. Mount \`Dashboard\` on a route.`,
+    `2. Import and mount: \`import ${rootName} from './src/${rootName}'\`.`,
     `3. Ensure server routes referenced by data hooks are available.`,
     irHasEquirectMediaPipeline(ir)
       ? `4. Install ffmpeg.wasm for media pipelines: \`npm install @ffmpeg/ffmpeg @ffmpeg/util\`.`

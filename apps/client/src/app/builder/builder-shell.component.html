@@ -131,6 +131,17 @@
       >
         Create
       </button>
+      <button
+        type="button"
+        class="builder__assistance"
+        data-testid="how-it-works-toggle"
+        [attr.aria-pressed]="assistance.howItWorksEnabled()"
+        [disabled]="state.loading()"
+        title="Turn How it works placement tips on or off"
+        (click)="toggleHowItWorksAssistance()"
+      >
+        How it works: {{ assistance.howItWorksEnabled() ? 'On' : 'Off' }}
+      </button>
       @if (featureFlags.isAiDrawerEnabled()) {
         <button
           type="button"
@@ -242,4 +253,9 @@
 
 <app-export-wizard [open]="exportWizardOpen()" (closed)="closeExportWizard()" />
 <app-ai-drawer [open]="aiDrawerOpen()" (closed)="closeAiDrawer()" />
-<app-creation-wizard (aiAssistRequested)="onCreationWizardAi($event)" />
+<app-creation-wizard
+  (aiAssistRequested)="onCreationWizardAi($event)"
+  (saveRequested)="save()"
+  (saveToLibraryRequested)="saveToLibrary()"
+  (exportRequested)="openExportWizard()"
+/>

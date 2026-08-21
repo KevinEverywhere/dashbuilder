@@ -5,6 +5,7 @@ import { listCompositeTemplates } from '@rosettadash/core';
 import { canEnterBuilder } from '../welcome/stack-profile-session';
 import { AppSelectComponent } from '../shared/app-select/app-select.component';
 import { AppNavComponent } from '../shared/app-nav/app-nav.component';
+import { BuilderAssistanceService } from './builder-assistance.service';
 import { BuilderAuthGateComponent } from './builder-auth-gate.component';
 import { BuilderAuthService } from './builder-auth.service';
 import { BuilderProjectService } from './builder-project.service';
@@ -53,6 +54,7 @@ export class BuilderShellComponent implements OnInit {
   protected readonly featureFlags = inject(AdminFeatureFlagsService);
   protected readonly contentLibrary = inject(ContentLibraryService);
   protected readonly creationWizard = inject(CreationWizardService);
+  protected readonly assistance = inject(BuilderAssistanceService);
   private readonly aiAssist = inject(AiAssistService);
 
   protected readonly exportWizardOpen = signal(false);
@@ -123,6 +125,10 @@ export class BuilderShellComponent implements OnInit {
 
   protected openCreationWizard(): void {
     this.creationWizard.openWizard();
+  }
+
+  protected toggleHowItWorksAssistance(): void {
+    this.assistance.toggleHowItWorksAssistance();
   }
 
   protected async onCreationWizardAi(prompt: string): Promise<void> {

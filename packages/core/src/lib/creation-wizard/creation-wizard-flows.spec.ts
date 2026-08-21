@@ -15,7 +15,9 @@ describe('creation wizard flows', () => {
     expect(goal.steps.at(-1)?.completeWhenTypes).toContain('visual.wasm.media');
   });
 
-  it('dashboard flow applies analytics template id', () => {
-    expect(getCreationGoal('dashboard').templateId).toBe('analytics-overview');
+  it('dashboard and filter flows build piece-by-piece without auto-applying a template', () => {
+    expect(getCreationGoal('dashboard').templateId).toBeUndefined();
+    expect(getCreationGoal('filter-table-chart').templateId).toBeUndefined();
+    expect(getCreationGoal('dashboard').steps.length).toBeGreaterThan(0);
   });
 });

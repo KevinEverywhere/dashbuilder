@@ -1,53 +1,135 @@
 @switch (node().type) {
   @case ('visual.input.text') {
-    <label class="preview-field">
-      @if (showsFieldLabel()) {
+    <div class="preview-field" [class.preview-field--fill]="textUsesMultiline()">
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <input
-        type="text"
-        class="preview-input"
-        data-testid="preview-text-input"
-        [placeholder]="readString('placeholder')"
-        [attr.required]="readBoolean('required') ? true : null"
-        [value]="previewFieldValue()"
-        (input)="updatePreviewFieldValue($event)"
-      />
-    </label>
+      <div class="preview-value-row">
+        @if (builderMode()) {
+          <input
+            type="checkbox"
+            class="preview-border-toggle"
+            data-testid="preview-text-border"
+            data-builder-tab="border"
+            title="Border"
+            [checked]="readBoolean('border')"
+            (change)="onBorderToggle($event)"
+            (pointerdown)="stopBuilderInputEvent($event)"
+            (keydown)="stopBuilderInputEvent($event)"
+          />
+        }
+        @if (textUsesMultiline()) {
+          <textarea
+            class="preview-input preview-textarea"
+            data-testid="preview-text-input"
+            data-builder-tab="placeholder"
+            [class.preview-input--bordered]="readBoolean('border')"
+            [attr.id]="readElementId()"
+            [placeholder]="builderMode() ? '' : readPlaceholder()"
+            [attr.required]="builderMode() ? null : (readBoolean('required') ? true : null)"
+            [ngModel]="builderMode() ? readPlaceholder() : previewFieldValue()"
+            [ngModelOptions]="textInputModelOptions()"
+            (ngModelChange)="onTextLikeModelChange($event)"
+            (focus)="onBuilderPlaceholderFocus($event)"
+            (pointerdown)="stopBuilderInputEvent($event)"
+            (keydown)="stopBuilderInputEvent($event)"
+          ></textarea>
+        } @else {
+          <input
+            type="text"
+            class="preview-input"
+            data-testid="preview-text-input"
+            data-builder-tab="placeholder"
+            [class.preview-input--bordered]="readBoolean('border')"
+            [attr.id]="readElementId()"
+            [placeholder]="builderMode() ? '' : readPlaceholder()"
+            [attr.required]="builderMode() ? null : (readBoolean('required') ? true : null)"
+            [ngModel]="builderMode() ? readPlaceholder() : previewFieldValue()"
+            [ngModelOptions]="textInputModelOptions()"
+            (ngModelChange)="onTextLikeModelChange($event)"
+            (focus)="onBuilderPlaceholderFocus($event)"
+            (pointerdown)="stopBuilderInputEvent($event)"
+            (keydown)="stopBuilderInputEvent($event)"
+          />
+        }
+      </div>
+    </div>
   }
   @case ('visual.input.select') {
     <div class="preview-field">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <app-select
-        class="preview-input"
-        testId="preview-select"
-        [placeholder]="readString('placeholder', 'Select…')"
-        [options]="selectOptions()"
-        [ngModel]="previewSelectValue()"
-        (ngModelChange)="updatePreviewSelectValue($event)"
-      />
+      <div class="preview-value-row">
+        @if (builderMode()) {
+          <input
+            type="checkbox"
+            class="preview-border-toggle"
+            data-testid="preview-select-border"
+            data-builder-tab="border"
+            title="Border"
+            [checked]="readBoolean('border')"
+            (change)="onBorderToggle($event)"
+            (pointerdown)="stopBuilderInputEvent($event)"
+            (keydown)="stopBuilderInputEvent($event)"
+          />
+        }
+        <app-select
+          class="preview-input"
+          [class.preview-input--bordered]="readBoolean('border')"
+          testId="preview-select"
+          [attr.data-builder-tab]="'select'"
+          [attr.id]="readElementId()"
+          [placeholder]="readString('placeholder', 'Select…')"
+          [options]="resolvedSelectOptions()"
+          [ngModel]="previewSelectValue()"
+          (ngModelChange)="updatePreviewSelectValue($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
+        />
+      </div>
     </div>
   }
   @case ('visual.input.number') {
-    <label class="preview-field">
-      @if (showsFieldLabel()) {
+    <div class="preview-field">
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <input
-        type="number"
-        class="preview-input"
-        data-testid="preview-number-input"
-        [placeholder]="readString('placeholder')"
-        [attr.min]="readNumber('min', 0)"
-        [attr.max]="readNumber('max', 100)"
-        [attr.step]="readNumber('step', 1)"
-        [attr.required]="readBoolean('required') ? true : null"
-        [value]="previewFieldValue()"
-        (input)="updatePreviewFieldValue($event)"
-      />
-    </label>
+      <div class="preview-value-row">
+        @if (builderMode()) {
+          <input
+            type="checkbox"
+            class="preview-border-toggle"
+            data-testid="preview-number-border"
+            data-builder-tab="border"
+            title="Border"
+            [checked]="readBoolean('border')"
+            (change)="onBorderToggle($event)"
+            (pointerdown)="stopBuilderInputEvent($event)"
+            (keydown)="stopBuilderInputEvent($event)"
+          />
+        }
+        <input
+          [attr.type]="builderMode() ? 'text' : 'number'"
+          class="preview-input"
+          data-testid="preview-number-input"
+          data-builder-tab="placeholder"
+          [class.preview-input--bordered]="readBoolean('border')"
+          [attr.id]="readElementId()"
+          [placeholder]="builderMode() ? '' : readPlaceholder()"
+          [attr.min]="builderMode() ? null : readNumber('min', 0)"
+          [attr.max]="builderMode() ? null : readNumber('max', 100)"
+          [attr.step]="builderMode() ? null : readNumber('step', 1)"
+          [attr.required]="builderMode() ? null : (readBoolean('required') ? true : null)"
+          [ngModel]="builderMode() ? readPlaceholder() : previewFieldValue()"
+          [ngModelOptions]="textInputModelOptions()"
+          (ngModelChange)="onTextLikeModelChange($event)"
+          (focus)="onBuilderPlaceholderFocus($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
+        />
+      </div>
+    </div>
   }
   @case ('visual.input.checkbox') {
     <label class="preview-field preview-field--checkbox">
@@ -55,33 +137,56 @@
         type="checkbox"
         class="preview-checkbox"
         data-testid="preview-checkbox"
+        [attr.id]="readElementId()"
         [checked]="previewCheckboxChecked()"
         (change)="updatePreviewCheckbox($event)"
       />
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
     </label>
   }
   @case ('visual.input.textarea') {
-    <label class="preview-field">
-      @if (showsFieldLabel()) {
+    <div class="preview-field preview-field--fill">
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <textarea
-        class="preview-input preview-textarea"
-        data-testid="preview-textarea"
-        [placeholder]="readString('placeholder')"
-        [attr.rows]="readNumber('rows', 4)"
-        [attr.required]="readBoolean('required') ? true : null"
-        [value]="previewFieldValue()"
-        (input)="updatePreviewFieldValue($event)"
-      ></textarea>
-    </label>
+      <div class="preview-value-row">
+        @if (builderMode()) {
+          <input
+            type="checkbox"
+            class="preview-border-toggle"
+            data-testid="preview-textarea-border"
+            data-builder-tab="border"
+            title="Border"
+            [checked]="readBoolean('border')"
+            (change)="onBorderToggle($event)"
+            (pointerdown)="stopBuilderInputEvent($event)"
+            (keydown)="stopBuilderInputEvent($event)"
+          />
+        }
+        <textarea
+          class="preview-input preview-textarea"
+          data-testid="preview-textarea"
+          data-builder-tab="placeholder"
+          [class.preview-input--bordered]="readBoolean('border')"
+          [attr.id]="readElementId()"
+          [placeholder]="builderMode() ? '' : readPlaceholder()"
+          [attr.rows]="readNumber('rows', 4)"
+          [attr.required]="builderMode() ? null : (readBoolean('required') ? true : null)"
+          [ngModel]="builderMode() ? readPlaceholder() : previewFieldValue()"
+          [ngModelOptions]="textInputModelOptions()"
+          (ngModelChange)="onTextLikeModelChange($event)"
+          (focus)="onBuilderPlaceholderFocus($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
+        ></textarea>
+      </div>
+    </div>
   }
   @case ('visual.input.date-range') {
     <div class="preview-date-range" data-testid="preview-date-range">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
       <div class="preview-date-range__controls">
@@ -200,7 +305,7 @@
   }
   @case ('logic.timer') {
     <div class="preview-timer" data-testid="preview-timer">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <div class="preview-timer__header">
           <span class="preview-field__label">{{ readFieldLabel() }}</span>
         </div>
@@ -348,9 +453,14 @@
         type="email"
         class="preview-input"
         data-testid="preview-person-invite-email"
-        [placeholder]="readString('emailPlaceholder', 'name@company.com')"
-        [value]="previewFieldValue()"
-        (input)="updatePreviewFieldValue($event)"
+        data-builder-tab="email"
+        [placeholder]="builderMode() ? '' : readString('emailPlaceholder', 'name@company.com')"
+        [ngModel]="builderMode() ? readString('emailPlaceholder', 'name@company.com') : previewFieldValue()"
+        [ngModelOptions]="textInputModelOptions()"
+        (ngModelChange)="onPersonInviteEmailModelChange($event)"
+        (focus)="onBuilderPlaceholderFocus($event)"
+        (pointerdown)="stopBuilderInputEvent($event)"
+        (keydown)="stopBuilderInputEvent($event)"
       />
       <button type="button" class="preview-onboarding__button" data-testid="preview-person-invite-submit">
         {{ readString('submitLabel', 'Send invite') }}
@@ -375,52 +485,97 @@
   }
   @case ('visual.news.language-select') {
     <div class="preview-field">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <app-select
-        class="preview-input"
-        testId="preview-news-language-select"
-        [placeholder]="readString('placeholder', 'Language')"
-        [options]="newsSelectOptions()"
-        [ngModel]="previewSelectValue()"
-        (ngModelChange)="updatePreviewSelectValue($event)"
-      />
+      @if (builderMode()) {
+        <input
+          type="text"
+          class="preview-input"
+          data-testid="preview-news-language-select"
+          data-builder-tab="placeholder"
+          [ngModel]="readPlaceholder('Language')"
+          [ngModelOptions]="textInputModelOptions()"
+          (ngModelChange)="onTextLikeModelChange($event)"
+          (focus)="onBuilderPlaceholderFocus($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
+        />
+      } @else {
+        <app-select
+          class="preview-input"
+          testId="preview-news-language-select"
+          [placeholder]="readString('placeholder', 'Language')"
+          [options]="newsSelectOptions()"
+          [ngModel]="previewSelectValue()"
+          (ngModelChange)="updatePreviewSelectValue($event)"
+        />
+      }
     </div>
   }
   @case ('visual.news.region-select') {
     <div class="preview-field">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <app-select
-        class="preview-input"
-        testId="preview-news-region-select"
-        [placeholder]="readString('placeholder', 'Region')"
-        [options]="newsSelectOptions()"
-        [ngModel]="previewSelectValue()"
-        (ngModelChange)="updatePreviewSelectValue($event)"
-      />
+      @if (builderMode()) {
+        <input
+          type="text"
+          class="preview-input"
+          data-testid="preview-news-region-select"
+          data-builder-tab="placeholder"
+          [ngModel]="readPlaceholder('Region')"
+          [ngModelOptions]="textInputModelOptions()"
+          (ngModelChange)="onTextLikeModelChange($event)"
+          (focus)="onBuilderPlaceholderFocus($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
+        />
+      } @else {
+        <app-select
+          class="preview-input"
+          testId="preview-news-region-select"
+          [placeholder]="readString('placeholder', 'Region')"
+          [options]="newsSelectOptions()"
+          [ngModel]="previewSelectValue()"
+          (ngModelChange)="updatePreviewSelectValue($event)"
+        />
+      }
     </div>
   }
   @case ('visual.news.type-select') {
     <div class="preview-field">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
-      <app-select
-        class="preview-input"
-        testId="preview-news-type-select"
-        [placeholder]="readString('placeholder', 'News type')"
-        [options]="newsSelectOptions()"
-        [ngModel]="previewSelectValue()"
-        (ngModelChange)="updatePreviewSelectValue($event)"
-      />
+      @if (builderMode()) {
+        <input
+          type="text"
+          class="preview-input"
+          data-testid="preview-news-type-select"
+          data-builder-tab="placeholder"
+          [ngModel]="readPlaceholder('News type')"
+          [ngModelOptions]="textInputModelOptions()"
+          (ngModelChange)="onTextLikeModelChange($event)"
+          (focus)="onBuilderPlaceholderFocus($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
+        />
+      } @else {
+        <app-select
+          class="preview-input"
+          testId="preview-news-type-select"
+          [placeholder]="readString('placeholder', 'News type')"
+          [options]="newsSelectOptions()"
+          [ngModel]="previewSelectValue()"
+          (ngModelChange)="updatePreviewSelectValue($event)"
+        />
+      }
     </div>
   }
   @case ('visual.news.search-box') {
     <div class="preview-field preview-search">
-      @if (showsFieldLabel()) {
+      @if (!builderMode() && showsFieldLabel()) {
         <span class="preview-field__label">{{ readFieldLabel() }}</span>
       }
       <div class="preview-search__row">
@@ -428,9 +583,14 @@
           type="search"
           class="preview-input preview-search__input"
           data-testid="preview-news-search-input"
-          [placeholder]="readString('placeholder', 'Search news…')"
-          [value]="previewFieldValue()"
-          (input)="updatePreviewFieldValue($event)"
+          data-builder-tab="placeholder"
+          [placeholder]="builderMode() ? '' : readString('placeholder', 'Search news…')"
+          [ngModel]="builderMode() ? readPlaceholder('Search news…') : previewFieldValue()"
+          [ngModelOptions]="textInputModelOptions()"
+          (ngModelChange)="onTextLikeModelChange($event)"
+          (focus)="onBuilderPlaceholderFocus($event)"
+          (pointerdown)="stopBuilderInputEvent($event)"
+          (keydown)="stopBuilderInputEvent($event)"
         />
         <button type="button" class="preview-search__button" data-testid="preview-news-search-button">
           {{ readString('buttonLabel', 'Search') }}

@@ -11,6 +11,7 @@ export interface PropertySchema {
   type: PropertySchemaType;
   default?: unknown;
   required?: boolean;
+  readOnly?: boolean;
   options?: { label: string; value: string | number | boolean }[];
   description?: string;
 }

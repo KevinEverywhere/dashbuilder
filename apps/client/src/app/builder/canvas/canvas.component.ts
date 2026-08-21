@@ -1,7 +1,10 @@
-import { AfterViewInit, Component, ElementRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
-import { Binding, ComponentNode, PlacementPrompt, getGroupingGuide, getInstructionSteps, groupingAnimationLabel, hasInstructionGuide, readNodeDisplayDataSource, readNodeDisplaySubtitle, resolveGroupingAnimationBlocks, type InstructionStep } from '@rosettadash/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Binding, ComponentNode, PlacementPrompt, getGroupingGuide, getInstructionSteps, groupingAnimationLabel, hasInstructionGuide, resolveGroupingAnimationBlocks, type InstructionStep } from '@rosettadash/core';
+import { BuilderAssistanceService } from '../builder-assistance.service';
 import { BuilderStateService } from '../builder-state.service';
+import { BuilderTabNavigationService } from '../builder-tab-navigation.service';
 import { CreationWizardService } from '../creation-wizard/creation-wizard.service';
+import { PreviewNodeComponent } from '../preview/preview-node.component';
 import {
   CANVAS_MIN_NODE_HEIGHT,
   clampCanvasNodeHeight,
@@ -44,12 +47,15 @@ interface ResizeState {
 
 @Component({
   selector: 'app-canvas',
+  imports: [PreviewNodeComponent],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.scss',
 })
-export class CanvasComponent implements AfterViewInit {
+export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly state = inject(BuilderStateService);
   protected readonly creationWizard = inject(CreationWizardService);
+  protected readonly assistance = inject(BuilderAssistanceService);
+  private readonly tabNav = inject(BuilderTabNavigationService);
 
   @ViewChild('surface') private surfaceRef?: ElementRef<HTMLElement>;
 
@@ -102,8 +108,21 @@ export class CanvasComponent implements AfterViewInit {
       .filter((edge): edge is BindingEdge => edge !== null);
   });
 
+  ngOnInit(): void {
+    this.tabNav.setRenameStarter((nodeId) => {
+      const node = this.state.nodes().find((item) => item.id === nodeId);
+      if (node) {
+        this.startRename(node, new Event('tab'));
+      }
+    });
+  }
+
   ngAfterViewInit(): void {
     this.syncViewport();
+  }
+
+  ngOnDestroy(): void {
+    this.tabNav.setRenameStarter(null);
   }
 
   protected syncViewport(): void {
@@ -193,9 +212,71 @@ export class CanvasComponent implements AfterViewInit {
     });
   }
 
+  protected onNamePointerDown(node: ComponentNode, event: PointerEvent): void {
+    event.stopPropagation();
+    if (!this.state.selectedNodeIdsSet().has(node.id)) {
+      this.state.selectNode(node.id);
+    }
+    this.startRename(node, event);
+  }
+
+  protected onNameClick(node: ComponentNode, event: Event): void {
+    event.stopPropagation();
+  }
+
+  protected stopPreviewEvent(event: Event): void {
+    event.stopPropagation();
+  }
+
   protected onRenameInputEvent(event: Event): void {
     // Keep clicks/pointerdowns inside the rename input from reselecting/dragging the node.
     event.stopPropagation();
+  }
+
+  protected onRenameKeydown(node: ComponentNode, event: KeyboardEvent): void {
+    event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.commitRename(node.id);
+      return;
+    }
+    if (event.key === 'Escape') {
+      this.cancelRename(event);
+      return;
+    }
+    if (event.key === ' ') {
+      return;
+    }
+    if (event.key === 'Tab') {
+      this.tabNav.handleTab(event, {
+        fromKey: 'name',
+        beforeMove: () => this.commitRename(node.id),
+      });
+    }
+  }
+
+  protected onNodeKeydown(node: ComponentNode, event: KeyboardEvent): void {
+    if (event.key !== 'Tab') {
+      return;
+    }
+    // Rename input handles its own Tab (commit + move).
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active.matches('[data-testid="canvas-node-rename-input"]')) {
+      return;
+    }
+    this.tabNav.handleTab(event);
+  }
+
+  protected onCloseKeydown(nodeId: string, event: KeyboardEvent): void {
+    if (event.key === 'Tab') {
+      this.tabNav.handleTab(event);
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.removeNode(nodeId, event);
+    }
   }
 
   protected commitRename(nodeId: string): void {
@@ -233,7 +314,10 @@ export class CanvasComponent implements AfterViewInit {
     event.stopPropagation();
 
     const target = event.target;
-    if (target instanceof Element && target.closest('.canvas__node-close')) {
+    if (
+      target instanceof Element &&
+      target.closest('.canvas__node-close, .canvas__node-name, .canvas__node-name-input')
+    ) {
       return;
     }
 
@@ -417,14 +501,6 @@ export class CanvasComponent implements AfterViewInit {
       return false;
     }
     return !this.isPendingOutput(nodeId, portId);
-  }
-
-  protected nodeSubtitle(node: ComponentNode): string | undefined {
-    return readNodeDisplaySubtitle(node.properties);
-  }
-
-  protected nodeDataSource(node: ComponentNode): string | undefined {
-    return readNodeDisplayDataSource(node.properties);
   }
 
   protected nodeHeaderHeight(node: ComponentNode): number {

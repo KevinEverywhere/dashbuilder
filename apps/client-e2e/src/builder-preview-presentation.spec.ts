@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { addFromPalette, openBuilder, waitForPreviewData } from './test-helpers';
+import { addFromPalette, expandInspectorSection, openBuilder, waitForPreviewData } from './test-helpers';
 
 test.describe('Builder preview presentation', () => {
   test.beforeEach(async ({ page }) => {
@@ -40,6 +40,7 @@ test.describe('Builder preview presentation', () => {
   test('shows field label only when label property is set', async ({ page }) => {
     await addFromPalette(page, 'visual.input.text');
     await page.getByTestId('canvas-node').click();
+    await expandInspectorSection(page, 'properties');
     await page.getByTestId('inspector-prop-label').fill('Customer name');
 
     await page.getByTestId('mode-preview').click();

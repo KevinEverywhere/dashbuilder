@@ -61,7 +61,7 @@ describe('generateReactUiFiles', () => {
 
     expect(paths).toEqual(
       expect.arrayContaining([
-        'src/Dashboard.tsx',
+        'src/SalesDashboard.tsx',
         'src/types.ts',
         'src/styles/tokens.css',
         'README.export.md',
@@ -70,7 +70,7 @@ describe('generateReactUiFiles', () => {
       ]),
     );
 
-    const dashboard = files.find((file) => file.path === 'src/Dashboard.tsx');
+    const dashboard = files.find((file) => file.path === 'src/SalesDashboard.tsx');
     expect(dashboard?.content).toContain('Sales Dashboard');
     expect(dashboard?.content).toContain('usePg1Data');
     expect(dashboard?.content).toContain('dr1_range');
@@ -160,7 +160,7 @@ describe('generateReactUiFiles', () => {
     const checkboxFile = files.find((file) => file.path.endsWith('Checkbox.tsx'));
     expect(checkboxFile?.content).toContain('type="checkbox"');
 
-    const dashboard = files.find((file) => file.path === 'src/Dashboard.tsx');
+    const dashboard = files.find((file) => file.path === 'src/FormInputs.tsx');
     expect(dashboard?.content).toContain('Accept terms');
 
     const textareaFile = files.find((file) => file.path.endsWith('Textarea.tsx'));
@@ -243,7 +243,7 @@ describe('generateReactUiFiles', () => {
     const files = generateReactUiFiles(ir);
     const detailFile = files.find((file) => file.path.endsWith('DetailPanel.tsx'));
     const tableFile = files.find((file) => file.path.endsWith('DataTable.tsx'));
-    const dashboard = files.find((file) => file.path === 'src/Dashboard.tsx');
+    const dashboard = files.find((file) => file.path === 'src/CrudDashboard.tsx');
 
     expect(detailFile?.content).toContain('detail-panel__fields');
     expect(tableFile?.content).toContain('onSelectRow');
@@ -290,7 +290,7 @@ describe('generateReactUiFiles', () => {
 
     const files = generateReactUiFiles(ir);
     const presetFile = files.find((file) => file.path.includes('TimePreset'));
-    const dashboard = files.find((file) => file.path === 'src/Dashboard.tsx');
+    const dashboard = files.find((file) => file.path === 'src/PresetDashboard.tsx');
 
     expect(presetFile?.content).toContain('time-preset__button');
     expect(dashboard?.content).toContain('tp1_range');
@@ -330,7 +330,7 @@ describe('generateReactUiFiles', () => {
 
     const files = generateReactUiFiles(ir);
     const skeletonFile = files.find((file) => file.path.includes('LoadingSkeleton'));
-    const dashboard = files.find((file) => file.path === 'src/Dashboard.tsx');
+    const dashboard = files.find((file) => file.path === 'src/LoadingDashboard.tsx');
 
     expect(skeletonFile?.content).toContain('skeleton__line');
     expect(dashboard?.content).toContain('cb1_value');
@@ -359,7 +359,7 @@ describe('generateReactUiFiles', () => {
     const files = generateReactUiFiles(ir);
     const timerFile = files.find((file) => file.path.includes('Timer.tsx'));
     expect(timerFile?.content).toContain('timer__value');
-    expect(files.some((file) => file.path === 'src/Dashboard.tsx' && file.content.includes('Timer'))).toBe(
+    expect(files.some((file) => file.path === 'src/TimerDashboard.tsx' && file.content.includes('Timer'))).toBe(
       true,
     );
   });

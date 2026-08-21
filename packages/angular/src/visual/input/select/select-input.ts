@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 export interface SelectInputOption {
   value: string;
@@ -23,8 +23,10 @@ export interface SelectInputProps {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section [attr.data-testid]="'rd-input-select'" [ngClass]="rootClass()">
-      @if (label()) { <span class="rd-field__label">{{ label() }}</span> }
-      <select class="rd-select" [value]="value() ?? ''">
+      @if (label()) {
+        <span class="rd-field__label">{{ label() }}</span>
+      }
+      <select class="rd-select" [value]="value() ?? ''" (change)="onNativeChange($event)">
         <option value="">{{ placeholder() ?? 'Select…' }}</option>
         @for (o of options() ?? []; track o.value) {
           <option [value]="o.value">{{ o.label }}</option>
@@ -40,8 +42,19 @@ export class SelectInput {
   readonly placeholder = input<string | undefined>(undefined);
   readonly options = input<SelectInputOption[] | undefined>(undefined);
   readonly value = input<string | undefined>(undefined);
+  readonly onChange = input<((value: string) => void) | undefined>(undefined);
+  readonly valueChange = output<string>();
 
   readonly rootClass = computed(() =>
     ['rd-input-select', this.className()].filter(Boolean).join(' '),
   );
+
+  protected onNativeChange(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement)) {
+      return;
+    }
+    this.onChange()?.(target.value);
+    this.valueChange.emit(target.value);
+  }
 }

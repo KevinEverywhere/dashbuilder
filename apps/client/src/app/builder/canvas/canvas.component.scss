@@ -104,37 +104,61 @@
   background: transparent;
   box-shadow: none;
   cursor: pointer;
+  z-index: 1;
+  overflow: hidden;
 
-  &--selected .canvas__node-frame {
-    border-color: var(--db-accent);
-    box-shadow: 0 0 0 2px var(--db-accent-soft);
+  &--selected {
+    z-index: 2;
+
+    .canvas__node-shell {
+      border-color: var(--db-accent);
+      box-shadow: 0 0 0 2px var(--db-accent-soft);
+    }
   }
+}
+
+.canvas__nodes--arranging .canvas__node {
+  transition:
+    left 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    top 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.canvas__node-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px dashed rgb(100 116 139 / 55%);
+  border-radius: 0.625rem;
+  /* Positioning wrapper only — keep the canvas grid visible through it */
+  background: transparent;
+  box-shadow: none;
 }
 
 .canvas__node-frame {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  border: 1px solid var(--db-border);
-  border-radius: 0.625rem;
-  background: var(--db-panel-bg);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  flex: 1;
+  min-height: 0;
+  margin: 0.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  box-shadow: none;
   overflow: hidden;
-
-  .canvas__node:hover & {
-    border-color: var(--db-border-strong);
-  }
 }
 
 .canvas__node-namebar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 2.25rem;
-  padding: 0.5rem 0.625rem;
-  border-bottom: 1px solid var(--db-border);
-  background: linear-gradient(180deg, var(--db-accent-soft), var(--db-panel-bg));
+  gap: 0.375rem;
+  min-height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -150,11 +174,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font: inherit;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--db-text);
   line-height: 1.2;
+  text-align: left;
+  padding: 0.25rem 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   cursor: text;
+  opacity: 1;
 }
 
 .canvas__node-name-input {
@@ -165,14 +197,37 @@
   font-weight: 700;
   color: var(--db-text);
   line-height: 1.2;
-  background: var(--db-panel-bg);
-  border: 1px solid var(--db-accent);
-  border-radius: 0.25rem;
-  padding: 0.0625rem 0.25rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--db-accent);
+  border-radius: 0;
+  padding: 0.25rem 0;
   cursor: text;
+  opacity: 1;
 
   &:focus {
     outline: none;
+  }
+}
+
+.canvas__node-close {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 1px solid var(--db-border);
+  border-radius: 0.25rem;
+  background: var(--db-panel-bg);
+  color: var(--db-text-muted);
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 1;
+
+  &:hover {
+    border-color: #f1aeb5;
+    background: #fff5f5;
+    color: #b42318;
   }
 }
 
@@ -181,28 +236,40 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  gap: 0;
+  margin-top: 0;
+  background: transparent;
 }
 
-.canvas__node-meta {
-  display: flex;
-  flex-direction: column;
+.canvas__node-preview {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+
+  app-preview-node {
+    display: block;
+    height: 100%;
+    pointer-events: auto;
+  }
+}
+
+.canvas__node-ports {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.125rem;
-  padding: 0.375rem 0.625rem 0.25rem;
-  border-bottom: 1px dashed var(--db-border);
-  background: var(--db-surface);
-}
-
-.canvas__node-subtitle,
-.canvas__node-datasource {
-  margin: 0;
-  font-size: 0.6875rem;
-  line-height: 1.4;
-  color: var(--db-text-muted);
-}
-
-.canvas__node-datasource {
-  font-family: ui-monospace, monospace;
-  color: var(--db-text-subtle);
+  padding: 0.125rem 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  opacity: 1;
+  position: relative;
+  z-index: 3;
 }
 
 .canvas__dashboard {
@@ -260,26 +327,6 @@
   display: none;
 }
 
-.canvas__node-close {
-  flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  padding: 0;
-  border: 1px solid var(--db-border);
-  border-radius: 0.25rem;
-  background: var(--db-panel-bg);
-  color: var(--db-text-muted);
-  font-size: 0.875rem;
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover {
-    border-color: #f1aeb5;
-    background: #fff5f5;
-    color: #b42318;
-  }
-}
-
 .canvas__resize-handle {
   position: absolute;
   right: -0.25rem;
@@ -298,13 +345,6 @@
   font-family: ui-monospace, monospace;
   font-size: 0.6875rem;
   color: var(--db-text-subtle);
-}
-
-.canvas__node-ports {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
-  padding: 0.375rem 0.25rem 0.5rem;
 }
 
 .canvas__ports {
@@ -413,7 +453,7 @@
   border: 1px solid rgb(37 99 235 / 35%);
   border-radius: 0.625rem;
   background: rgb(37 99 235 / 8%);
-  text-align: left;
+  text-align: center;
 }
 
 .canvas__welcome-lead {
@@ -425,20 +465,24 @@
 
 .canvas__welcome-actions {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
   gap: 0.5rem;
   margin-top: 0.875rem;
 }
 
 .canvas__welcome-primary,
-.canvas__welcome-secondary,
-.canvas__welcome-link {
+.canvas__welcome-secondary {
+  flex: 1 1 0;
+  min-width: 0;
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
   border-radius: 0.375rem;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .canvas__welcome-primary {
@@ -453,24 +497,34 @@
   color: var(--db-text, #0f172a);
 }
 
-.canvas__welcome-link {
-  border: 0;
-  background: transparent;
-  color: var(--db-accent, #2563eb);
-  text-decoration: underline;
-  padding-inline: 0.25rem;
+.canvas__welcome-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.875rem;
 }
 
+.canvas__welcome-link,
 .canvas__welcome-dismiss {
-  margin-top: 0.75rem;
   border: 0;
   background: transparent;
   padding: 0;
   font: inherit;
-  font-size: 0.75rem;
-  color: var(--db-text-muted, #64748b);
+  font-size: 0.8125rem;
   cursor: pointer;
   text-decoration: underline;
+}
+
+.canvas__welcome-link {
+  color: var(--db-accent, #2563eb);
+  font-weight: 600;
+}
+
+.canvas__welcome-dismiss {
+  color: var(--db-text-muted, #64748b);
+  font-size: 0.75rem;
 }
 
 .canvas__explore-tips {

@@ -1,16 +1,26 @@
+import { TestBed } from '@angular/core/testing';
 import { defaultComponentRegistry } from '@rosettadash/core';
 import {
   CANVAS_GRID_SIZE,
   clampCanvasNodeWidth,
   snapToCanvasGrid,
 } from './canvas/canvas-layout';
+import { BuilderAssistanceService } from './builder-assistance.service';
 import { BuilderStateService } from './builder-state.service';
 
 describe('BuilderStateService', () => {
   let service: BuilderStateService;
+  let assistance: BuilderAssistanceService;
 
   beforeEach(() => {
-    service = new BuilderStateService();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
+    TestBed.configureTestingModule({
+      providers: [BuilderStateService, BuilderAssistanceService],
+    });
+    service = TestBed.inject(BuilderStateService);
+    assistance = TestBed.inject(BuilderAssistanceService);
   });
 
   it('adds nodes from the registry', () => {
@@ -28,6 +38,19 @@ describe('BuilderStateService', () => {
 
     service.updateNodeProperty(node.id, 'title', 'Revenue');
     expect(service.selectedNode()?.properties['title']).toBe('Revenue');
+  });
+
+  it('keeps the canvas title in sync with the inspector Label property when edited', () => {
+    const definition = defaultComponentRegistry.getOrThrow('visual.input.text');
+    const node = service.addNodeFromDefinition(definition);
+
+    service.updateNodeProperty(node.id, 'label', 'First Name');
+    expect(service.selectedNode()?.label).toBe('First Name');
+    expect(service.selectedNode()?.properties['label']).toBe('First Name');
+
+    service.updateNodeLabel(node.id, 'Last Name');
+    expect(service.selectedNode()?.label).toBe('Last Name');
+    expect(service.selectedNode()?.properties['label']).toBe('Last Name');
   });
 
   it('renames a node label, trims it, and rejects empty/unchanged values', () => {
@@ -212,7 +235,8 @@ describe('BuilderStateService', () => {
     expect(service.nodes()).toHaveLength(1);
   });
 
-  it('shows a placement prompt when adding a grouped component', () => {
+  it('shows a placement prompt when adding a grouped component and assistance is enabled', () => {
+    assistance.enableHowItWorksAssistance();
     const table = service.addNodeFromDefinition(
       defaultComponentRegistry.getOrThrow('visual.table'),
     );
@@ -222,7 +246,14 @@ describe('BuilderStateService', () => {
     expect(prompt?.companions.some((entry) => entry.type === 'visual.input.date-range')).toBe(true);
   });
 
+  it('does not show a placement prompt when How it works assistance is off', () => {
+    assistance.chooseInspectorOnly();
+    service.addNodeFromDefinition(defaultComponentRegistry.getOrThrow('visual.table'));
+    expect(service.placementPrompt()).toBeNull();
+  });
+
   it('adds a companion from the placement prompt near the source node', () => {
+    assistance.enableHowItWorksAssistance();
     const table = service.addNodeFromDefinition(
       defaultComponentRegistry.getOrThrow('visual.table'),
     );

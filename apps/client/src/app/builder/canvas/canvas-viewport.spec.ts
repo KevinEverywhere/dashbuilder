@@ -73,11 +73,12 @@ describe('canvas viewport helpers', () => {
     expect(visible.some((node) => node.id === 'far')).toBe(true);
   });
 
-  it('uses palette-aligned minimum height for an empty canvas', () => {
+  it('uses a modest minimum height for an empty canvas', () => {
     expect(computeCanvasContentBounds([])).toEqual({
       width: 480,
       height: CANVAS_MIN_CONTENT_HEIGHT_PX,
     });
+    expect(CANVAS_MIN_CONTENT_HEIGHT_PX).toBeLessThanOrEqual(480);
   });
 
   it('computes content bounds from node positions and heights', () => {
@@ -90,5 +91,12 @@ describe('canvas viewport helpers', () => {
       width: 480,
       height: CANVAS_MIN_CONTENT_HEIGHT_PX,
     });
+  });
+
+  it('extends height when a node is placed far down the canvas', () => {
+    const bounds = computeCanvasContentBounds([
+      createNode({ layout: { x: 24, y: 1200, width: 220, height: 120 } }),
+    ]);
+    expect(bounds.height).toBeGreaterThan(1200);
   });
 });

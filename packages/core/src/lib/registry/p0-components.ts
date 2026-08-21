@@ -11,8 +11,18 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     outputs: [{ id: 'value', name: 'value', dataType: 'string' }],
     properties: [
       { key: 'label', label: 'Label', type: 'string', default: '' },
-      { key: 'placeholder', label: 'Placeholder', type: 'string', default: '' },
-      { key: 'required', label: 'Required', type: 'boolean', default: false },
+      { key: 'id', label: 'ID', type: 'string', default: '' },
+      { key: 'placeholder', label: 'Placeholder', type: 'string', default: 'enter placeholder here' },
+      { key: 'required', label: "Req'd", type: 'boolean', default: false },
+      { key: 'border', label: 'Border', type: 'boolean', default: false },
+      {
+        key: 'rows',
+        label: 'Rows',
+        type: 'number',
+        default: 1,
+        readOnly: true,
+        description: 'Derived from canvas height when the field is stretched.',
+      },
     ],
   },
   {
@@ -25,7 +35,17 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     outputs: [{ id: 'value', name: 'value', dataType: 'string' }],
     properties: [
       { key: 'label', label: 'Label', type: 'string', default: '' },
+      { key: 'id', label: 'ID', type: 'string', default: '' },
       { key: 'placeholder', label: 'Placeholder', type: 'string', default: 'Select…' },
+      {
+        key: 'staticOptions',
+        label: 'Options',
+        type: 'string',
+        default: 'Option A\nOption B\nOption C',
+      },
+      { key: 'labelField', label: 'Label field', type: 'string', default: 'name' },
+      { key: 'valueField', label: 'Value field', type: 'string', default: 'id' },
+      { key: 'border', label: 'Border', type: 'boolean', default: false },
     ],
   },
   {
@@ -38,8 +58,10 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     outputs: [{ id: 'value', name: 'value', dataType: 'number' }],
     properties: [
       { key: 'label', label: 'Label', type: 'string', default: '' },
-      { key: 'placeholder', label: 'Placeholder', type: 'string', default: '' },
-      { key: 'required', label: 'Required', type: 'boolean', default: false },
+      { key: 'id', label: 'ID', type: 'string', default: '' },
+      { key: 'placeholder', label: 'Placeholder', type: 'string', default: 'enter placeholder here' },
+      { key: 'required', label: "Req'd", type: 'boolean', default: false },
+      { key: 'border', label: 'Border', type: 'boolean', default: false },
       { key: 'min', label: 'Minimum', type: 'number', default: 0 },
       { key: 'max', label: 'Maximum', type: 'number', default: 100 },
       { key: 'step', label: 'Step', type: 'number', default: 1 },
@@ -55,6 +77,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     outputs: [{ id: 'value', name: 'value', dataType: 'boolean' }],
     properties: [
       { key: 'label', label: 'Label', type: 'string', default: '' },
+      { key: 'id', label: 'ID', type: 'string', default: '' },
       { key: 'defaultChecked', label: 'Default checked', type: 'boolean', default: false },
     ],
   },
@@ -68,8 +91,10 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     outputs: [{ id: 'value', name: 'value', dataType: 'string' }],
     properties: [
       { key: 'label', label: 'Label', type: 'string', default: '' },
-      { key: 'placeholder', label: 'Placeholder', type: 'string', default: '' },
-      { key: 'required', label: 'Required', type: 'boolean', default: false },
+      { key: 'id', label: 'ID', type: 'string', default: '' },
+      { key: 'placeholder', label: 'Placeholder', type: 'string', default: 'enter placeholder here' },
+      { key: 'required', label: "Req'd", type: 'boolean', default: false },
+      { key: 'border', label: 'Border', type: 'boolean', default: false },
       { key: 'rows', label: 'Rows', type: 'number', default: 4 },
     ],
   },

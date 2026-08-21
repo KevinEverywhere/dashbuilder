@@ -54,7 +54,7 @@ describe('ExportService', () => {
     });
 
     expect(result.ir.meta.compositeName).toBe('Export me');
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path.startsWith('src/components/'))).toBe(true);
   });
 
@@ -379,7 +379,7 @@ describe('ExportService', () => {
       ],
     });
 
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
     expect(result.files.length).toBeGreaterThan(10);
   });
@@ -396,7 +396,7 @@ describe('ExportService', () => {
       bindings: [],
     });
 
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/KpiOnly.tsx')).toBe(true);
     expect(result.files.some((file) => file.path.includes('KpiCard'))).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
     expect(result.files.some((file) => file.path.includes('DataTable'))).toBe(false);
@@ -429,7 +429,7 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/dashboard.component.ts')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(false);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(false);
   });
 
   it('returns combined Vue and NestJS files for a valid composite', () => {
@@ -459,7 +459,7 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/Dashboard.vue')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(false);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(false);
   });
 
   it('returns combined Svelte and NestJS files for a valid composite', () => {
@@ -489,7 +489,7 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/Dashboard.svelte')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(false);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(false);
   });
 
   it('returns combined React and Express files for a valid composite', () => {
@@ -517,7 +517,7 @@ describe('ExportService', () => {
       ],
     });
 
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/index.ts')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
   });
@@ -547,7 +547,7 @@ describe('ExportService', () => {
       ],
     });
 
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'database/src/mongo.client.ts')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
   });
@@ -577,7 +577,7 @@ describe('ExportService', () => {
       ],
     });
 
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'database/src/supabase.client.ts')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
   });
@@ -607,7 +607,7 @@ describe('ExportService', () => {
       ],
     });
 
-    expect(result.files.some((file) => file.path === 'src/Dashboard.tsx')).toBe(true);
+    expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'database/src/mysql.pool.ts')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
   });

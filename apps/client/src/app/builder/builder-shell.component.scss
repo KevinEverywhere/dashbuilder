@@ -138,6 +138,7 @@
 
 .builder__export,
 .builder__create,
+.builder__assistance,
 .builder__ai,
 .builder__template,
 .builder__library-save,
@@ -157,12 +158,18 @@
 
 .builder__export,
 .builder__create,
+.builder__assistance,
 .builder__ai,
 .builder__template,
 .builder__library-save {
   border: 1px solid var(--db-border);
   background: var(--db-panel-bg);
   color: var(--db-text);
+}
+
+.builder__assistance[aria-pressed='true'] {
+  border-color: var(--db-accent);
+  color: var(--db-accent);
 }
 
 .builder__create--return-hint {

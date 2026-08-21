@@ -52,7 +52,7 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-ui-react')).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-files')).toBeVisible();
-    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.tsx');
+    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Main.tsx');
     await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/main.ts');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
 
@@ -81,7 +81,7 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-targets')).toContainText('angular UI');
     await expect(page.getByTestId('export-wizard-files')).toContainText('src/dashboard.component.ts');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Dashboard.tsx');
+    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
@@ -104,7 +104,7 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-targets')).toContainText('vue UI');
     await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.vue');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Dashboard.tsx');
+    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
@@ -127,7 +127,7 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-targets')).toContainText('svelte UI');
     await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.svelte');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Dashboard.tsx');
+    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 

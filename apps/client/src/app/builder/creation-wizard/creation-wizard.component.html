@@ -115,8 +115,8 @@
     @if (wizard.phase() === 'intent') {
       <div class="creation-wizard__body" data-testid="creation-wizard-intent">
         <p class="creation-wizard__lead">
-          Pick a starting point. We will color-code palette groups and walk you through each step —
-          no AI required.
+          Pick a starting point. We walk you through adding each piece on an empty canvas —
+          no pre-built example. When you finish, components arrange so you can place and save them.
         </p>
         <ul class="creation-wizard__goals">
           @for (goal of wizard.guidedGoals(); track goal.id) {
@@ -219,7 +219,11 @@
               [disabled]="!wizard.stepComplete()"
               (click)="wizard.advanceStep()"
             >
-              {{ wizard.stepIndex() + 1 >= (wizard.activeGoal()?.steps?.length ?? 0) ? 'Finish steps' : 'Next step' }}
+              {{
+                wizard.stepIndex() + 1 >= (wizard.activeGoal()?.steps?.length ?? 0)
+                  ? 'Finish & arrange'
+                  : 'Next step'
+              }}
             </button>
           </div>
           @if (!wizard.stepComplete()) {
@@ -229,6 +233,74 @@
           }
         </div>
       }
+    }
+
+    @if (wizard.phase() === 'arrange') {
+      <div class="creation-wizard__body" data-testid="creation-wizard-arrange">
+        <p class="creation-wizard__lead">{{ wizard.arrangeMessage() }}</p>
+        <div class="creation-wizard__step-card">
+          <h3>Save your meta component</h3>
+          <p>
+            Name it for reuse. After Export → React, you can import it into another project.
+          </p>
+          <label class="creation-wizard__field" for="meta-component-name">
+            Component name
+            <input
+              id="meta-component-name"
+              type="text"
+              data-testid="creation-wizard-meta-name"
+              [value]="wizard.metaComponentName()"
+              (input)="wizard.setMetaComponentName($any($event.target).value)"
+              (blur)="wizard.applyMetaComponentName(wizard.metaComponentName())"
+            />
+          </label>
+          <code class="creation-wizard__import-hint" data-testid="creation-wizard-react-import">
+            {{ wizard.reactImportHint() }}
+          </code>
+        </div>
+        <div class="creation-wizard__actions creation-wizard__actions--stack">
+          <button
+            type="button"
+            class="creation-wizard__primary"
+            data-testid="creation-wizard-save"
+            (click)="requestSave()"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            class="creation-wizard__secondary"
+            data-testid="creation-wizard-save-library"
+            (click)="requestSaveToLibrary()"
+          >
+            Save to library
+          </button>
+          <button
+            type="button"
+            class="creation-wizard__secondary"
+            data-testid="creation-wizard-export"
+            (click)="requestExport()"
+          >
+            Export for React
+          </button>
+          <button
+            type="button"
+            class="creation-wizard__primary"
+            data-testid="creation-wizard-done"
+            (click)="wizard.finishArrangeAndClose()"
+          >
+            Done
+          </button>
+        </div>
+        <button
+          type="button"
+          class="creation-wizard__secondary"
+          data-testid="creation-wizard-back-arrange"
+          (click)="wizard.goBackFromArrange()"
+        >
+          Back
+        </button>
+      </div>
     }
 
     @if (wizard.phase() === 'ai-choice') {

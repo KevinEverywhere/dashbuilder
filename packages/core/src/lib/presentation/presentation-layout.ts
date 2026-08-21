@@ -60,10 +60,156 @@ const INPUT_HEIGHT = 38;
 const FORM_FIELD_PADDING = 8;
 const CHECKBOX_HEIGHT = 32;
 const TEXTAREA_ROW_HEIGHT = 22;
+/** Extra preview height beyond single-line before text becomes multiline. */
+const TEXT_MULTILINE_THRESHOLD_PX = 16;
 
 const DEFAULT_FORM_FIELD_WIDTH = 280;
 const DEFAULT_FORM_FIELD_HEIGHT =
   LABEL_LINE_HEIGHT + FIELD_GAP + INPUT_HEIGHT + FORM_FIELD_PADDING * 2;
+
+export const FORM_SINGLE_LINE_INPUT_HEIGHT = INPUT_HEIGHT + FORM_FIELD_PADDING * 2;
+
+/** Parse newline- or comma-separated select options (`Label` or `Label|value`). */
+export function parseStaticSelectOptions(raw: unknown): { label: string; value: string }[] {
+  if (typeof raw !== 'string' || raw.trim().length === 0) {
+    return [];
+  }
+  return raw
+    .split(/\r?\n|,/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const pipe = line.indexOf('|');
+      if (pipe > 0) {
+        const label = line.slice(0, pipe).trim();
+        const value = line.slice(pipe + 1).trim();
+        return { label: label || value, value: value || label };
+      }
+      return { label: line, value: line };
+    });
+}
+
+export function mapRowsetToSelectOptions(
+  rows: ReadonlyArray<Record<string, unknown>>,
+  labelField = 'name',
+  valueField = 'id',
+): { label: string; value: string }[] {
+  const fields = resolveSelectFieldKeys(rows, labelField, valueField);
+  return rows.map((row, index) => {
+    const label = String(row[fields.labelField] ?? index + 1);
+    const value = String(row[fields.valueField] ?? label);
+    return { label, value };
+  });
+}
+
+const SELECT_LABEL_FIELD_CANDIDATES = ['name', 'label', 'title', 'text', 'displayName'] as const;
+const SELECT_VALUE_FIELD_CANDIDATES = ['id', 'value', 'key', 'code'] as const;
+
+/**
+ * Prefer configured fields when present on the rowset; otherwise pick typical
+ * label/value columns, then the first available string-ish columns.
+ */
+export function resolveSelectFieldKeys(
+  rows: ReadonlyArray<Record<string, unknown>>,
+  labelField?: string,
+  valueField?: string,
+): { labelField: string; valueField: string } {
+  const sample = rows[0] ?? {};
+  const keys = Object.keys(sample);
+
+  const resolvedLabel =
+    pickPresentField(sample, labelField) ??
+    SELECT_LABEL_FIELD_CANDIDATES.find((key) => key in sample) ??
+    firstStringishKey(sample, keys) ??
+    keys[0] ??
+    'label';
+
+  const resolvedValue =
+    pickPresentField(sample, valueField) ??
+    SELECT_VALUE_FIELD_CANDIDATES.find((key) => key in sample && key !== resolvedLabel) ??
+    firstStringishKey(
+      sample,
+      keys.filter((key) => key !== resolvedLabel),
+    ) ??
+    resolvedLabel;
+
+  return { labelField: resolvedLabel, valueField: resolvedValue };
+}
+
+function pickPresentField(
+  sample: Record<string, unknown>,
+  field: string | undefined,
+): string | undefined {
+  const trimmed = field?.trim();
+  if (!trimmed || !(trimmed in sample)) {
+    return undefined;
+  }
+  return trimmed;
+}
+
+function firstStringishKey(
+  sample: Record<string, unknown>,
+  keys: readonly string[],
+): string | undefined {
+  return keys.find((key) => {
+    const value = sample[key];
+    return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+  });
+}
+
+/** Bound rowset wins, then static Options text, then fallback list. */
+export function resolveSelectOptionList(input: {
+  boundRows?: ReadonlyArray<Record<string, unknown>> | null;
+  staticOptions?: unknown;
+  labelField?: string;
+  valueField?: string;
+  fallback?: { label: string; value: string }[];
+}): { label: string; value: string }[] {
+  if (input.boundRows && input.boundRows.length > 0) {
+    return mapRowsetToSelectOptions(input.boundRows, input.labelField, input.valueField);
+  }
+  const fromStatic = parseStaticSelectOptions(input.staticOptions);
+  if (fromStatic.length > 0) {
+    return fromStatic;
+  }
+  if (input.fallback && input.fallback.length > 0) {
+    return [...input.fallback];
+  }
+  return [
+    { label: 'Option A', value: 'Option A' },
+    { label: 'Option B', value: 'Option B' },
+    { label: 'Option C', value: 'Option C' },
+  ];
+}
+
+/**
+ * Whether a text input should render as multiline based on allocated preview height
+ * (presentation height or inverted canvas shell height).
+ */
+export function textInputUsesMultiline(
+  node: Pick<ComponentNode, 'type' | 'properties'> &
+    Partial<Pick<ComponentNode, 'layout' | 'ports'>>,
+): boolean {
+  if (node.type !== 'visual.input.text') {
+    return false;
+  }
+  const previewHeight = resolveTextPreviewHeight(node);
+  return previewHeight > FORM_SINGLE_LINE_INPUT_HEIGHT + TEXT_MULTILINE_THRESHOLD_PX;
+}
+
+function resolveTextPreviewHeight(
+  node: Pick<ComponentNode, 'properties'> & Partial<Pick<ComponentNode, 'layout' | 'ports'>>,
+): number {
+  const layoutHeight = node.layout?.height;
+  if (typeof layoutHeight === 'number' && layoutHeight > 0) {
+    const portCount = Math.max(node.ports?.inputs?.length ?? 0, node.ports?.outputs?.length ?? 0, 1);
+    // Mirror canvas-viewport chrome so stretch on the shell drives the field body.
+    const chrome = 28 + portCount * 22 + 8;
+    return Math.max(FORM_SINGLE_LINE_INPUT_HEIGHT, layoutHeight - chrome);
+  }
+  const showsLabel = formFieldShowsLabel(node.properties);
+  return showsLabel ? DEFAULT_FORM_FIELD_HEIGHT : FORM_SINGLE_LINE_INPUT_HEIGHT;
+}
 
 /** Properties that change rendered size and should sync canvas layout. */
 const LAYOUT_SYNC_PROPERTY_KEYS: Record<string, readonly string[]> = {
@@ -113,6 +259,23 @@ export function syncMediaDisplayPropertiesFromLayout(
   layout: { width: number; height: number },
   properties: Record<string, unknown>,
   previousLayout?: { width: number; height: number },
+  ports?: ComponentNode['ports'],
+): Record<string, unknown> {
+  let next = properties;
+  if (MEDIA_VIEWPORT_TYPES.has(type)) {
+    next = syncMediaViewportPropertiesFromLayout(type, layout, next, previousLayout);
+  }
+  if (type === 'visual.input.text') {
+    next = syncTextRowsFromLayout(layout, next, ports);
+  }
+  return next;
+}
+
+function syncMediaViewportPropertiesFromLayout(
+  type: string,
+  layout: { width: number; height: number },
+  properties: Record<string, unknown>,
+  previousLayout?: { width: number; height: number },
 ): Record<string, unknown> {
   if (!MEDIA_VIEWPORT_TYPES.has(type)) {
     return properties;
@@ -144,6 +307,38 @@ export function syncMediaDisplayPropertiesFromLayout(
     customWidth: layout.width,
     customHeight: layout.height,
   };
+}
+
+/** Keep read-only `rows` in sync with stretched text-input height. */
+export function syncTextRowsFromLayout(
+  layout: { width: number; height: number },
+  properties: Record<string, unknown>,
+  ports?: ComponentNode['ports'],
+): Record<string, unknown> {
+  const nodeLike = {
+    type: 'visual.input.text' as const,
+    properties,
+    layout: { x: 0, y: 0, width: layout.width, height: layout.height },
+    ports,
+  };
+  if (!textInputUsesMultiline(nodeLike)) {
+    if (!('rows' in properties)) {
+      return properties;
+    }
+    const { rows: _rows, ...rest } = properties;
+    return rest;
+  }
+
+  const previewHeight = resolveTextPreviewHeight(nodeLike);
+  const contentHeight = Math.max(
+    TEXTAREA_ROW_HEIGHT * 2,
+    previewHeight - FORM_FIELD_PADDING * 2,
+  );
+  const rows = Math.max(2, Math.round(contentHeight / TEXTAREA_ROW_HEIGHT));
+  if (properties['rows'] === rows) {
+    return properties;
+  }
+  return { ...properties, rows };
 }
 
 export function readFormFieldLabel(properties: Record<string, unknown>, key = 'label'): string {
@@ -183,7 +378,8 @@ function resolveMediaDisplayDimensions(
 }
 
 export function resolvePresentationDimensions(
-  node: Pick<ComponentNode, 'type' | 'label' | 'properties'>,
+  node: Pick<ComponentNode, 'type' | 'label' | 'properties'> &
+    Partial<Pick<ComponentNode, 'layout' | 'ports'>>,
 ): PresentationDimensions | null {
   switch (node.type) {
     case 'visual.media.video-source':
@@ -191,7 +387,28 @@ export function resolvePresentationDimensions(
     case 'visual.media.flat-video-viewport':
     case 'visual.media.equirect-sphere-viewport':
       return resolveMediaDisplayDimensions(node.properties);
-    case 'visual.input.text':
+    case 'visual.input.text': {
+      const showsLabel = formFieldShowsLabel(node.properties);
+      const base = showsLabel
+        ? DEFAULT_FORM_FIELD_HEIGHT
+        : INPUT_HEIGHT + FORM_FIELD_PADDING * 2;
+      if (textInputUsesMultiline(node)) {
+        const layoutH = node.layout?.height;
+        if (typeof layoutH === 'number' && layoutH > 0) {
+          const portCount = Math.max(
+            node.ports?.inputs?.length ?? 0,
+            node.ports?.outputs?.length ?? 0,
+            1,
+          );
+          const chrome = 28 + portCount * 22 + 8;
+          return {
+            width: DEFAULT_FORM_FIELD_WIDTH,
+            height: Math.max(base + TEXTAREA_ROW_HEIGHT, layoutH - chrome),
+          };
+        }
+      }
+      return { width: DEFAULT_FORM_FIELD_WIDTH, height: base };
+    }
     case 'visual.input.select':
     case 'visual.input.number':
     case 'visual.input.date-range': {

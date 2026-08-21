@@ -1,9 +1,18 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, HostBinding, inject, input, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ComponentNode, isNumericFieldKey, parseRoleGateAllowedRoles, resolveRoleOptions, roleGateAllowsRole } from '@rosettadash/core';
+import {
+  ComponentNode,
+  defaultComponentRegistry,
+  isNumericFieldKey,
+  parseRoleGateAllowedRoles,
+  resolveRoleOptions,
+  resolveSelectOptionList,
+  roleGateAllowsRole,
+  textInputUsesMultiline,
+} from '@rosettadash/core';
 import { PreviewNewsRow, PreviewRow, PRESET_LABELS } from '@rosettadash/ui-primitives';
-import { AppSelectComponent } from '../../shared/app-select/app-select.component';
+import { AppSelectComponent, AppSelectOption } from '../../shared/app-select/app-select.component';
 import { AppCollapsibleComponent } from '../../shared/app-collapsible/app-collapsible.component';
 import { BuilderStateService } from '../builder-state.service';
 import { ComponentPreviewAdapterRegistry } from './component-preview-adapter.registry';
@@ -24,6 +33,13 @@ import { PreviewPluginComponent } from './preview-plugin.component';
 })
 export class PreviewNodeComponent {
   readonly node = input.required<ComponentNode>();
+  /** When true, renders a canvas-safe preview with editable field labels and non-interactive controls. */
+  readonly builderMode = input(false);
+
+  @HostBinding('class.preview-node--builder')
+  protected get builderModeClass(): boolean {
+    return this.builderMode();
+  }
 
   private readonly previewData = inject(PreviewDataService);
   private readonly state = inject(BuilderStateService);
@@ -119,6 +135,37 @@ export class PreviewNodeComponent {
   protected readonly selectOptions = computed(
     () => this.previewData.bundle().selectOptions,
   );
+
+  protected readonly resolvedSelectOptions = computed((): AppSelectOption[] => {
+    const node = this.node();
+    const binding = this.state
+      .bindings()
+      .find((item) => item.targetNodeId === node.id && item.targetPortId === 'options');
+    const boundRows = binding
+      ? ((this.previewData.sliceForNode(binding.sourceNodeId)?.tableRows ??
+          this.previewData.bundle().tableRows) as unknown as Record<string, unknown>[])
+      : null;
+
+    return resolveSelectOptionList({
+      boundRows,
+      staticOptions: node.properties['staticOptions'],
+      labelField: this.readString('labelField', 'name'),
+      valueField: this.readString('valueField', 'id'),
+      fallback: this.selectOptions(),
+    });
+  });
+
+  protected textUsesMultiline(): boolean {
+    return textInputUsesMultiline(this.node());
+  }
+
+  protected onBorderToggle(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    this.state.updateNodeProperty(this.node().id, 'border', target.checked);
+  }
   protected readonly chartPoints = computed(
     () => this.slice()?.chartPoints ?? this.previewData.bundle().chartPoints,
   );
@@ -312,11 +359,83 @@ export class PreviewNodeComponent {
   );
 
   protected readFieldLabel(): string {
-    return this.readString('label');
+    const fromProperty = this.readString('label');
+    if (fromProperty.length > 0) {
+      return fromProperty;
+    }
+    // Customized canvas title (not the catalog name) also drives the preview label.
+    const definition = defaultComponentRegistry.get(this.node().type);
+    const catalogLabel = definition?.label ?? '';
+    const instanceLabel = this.node().label.trim();
+    if (instanceLabel.length > 0 && instanceLabel !== catalogLabel) {
+      return instanceLabel;
+    }
+    return '';
   }
 
   protected showsFieldLabel(): boolean {
     return this.readFieldLabel().length > 0;
+  }
+
+  /** HTML id for exported/usable controls (properties.id), not the graph node id. */
+  protected readElementId(): string | null {
+    const value = this.readString('id');
+    return value.length > 0 ? value : null;
+  }
+
+  protected readonly builderPlaceholderModelOptions = { standalone: true, updateOn: 'blur' as const };
+  protected readonly previewFieldModelOptions = { standalone: true };
+
+  protected textInputModelOptions(): { standalone: boolean; updateOn?: 'blur' } {
+    return this.builderMode() ? this.builderPlaceholderModelOptions : this.previewFieldModelOptions;
+  }
+
+  protected readPlaceholder(fallback = 'enter placeholder here'): string {
+    const value = this.node().properties['placeholder'];
+    if (typeof value !== 'string') {
+      return fallback;
+    }
+    if (this.builderMode()) {
+      return value.length > 0 ? value : fallback;
+    }
+    return value.trim().length > 0 ? value : fallback;
+  }
+
+  protected stopBuilderInputEvent(event: Event): void {
+    if (!this.builderMode()) {
+      return;
+    }
+    // Allow Tab/Shift+Tab to bubble so the canvas can cycle builder fields.
+    if (event instanceof KeyboardEvent && event.key === 'Tab') {
+      return;
+    }
+    event.stopPropagation();
+  }
+
+  protected onBuilderPlaceholderFocus(event: FocusEvent): void {
+    if (!this.builderMode()) {
+      return;
+    }
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      queueMicrotask(() => target.select());
+    }
+  }
+
+  protected onTextLikeModelChange(value: string): void {
+    if (this.builderMode()) {
+      this.state.updateNodeProperty(this.node().id, 'placeholder', value);
+      return;
+    }
+    this.previewData.setFieldValue(this.node().id, value);
+  }
+
+  protected onPersonInviteEmailModelChange(value: string): void {
+    if (this.builderMode()) {
+      this.state.updateNodeProperty(this.node().id, 'emailPlaceholder', value);
+      return;
+    }
+    this.previewData.setFieldValue(this.node().id, value);
   }
 
   protected previewFieldValue(): string {

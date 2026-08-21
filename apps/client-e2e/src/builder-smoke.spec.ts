@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { addFromPalette, openBuilder, selectCanvasNode } from './test-helpers';
+import { addFromPalette, expandInspectorSection, openBuilder, selectCanvasNode } from './test-helpers';
 
 test.describe('Builder smoke', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,6 +13,7 @@ test.describe('Builder smoke', () => {
     await expect(page.getByTestId('canvas-node')).toHaveCount(1);
 
     await selectCanvasNode(page, page.getByTestId('canvas-node'));
+    await expandInspectorSection(page, 'properties');
     await page.getByTestId('inspector-prop-placeholder').fill('Email address');
 
     await expect(page.getByTestId('save-status')).toContainText('Unsaved');
@@ -24,6 +25,7 @@ test.describe('Builder smoke', () => {
     await expect(page.getByTestId('canvas-node')).toHaveCount(1);
 
     await selectCanvasNode(page, page.getByTestId('canvas-node'));
+    await expandInspectorSection(page, 'properties');
     await expect(page.getByTestId('inspector-prop-placeholder')).toHaveValue('Email address');
   });
 });

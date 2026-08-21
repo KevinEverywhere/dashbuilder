@@ -1,21 +1,17 @@
 import type { ComponentNode, NodeLayout } from '@rosettadash/core';
-import { PALETTE_GROUP_DEFINITIONS } from '@rosettadash/core';
-import { readNodeDisplayDataSource, readNodeDisplaySubtitle } from '@rosettadash/core';
+import { resolvePresentationDimensions } from '@rosettadash/core';
 import { CANVAS_MIN_NODE_HEIGHT } from './canvas-layout';
 
 export const CANVAS_VIEWPORT_CULL_THRESHOLD = 50;
 export const CANVAS_VIEWPORT_BUFFER_PX = 120;
 
-/** Vertical space per palette accordion row — canvas extends at least this far. */
-export const CANVAS_PALETTE_ROW_HEIGHT_PX = 168;
+/** Modest empty-canvas floor — grow only with placed/off-screen node bounds. */
+export const CANVAS_MIN_CONTENT_HEIGHT_PX = 480;
 
-/** Minimum scrollable canvas height aligned with full palette (through WASM Compute). */
-export const CANVAS_MIN_CONTENT_HEIGHT_PX =
-  PALETTE_GROUP_DEFINITIONS.length * CANVAS_PALETTE_ROW_HEIGHT_PX;
-
-const PORT_ROW_HEIGHT = 24;
-const NODE_NAME_BAR_HEIGHT = 36;
-const NODE_TYPE_ROW_HEIGHT = 22;
+const PORT_ROW_HEIGHT = 22;
+const NODE_NAME_BAR_HEIGHT = 28;
+const NODE_SHELL_CHROME = 8;
+const DEFAULT_PREVIEW_HEIGHT = 54;
 
 export interface CanvasViewport {
   left: number;
@@ -29,22 +25,27 @@ export interface CanvasContentBounds {
   height: number;
 }
 
-export function canvasNodeHeaderHeight(node: ComponentNode): number {
-  let height = NODE_NAME_BAR_HEIGHT + NODE_TYPE_ROW_HEIGHT;
-  if (readNodeDisplaySubtitle(node.properties)) {
-    height += 16;
+export function canvasNodePreviewHeight(node: ComponentNode): number {
+  const dims = resolvePresentationDimensions(node);
+  if (dims) {
+    return dims.height;
   }
-  if (readNodeDisplayDataSource(node.properties)) {
-    height += 14;
-  }
-  return height;
+  return DEFAULT_PREVIEW_HEIGHT;
+}
+
+export function canvasNodeHeaderHeight(_node: ComponentNode): number {
+  return NODE_NAME_BAR_HEIGHT;
 }
 
 export function estimateCanvasNodeHeight(node: ComponentNode): number {
   const portCount = Math.max(node.ports.inputs.length, node.ports.outputs.length, 1);
+  const previewHeight = canvasNodePreviewHeight(node);
   const minHeight = Math.max(
     CANVAS_MIN_NODE_HEIGHT,
-    canvasNodeHeaderHeight(node) + portCount * PORT_ROW_HEIGHT + 12,
+    canvasNodeHeaderHeight(node) +
+      previewHeight +
+      portCount * PORT_ROW_HEIGHT +
+      NODE_SHELL_CHROME,
   );
   const layoutHeight = node.layout?.height;
   if (layoutHeight !== undefined && layoutHeight >= minHeight) {

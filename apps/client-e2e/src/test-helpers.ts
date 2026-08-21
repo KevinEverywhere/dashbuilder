@@ -104,6 +104,10 @@ export async function openBuilder(page: Page): Promise<void> {
   await page.goto('/builder');
   await expect(page.getByTestId('builder-loading')).toBeHidden({ timeout: 120_000 });
   await expect(page.getByTestId('builder-shell')).toBeVisible();
+  const welcomeDismiss = page.getByTestId('creation-welcome-dismiss');
+  if (await welcomeDismiss.isVisible().catch(() => false)) {
+    await welcomeDismiss.click();
+  }
   await expectBuilderPaletteReady(page);
 }
 

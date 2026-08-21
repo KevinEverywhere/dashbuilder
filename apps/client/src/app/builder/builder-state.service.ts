@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   Binding,
   ComponentDefinition,
@@ -35,10 +35,12 @@ import {
   clampCanvasNodeWidth,
   snapToCanvasGrid,
 } from './canvas/canvas-layout';
+import { estimateCanvasNodeHeight } from './canvas/canvas-viewport';
 import {
   BuilderHistoryStack,
   type BuilderGraphSnapshot,
 } from './history/builder-history';
+import { BuilderAssistanceService } from './builder-assistance.service';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 export type WorkspaceMode = 'design' | 'preview';
@@ -56,6 +58,8 @@ export type ApplyAiActionsResult = { ok: true } | { ok: false; error: string };
 
 @Injectable({ providedIn: 'root' })
 export class BuilderStateService {
+  private readonly assistance = inject(BuilderAssistanceService);
+
   readonly project = signal<Project | null>(null);
   readonly composite = signal<Composite | null>(null);
   readonly nodes = signal<ComponentNode[]>([]);
@@ -206,6 +210,7 @@ export class BuilderStateService {
           next,
           node.properties,
           current,
+          node.ports,
         );
         return { ...node, layout: next, properties };
       }),
@@ -271,9 +276,7 @@ export class BuilderStateService {
     const node = defaultComponentRegistry.createNode(definition.type, {
       layout: this.resolveInitialLayout(definition.type, {
         x: snapToCanvasGrid(options?.layout?.x ?? 24),
-        y: snapToCanvasGrid(
-          options?.layout?.y ?? this.nodes().length * CANVAS_GRID_SIZE * 6 + 24,
-        ),
+        y: snapToCanvasGrid(options?.layout?.y ?? this.nextStackedCanvasY()),
         width: options?.layout?.width,
         height: options?.layout?.height,
       }),
@@ -291,6 +294,20 @@ export class BuilderStateService {
     }
     this.markDirty();
     return node;
+  }
+
+  /** Place new nodes below existing ones so ports stay clickable (no vertical overlap). */
+  private nextStackedCanvasY(): number {
+    const nodes = this.nodes();
+    if (nodes.length === 0) {
+      return 24;
+    }
+    let maxBottom = 24;
+    for (const node of nodes) {
+      const top = node.layout?.y ?? 24;
+      maxBottom = Math.max(maxBottom, top + estimateCanvasNodeHeight(node));
+    }
+    return maxBottom + CANVAS_GRID_SIZE;
   }
 
   addCompanionFromPrompt(companionType: string): ComponentNode | null {
@@ -325,32 +342,46 @@ export class BuilderStateService {
 
   updateNodeProperty(nodeId: string, key: string, value: unknown): void {
     const current = this.nodes().find((node) => node.id === nodeId);
-    if (current?.properties[key] === value) {
+    const nextValue =
+      key === 'label' && typeof value === 'string' ? value.trim() : value;
+    if (current?.properties[key] === nextValue) {
       return;
     }
     if (!this.historySuspended) {
       this.recordHistory();
     }
+
+    const nextLabel =
+      key === 'label' && typeof nextValue === 'string' && nextValue.length > 0
+        ? nextValue
+        : undefined;
+
     this.nodes.update((nodes) =>
-      nodes.map((node) =>
-        node.id === nodeId
-          ? { ...node, properties: { ...node.properties, [key]: value } }
-          : node,
-      ),
+      nodes.map((node) => {
+        if (node.id !== nodeId) {
+          return node;
+        }
+        return {
+          ...node,
+          ...(nextLabel ? { label: nextLabel } : {}),
+          properties: { ...node.properties, [key]: nextValue },
+        };
+      }),
     );
     if (current && key === 'displaySize' && value === CUSTOM_VIDEO_DISPLAY_SIZE) {
       this.seedCustomDisplayFromLayout(nodeId);
     } else if (current && shouldSyncLayoutOnPropertyChange(current.type, key)) {
       const updated = {
         ...current,
-        properties: { ...current.properties, [key]: value },
+        ...(nextLabel ? { label: nextLabel } : {}),
+        properties: { ...current.properties, [key]: nextValue },
       };
       this.syncPresentationLayout(updated);
     }
     this.markDirty();
   }
 
-  /** Rename a placed component instance (double-click on canvas, or the Inspector overview field). */
+  /** Rename canvas title / Inspector Name. Syncs to properties.label when the type has a Label field. */
   updateNodeLabel(nodeId: string, label: string): void {
     const trimmed = label.trim();
     const current = this.nodes().find((node) => node.id === nodeId);
@@ -360,10 +391,33 @@ export class BuilderStateService {
     if (!this.historySuspended) {
       this.recordHistory();
     }
+    const hasLabelProperty = this.nodeHasLabelProperty(current.type);
     this.nodes.update((nodes) =>
-      nodes.map((node) => (node.id === nodeId ? { ...node, label: trimmed } : node)),
+      nodes.map((node) => {
+        if (node.id !== nodeId) {
+          return node;
+        }
+        return {
+          ...node,
+          label: trimmed,
+          properties: hasLabelProperty
+            ? { ...node.properties, label: trimmed }
+            : node.properties,
+        };
+      }),
     );
+    if (hasLabelProperty && shouldSyncLayoutOnPropertyChange(current.type, 'label')) {
+      this.syncPresentationLayout({
+        ...current,
+        label: trimmed,
+        properties: { ...current.properties, label: trimmed },
+      });
+    }
     this.markDirty();
+  }
+
+  nodeHasLabelProperty(type: string): boolean {
+    return defaultComponentRegistry.get(type)?.properties.some((prop) => prop.key === 'label') ?? false;
   }
 
   private seedCustomDisplayFromLayout(nodeId: string): void {
@@ -419,6 +473,32 @@ export class BuilderStateService {
 
   removeNode(nodeId: string): void {
     this.removeNodes([nodeId]);
+  }
+
+  /** Clear the design surface (nodes + bindings). Used when starting a guided goal. */
+  clearCanvas(options?: { skipHistory?: boolean }): void {
+    if (this.nodes().length === 0 && this.bindings().length === 0) {
+      const composite = this.composite();
+      if (composite?.templateId) {
+        this.composite.set({ ...composite, templateId: undefined });
+      }
+      return;
+    }
+    if (!options?.skipHistory) {
+      this.recordHistory();
+    }
+    this.nodes.set([]);
+    this.bindings.set([]);
+    this.selectedNodeIds.set([]);
+    this.selectedDefinition.set(null);
+    this.placementPrompt.set(null);
+    this.suggestions.set([]);
+    this.clearPendingBinding();
+    const composite = this.composite();
+    if (composite) {
+      this.composite.set({ ...composite, templateId: undefined });
+    }
+    this.markDirty();
   }
 
   removeSelectedNode(): void {
@@ -1019,6 +1099,11 @@ export class BuilderStateService {
   }
 
   private refreshPlacementPrompt(sourceNodeId: string): void {
+    if (!this.assistance.isHowItWorksEnabled()) {
+      this.placementPrompt.set(null);
+      return;
+    }
+
     const source = this.nodes().find((node) => node.id === sourceNodeId);
     if (!source) {
       this.placementPrompt.set(null);
