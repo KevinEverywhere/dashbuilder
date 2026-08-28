@@ -84,6 +84,7 @@ Forward-looking Jira ticket plan for RosettaDash.
 
 | Ticket | Branch | Status |
 |--------|--------|--------|
+| [DAS-160](https://planetkevin.atlassian.net/browse/DAS-160) | `feature/DAS-160-readme-truth-and-npm-release` | Root README as current truth; npm/GitHub publish docs and `publish:npm` / `publish:npm:dry-run` |
 | [DAS-74](https://planetkevin.atlassian.net/browse/DAS-74) | `feature/DAS-74-admin-control-panel` | Admin control panel + content library |
 | [DAS-90](https://planetkevin.atlassian.net/browse/DAS-90) | `feature/DAS-90-npm-package-prep` | npm prep docs (`rosettadash` public API) — docs only |
 

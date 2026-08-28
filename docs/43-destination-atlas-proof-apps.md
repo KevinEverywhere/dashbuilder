@@ -4,7 +4,7 @@
 **Research:** [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126)  
 **Gap WC components:** [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127) app-language-select · [DAS-128](https://planetkevin.atlassian.net/browse/DAS-128) geo-map · [DAS-129](https://planetkevin.atlassian.net/browse/DAS-129) youtube-embed
 
-Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.1` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations.
+Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations.
 
 ## Product intent
 
@@ -144,7 +144,7 @@ Component props: `provider`, `tile-url`, `api-key`, `center`, `zoom`, `markers`,
 ## Install (consumer)
 
 ```bash
-npm install @rosettadash/core@0.1.1 @rosettadash/web-components@0.1.1 @rosettadash/react@0.1.1
+npm install @rosettadash/core@0.1.3 @rosettadash/web-components@0.1.3 @rosettadash/react@0.1.3
 # … angular, vue, svelte as needed
 ```
 

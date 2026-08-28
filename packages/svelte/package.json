@@ -1,6 +1,6 @@
 {
   "name": "@rosettadash/svelte",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "RosettaDash Svelte 5 runtime — same import paths as @rosettadash/web-components. Storybook: github.com/KevinEverywhere/rosettadash (port 6010).",
   "author": "Kevin Ready <kevin@planetkevin.com>",
   "type": "module",
@@ -394,7 +394,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@rosettadash/web-components": "0.1.1",
+    "@rosettadash/web-components": "0.1.3",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {

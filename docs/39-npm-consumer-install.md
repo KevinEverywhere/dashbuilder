@@ -16,7 +16,7 @@ import { registerRosettaDashMediaElements } from '@rosettadash/web-components/me
 
 Same subpaths on every runtime: `@rosettadash/react/layout/accordion`, `@rosettadash/vue/visual/media/video-source`, etc. See [docs/34-public-component-api.md](./34-public-component-api.md).
 
-Until scoped packages are on the registry, use **local pack** (`npm run pack:consumer`) or `file:` / tarball install. Published versions: `@rosettadash/*@0.1.1` (core, web-components, react, angular, vue, svelte).
+Until scoped packages are on the registry, use **local pack** (`npm run pack:consumer`) or `file:` / tarball install. Current checkout: `@rosettadash/*@0.1.3` (core, web-components, react, angular, vue, svelte).
 
 ## Critical distinction
 
@@ -63,7 +63,7 @@ Keep Three.js live sphere (`EquirectSphereViewport`) in ffmp3; bridge pose ↔ `
 ### A) Registry (recommended)
 
 ```bash
-npm install @rosettadash/web-components@0.1.0 @rosettadash/core@0.1.0
+npm install @rosettadash/web-components@0.1.3 @rosettadash/core@0.1.3
 ```
 
 ### B) Local tarballs (dogfood before registry)
@@ -129,7 +129,7 @@ Express should static-serve `node_modules/@rosettadash/web-components` under `/v
 npm run pack:core            # dry-run
 npm run pack:web-components  # dry-run
 npm run pack:runtimes        # dry-run react, angular, vue, svelte
-npm run pack:consumer        # real .tgz — core + web-components + all four runtimes @ 0.1.1
+npm run pack:consumer        # real .tgz — core + web-components + all four runtimes @ 0.1.3
 npm run publish:npm          # pack then publish all six scoped packages (maintainers)
 ```
 

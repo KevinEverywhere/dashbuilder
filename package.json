@@ -1,6 +1,6 @@
 {
   "name": "rosettadash",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "RosettaDash product monorepo — visual dashboard builder plus five Storybook component catalogs. Not a component library; install @rosettadash/web-components for UI elements.",
   "homepage": "https://github.com/KevinEverywhere/rosettadash#readme",
@@ -45,6 +45,7 @@
     "proof:web-components": "nx serve proof-web-components",
     "proof:web-components:build": "nx build proof-web-components",
     "publish:npm": "npm run pack:consumer && npm publish ./dist/packages/core --access public && npm publish ./dist/packages/web-components --access public && npm publish ./dist/packages/react --access public && npm publish ./dist/packages/angular --access public && npm publish ./dist/packages/vue --access public && npm publish ./dist/packages/svelte --access public",
+    "publish:npm:dry-run": "npm run pack:consumer && npm publish ./dist/packages/core --access public --dry-run && npm publish ./dist/packages/web-components --access public --dry-run && npm publish ./dist/packages/react --access public --dry-run && npm publish ./dist/packages/angular --access public --dry-run && npm publish ./dist/packages/vue --access public --dry-run && npm publish ./dist/packages/svelte --access public --dry-run",
     "publish:npm:frameworks": "npm run pack:consumer && npm publish ./dist/packages/core --access public && npm publish ./dist/packages/react --access public && npm publish ./dist/packages/angular --access public && npm publish ./dist/packages/vue --access public && npm publish ./dist/packages/svelte --access public",
     "setup:e2e": "playwright install chromium",
     "start": "nx run-many -t serve -p client,server --parallel=2",

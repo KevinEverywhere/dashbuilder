@@ -178,14 +178,16 @@ test.describe('Builder export wizard', () => {
     await dismissPlacementPromptIfVisible(page);
     await addFromPalette(page, 'visual.kpi');
     await dismissPlacementPromptIfVisible(page);
+    await expect(page.getByTestId('canvas-node')).toHaveCount(4);
 
     const postgresNode = page.getByTestId('canvas-node').nth(0);
     const tableNode = page.getByTestId('canvas-node').nth(2);
+    const kpiNode = page.getByTestId('canvas-node').nth(3);
 
     await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
     await tableNode.getByTestId(/^port-input-.*-data$/).click();
 
-    const kpiNode = page.getByTestId('canvas-node').filter({ hasText: 'KPI Card' });
+    await kpiNode.scrollIntoViewIfNeeded();
     await selectCanvasNodeHeader(page, kpiNode);
     await expect(kpiNode).toHaveAttribute('data-selected', 'true');
 

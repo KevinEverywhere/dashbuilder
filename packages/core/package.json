@@ -1,6 +1,6 @@
 {
   "name": "@rosettadash/core",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "RosettaDash shared types, defaults, and media filter helpers (used by runtime packages). Storybook: github.com/KevinEverywhere/rosettadash#component-examples-storybook",
   "author": "Kevin Ready <kevin@planetkevin.com>",
   "license": "MIT",
