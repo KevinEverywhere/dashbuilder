@@ -19,10 +19,10 @@ export interface NewsTypeSelectProps {
   template: `
     <section [attr.data-testid]="'rd-news-type-select'" [ngClass]="rootClass()">
       @if (label()) { <span class="rd-field__label">{{ label() }}</span> }
-      <select class="rd-select" [value]="value() ?? ''">
-        <option value="">{{ placeholder() ?? 'Select…' }}</option>
+      <select class="rd-select">
+        <option value="" [selected]="!(value() ?? '')">{{ placeholder() ?? 'Select…' }}</option>
         @for (o of options() ?? []; track o.value) {
-          <option [value]="o.value">{{ o.label }}</option>
+          <option [value]="o.value" [selected]="o.value === (value() ?? '')">{{ o.label }}</option>
         }
       </select>
       <ng-content />

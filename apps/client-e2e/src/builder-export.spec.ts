@@ -2,9 +2,10 @@ import { test, expect } from '@playwright/test';
 import { addFromPalette, dismissPlacementPromptIfVisible, openBuilder, selectCanvasNodeHeader } from './test-helpers';
 
 test.describe('Builder export wizard', () => {
-  test.beforeEach(async ({ page }) => {
-    await openBuilder(page);
-  });
+  test.describe('React stack', () => {
+    test.beforeEach(async ({ page }) => {
+      await openBuilder(page);
+    });
 
   test('locks the UI picker to the chosen React stack', async ({ page }) => {
     await page.getByTestId('export-button').click();
@@ -60,78 +61,6 @@ test.describe('Builder export wizard', () => {
     await page.getByTestId('export-wizard-download').click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toMatch(/-export\.zip$/);
-  });
-
-  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
-  test.skip('previews Angular UI files when Angular target is selected', async ({ page }) => {
-    await addFromPalette(page, 'infra.postgresql');
-    await addFromPalette(page, 'infra.server.nest');
-    await addFromPalette(page, 'visual.table');
-    await expect(page.getByTestId('canvas-node')).toHaveCount(3);
-
-    const postgresNode = page.getByTestId('canvas-node').nth(0);
-    const tableNode = page.getByTestId('canvas-node').nth(2);
-
-    await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
-    await tableNode.getByTestId(/^port-input-.*-data$/).click();
-
-    await page.getByTestId('export-button').click();
-    await expect(page.getByTestId('export-wizard')).toBeVisible();
-    await page.getByTestId('export-wizard-ui-angular').click();
-    await expect(page.getByTestId('export-wizard-ui-angular')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
-    await expect(page.getByTestId('export-wizard-targets')).toContainText('angular UI');
-    await expect(page.getByTestId('export-wizard-files')).toContainText('src/dashboard.component.ts');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
-    await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
-  });
-
-  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
-  test.skip('previews Vue UI files when Vue target is selected', async ({ page }) => {
-    await addFromPalette(page, 'infra.postgresql');
-    await addFromPalette(page, 'infra.server.nest');
-    await addFromPalette(page, 'visual.table');
-    await expect(page.getByTestId('canvas-node')).toHaveCount(3);
-
-    const postgresNode = page.getByTestId('canvas-node').nth(0);
-    const tableNode = page.getByTestId('canvas-node').nth(2);
-
-    await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
-    await tableNode.getByTestId(/^port-input-.*-data$/).click();
-
-    await page.getByTestId('export-button').click();
-    await expect(page.getByTestId('export-wizard')).toBeVisible();
-    await page.getByTestId('export-wizard-ui-vue').click();
-    await expect(page.getByTestId('export-wizard-ui-vue')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
-    await expect(page.getByTestId('export-wizard-targets')).toContainText('vue UI');
-    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.vue');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
-    await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
-  });
-
-  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
-  test.skip('previews Svelte UI files when Svelte target is selected', async ({ page }) => {
-    await addFromPalette(page, 'infra.postgresql');
-    await addFromPalette(page, 'infra.server.nest');
-    await addFromPalette(page, 'visual.table');
-    await expect(page.getByTestId('canvas-node')).toHaveCount(3);
-
-    const postgresNode = page.getByTestId('canvas-node').nth(0);
-    const tableNode = page.getByTestId('canvas-node').nth(2);
-
-    await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
-    await tableNode.getByTestId(/^port-input-.*-data$/).click();
-
-    await page.getByTestId('export-button').click();
-    await expect(page.getByTestId('export-wizard')).toBeVisible();
-    await page.getByTestId('export-wizard-ui-svelte').click();
-    await expect(page.getByTestId('export-wizard-ui-svelte')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
-    await expect(page.getByTestId('export-wizard-targets')).toContainText('svelte UI');
-    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.svelte');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
-    await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
   test('previews Express server files when Express target is selected', async ({ page }) => {
@@ -267,6 +196,84 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-files')).toBeVisible();
     await expect(page.getByTestId('export-wizard-files')).not.toContainText('DataTable');
+    await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
+  });
+  });
+
+  test.describe('Angular stack', () => {
+    test.beforeEach(async ({ page }) => {
+      await openBuilder(page, { ui: 'angular' });
+    });
+
+    test('previews Angular UI files for the chosen Angular stack', async ({ page }) => {
+      await addFromPalette(page, 'infra.postgresql');
+      await addFromPalette(page, 'infra.server.nest');
+      await addFromPalette(page, 'visual.table');
+      await expect(page.getByTestId('canvas-node')).toHaveCount(3);
+
+      const postgresNode = page.getByTestId('canvas-node').nth(0);
+      const tableNode = page.getByTestId('canvas-node').nth(2);
+
+      await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
+      await tableNode.getByTestId(/^port-input-.*-data$/).click();
+
+      await page.getByTestId('export-button').click();
+      await expect(page.getByTestId('export-wizard')).toBeVisible();
+      await expect(page.getByTestId('export-wizard-ui-angular')).toBeVisible();
+      await expect(page.getByTestId('export-wizard-ui-angular')).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByTestId('export-wizard-ui-react')).toHaveCount(0);
+      await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
+      await expect(page.getByTestId('export-wizard-targets')).toContainText('angular UI');
+      await expect(page.getByTestId('export-wizard-files')).toContainText('src/dashboard.component.ts');
+      await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
+      await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
+    });
+  });
+
+  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
+  test.skip('previews Vue UI files when Vue target is selected', async ({ page }) => {
+    await addFromPalette(page, 'infra.postgresql');
+    await addFromPalette(page, 'infra.server.nest');
+    await addFromPalette(page, 'visual.table');
+    await expect(page.getByTestId('canvas-node')).toHaveCount(3);
+
+    const postgresNode = page.getByTestId('canvas-node').nth(0);
+    const tableNode = page.getByTestId('canvas-node').nth(2);
+
+    await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
+    await tableNode.getByTestId(/^port-input-.*-data$/).click();
+
+    await page.getByTestId('export-button').click();
+    await expect(page.getByTestId('export-wizard')).toBeVisible();
+    await page.getByTestId('export-wizard-ui-vue').click();
+    await expect(page.getByTestId('export-wizard-ui-vue')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByTestId('export-wizard-targets')).toContainText('vue UI');
+    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.vue');
+    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
+    await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
+  });
+
+  test.skip('previews Svelte UI files when Svelte target is selected', async ({ page }) => {
+    await addFromPalette(page, 'infra.postgresql');
+    await addFromPalette(page, 'infra.server.nest');
+    await addFromPalette(page, 'visual.table');
+    await expect(page.getByTestId('canvas-node')).toHaveCount(3);
+
+    const postgresNode = page.getByTestId('canvas-node').nth(0);
+    const tableNode = page.getByTestId('canvas-node').nth(2);
+
+    await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
+    await tableNode.getByTestId(/^port-input-.*-data$/).click();
+
+    await page.getByTestId('export-button').click();
+    await expect(page.getByTestId('export-wizard')).toBeVisible();
+    await page.getByTestId('export-wizard-ui-svelte').click();
+    await expect(page.getByTestId('export-wizard-ui-svelte')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByTestId('export-wizard-targets')).toContainText('svelte UI');
+    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.svelte');
+    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 });

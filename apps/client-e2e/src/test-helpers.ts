@@ -85,15 +85,20 @@ export async function expandInspectorBindings(page: Page): Promise<void> {
   await expandInspectorSection(page, 'bindings');
 }
 
-export async function openBuilder(page: Page): Promise<void> {
+export async function openBuilder(
+  page: Page,
+  stack?: { ui?: string; server?: string; database?: string },
+): Promise<void> {
+  const pending = {
+    ui: stack?.ui ?? 'react',
+    server: stack?.server ?? 'nest',
+    database: stack?.database ?? 'postgresql',
+  };
   await page.goto('/');
-  await page.evaluate(() => {
+  await page.evaluate((next) => {
     sessionStorage.clear();
-    sessionStorage.setItem(
-      'rosettadash:pending-stack',
-      JSON.stringify({ ui: 'react', server: 'nest', database: 'postgresql' }),
-    );
-  });
+    sessionStorage.setItem('rosettadash:pending-stack', JSON.stringify(next));
+  }, pending);
   await page.goto('/builder');
   await expect(page.getByTestId('builder-loading')).toBeHidden({ timeout: 120_000 });
   await expect(page.getByTestId('builder-shell')).toBeVisible();

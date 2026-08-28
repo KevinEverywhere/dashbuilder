@@ -144,6 +144,8 @@ export class AtlasStateService {
   }
 
   setSelectedId(id: string): void {
+    this.mapViewOverride.set(null);
+    this.mapLocationQuery.set('');
     this.navigateAtlas(this.screen(), { ...this.atlasQuery(), dest: id });
   }
 

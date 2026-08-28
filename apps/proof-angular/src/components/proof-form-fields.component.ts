@@ -38,14 +38,13 @@ export class DaBoundTextInputComponent {
       }
       <select
         class="rd-select"
-        [value]="value()"
         (change)="valueChange.emit($any($event.target).value)"
       >
         @if (placeholder()) {
-          <option value="">{{ placeholder() }}</option>
+          <option value="" [selected]="!value()">{{ placeholder() }}</option>
         }
         @for (option of options(); track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
+          <option [value]="option.value" [selected]="option.value === value()">{{ option.label }}</option>
         }
       </select>
     </section>

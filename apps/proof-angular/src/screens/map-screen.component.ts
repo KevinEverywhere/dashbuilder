@@ -7,11 +7,7 @@ import {
   type GeoMapProvider,
 } from '@destination-atlas';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
-import {
-  destinationByIdMapView,
-  destinationMapView,
-  resolveMapLocationQuery,
-} from '../lib/map-location';
+import { destinationMapView, resolveMapLocationQuery } from '../lib/map-location';
 import { AtlasStateService } from '../services/atlas-state.service';
 import { ConsumerSecretsService } from '../services/consumer-secrets.service';
 import {
@@ -207,10 +203,6 @@ export class MapScreenComponent {
 
   selectDestination(id: string): void {
     this.atlas.setSelectedId(id);
-    const destView = destinationByIdMapView(id, this.atlas.locale());
-    if (destView) {
-      this.atlas.goToMapView(destView);
-    }
   }
 
   openIntegrationsSettings(): void {
