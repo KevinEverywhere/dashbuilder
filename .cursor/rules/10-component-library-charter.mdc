@@ -1,0 +1,125 @@
+---
+description: Component library constitution — multi-runtime parity, source of truth, add-component workflow
+alwaysApply: true
+---
+
+# Component library charter
+
+RosettaDash ships one logical component library across **six consumer targets**:
+
+| Target | Package / surface |
+|--------|-------------------|
+| Plain HTML/JS/CSS | `@rosettadash/web-components` + copy-paste snippets (see `packages/web-components/.cursor/rules/vanilla-target.mdc`) |
+| Web Components | `@rosettadash/web-components` |
+| React | `@rosettadash/react` |
+| Angular | `@rosettadash/angular` |
+| Vue | `@rosettadash/vue` |
+| Svelte | `@rosettadash/svelte` |
+
+The Angular **builder** (`apps/client`) is the authoring app — not a consumer runtime. It previews and exports; it does not define the public component contract.
+
+## Source of truth (in order)
+
+1. **`tools/runtime-taxonomy/manifest.mjs`** — which components exist, their subpaths, export names, and generation pattern (`native` | `manual` | `ce-host`).
+2. **`@rosettadash/web-components`** — canonical DOM, attributes, events, and styles for every component.
+3. **`tools/runtime-taxonomy/*-templates.mjs`** — shared markup/props for codegen into React/Angular/Vue/Svelte.
+4. **`@rosettadash/core`** — taxonomy registry, Export IR, shared math (equirect filters, BYOK), validation.
+5. **Numbered docs** (`docs/33`–`docs/43`, `docs/28`, `docs/35`) — long-form reference; when a doc disagrees with manifest or code, flag the conflict.
+
+**Never** add a public runtime export without a manifest entry. Framework-only exports are bugs unless listed under Grandfathered debt below.
+
+## Three parity levels
+
+Every manifest component must satisfy all three over time:
+
+| Level | Must match across runtimes |
+|-------|------------------------------|
+| **API** | Subpath `@rosettadash/<runtime>/<group>/…/<component>`, PascalCase export, prop names, event names, typed `.d.ts` |
+| **DOM** | Root BEM block (`rd-*`), `data-testid`, semantic structure, child/slot placement |
+| **Behavior** | Interaction, keyboard, empty/loading/error states, teardown on unmount |
+
+API + DOM parity is required before merge. Behavior parity is required before calling a component "done"; stubs are grandfathered only where listed.
+
+## Implementation patterns
+
+| Pattern | When | Canonical layer |
+|---------|------|-----------------|
+| `native` | Layout, inputs, charts, most atoms | WC `RosettaAtomElement` → codegen per framework |
+| `manual` | Media CEs, geo-map, wasm/media | Hand-written WC → thin CE-host in frameworks |
+| `ce-host` | Same as manual with `wcImport` | Framework wraps WC custom element |
+
+Heavy logic (equirect math, BYOK crypto) lives in **`@rosettadash/core`**, never duplicated per runtime.
+
+## Add-a-component workflow (mandatory order)
+
+1. Jira ticket + feature branch (see `01-jira-ticket-and-branch.mdc`).
+2. Add **`ComponentDefinition`** + palette group (2–7 items) in `packages/core`.
+3. Add **`RuntimeAtomEntry`** to `manifest.mjs` with `subpath`, `exportName`, `pattern`, `testId`.
+4. Implement **web-components** (native or manual CE).
+5. Run codegen: `npm run generate:web-components-runtime` and the target framework script(s).
+6. Add **vanilla snippet** to `packages/web-components/README.md` (or dedicated docs section).
+7. Add **Storybook** story via `tools/storybook-shared/` (all five `apps/storybook-*`).
+8. Update **exporters** for new palette type (all UI exporters or matrix tests fail).
+9. Use in a **proof app** screen when the component is user-facing.
+10. Run `npm run verify` (and `verify:all` if builder UI changed).
+
+Standalone export must work before package-mode imports (`02-standalone-first-export.mdc`).
+
+## Grandfathered debt (do not extend)
+
+Known gaps vs target parity. **Do not add new entries.** Close with a dedicated parity ticket.
+
+### React-only exports (no manifest entry; missing on Angular/Vue/Svelte/WC)
+
+- `layout/scroll-region`, `layout/filter-grid`, `layout/geo-explorer`, `layout/form-section`
+- `visual/chart/sankey`, `visual/chart/venn`
+- `visual/destination/destination-select-list`, `visual/filter/filter-summary`
+- `visual/display/equirect-globe`
+- `visual/media/carousel`, `visual/media/video-metadata`
+
+### React + Angular only (missing Vue/Svelte/WC/manifest)
+
+- `visual/media/equirect-sphere-viewport`, `visual/media/flat-video-viewport`
+
+### Implementation depth stubs (manifest entry exists; behavior incomplete)
+
+- `visual/display/3d-geo-globe` — full Three.js in WC/React/Angular; Svelte/Vue remain codegen stubs
+
+### Tooling gaps
+
+_(None — `generate:svelte-runtime` added to root `package.json`.)_
+
+### Cross-runtime embed exceptions (proof apps only)
+
+- Vue/Svelte proof apps may embed React for Authoring/Globe ahead-of-parity — documented in `docs/43-destination-atlas-proof-apps.md`. Not a license for runtime package skew.
+
+## Rule index
+
+Cursor loads `.mdc` rules by scope. Claude Code: read the matching file when working in that area (also indexed in root `CLAUDE.md` / `AGENTS.md`).
+
+| File | Scope |
+|------|-------|
+| `00-agent-no-commits.mdc` | Process — always |
+| `01-jira-ticket-and-branch.mdc` | Process — always |
+| `02-standalone-first-export.mdc` | Process — always |
+| `10-component-library-charter.mdc` | This file — always |
+| `11-component-public-contract.mdc` | Runtime packages — API/DOM |
+| `12-styling-tokens-and-css.mdc` | Runtime packages — CSS |
+| `13-accessibility.mdc` | Runtime packages — WCAG 2.2 AA |
+| `14-parity-and-codegen.mdc` | Manifest + codegen |
+| `15-testing-and-verification.mdc` | Tests + verify |
+| `16-ssr-and-runtime-environment.mdc` | SSR guards |
+| `17-performance-and-packaging.mdc` | exports map, tree-shaking |
+| `18-docs-and-catalog-upkeep.mdc` | docs + Storybook |
+| `26-exporter-authoring.mdc` | `packages/exporters-*` |
+| `30-media-and-video.mdc` | Media components |
+| `31-vr-and-3d.mdc` | 3D / WebXR roadmap |
+| `32-storage-and-persistence.mdc` | localStorage conventions |
+| `33-dashboard-and-data-components.mdc` | Charts, tables, KPIs |
+| `packages/*/.cursor/rules/*` | Per-language authoring |
+| `apps/client/.cursor/rules/builder-app.mdc` | Builder UI |
+
+## Related docs
+
+- `docs/34-public-component-api.md`, `docs/35-styling-and-classnames.md`, `docs/37-npm-library-build.md`
+- `docs/43-destination-atlas-proof-apps.md`, `docs/38-storybook-component-catalog.md`

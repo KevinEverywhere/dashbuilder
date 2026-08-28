@@ -2,7 +2,7 @@
 
 Forward-looking Jira ticket plan for RosettaDash.
 
-**Rule:** Every change requires a **Jira ticket first**, then a **matching feature branch** (`feature/DAS-<n>-…`). One ticket at a time. See [Workflow & Branching](./07-workflow-and-branching.md) and `.cursor/rules/jira-ticket-and-branch.mdc`.
+**Rule:** Every change requires a **Jira ticket first**, then a **matching feature branch** (`feature/DAS-<n>-…`). One ticket at a time. See [Workflow & Branching](./07-workflow-and-branching.md) and `.cursor/rules/01-jira-ticket-and-branch.mdc`.
 
 ## Completed
 

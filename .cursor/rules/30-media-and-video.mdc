@@ -1,0 +1,74 @@
+---
+description: Video, equirect, YouTube, live capture, and wasm media components
+globs: packages/{web-components,react,angular,vue,svelte}/**/media/**,packages/{web-components,react,angular,vue,svelte}/**/wasm/**,packages/core/**/media/**
+alwaysApply: false
+---
+
+# Media and video
+
+Media components span WC (canonical CE), framework CE-hosts, and shared math in `@rosettadash/core`.
+
+## Component map
+
+| Component | Taxonomy | Pattern | Notes |
+|-----------|----------|---------|-------|
+| `video-source` | `visual.media.video-source` | manual CE | File pick, metadata events |
+| `equirect-viewport` | `visual.media.equirect-viewport` | manual CE | Legacy 2:1 flat-crop on frame |
+| `youtube-embed` | `visual.media.youtube-embed` | manual CE | iframe embed |
+| `live-capture` | `visual.media.live-capture` | native | getUserMedia |
+| `wasm/media` | `visual.wasm.media` | manual CE | ffmpeg.wasm pipeline |
+| `equirect-sphere-viewport` | — | hand (React/Angular only) | Authoring 360° sphere |
+| `flat-video-viewport` | — | hand (React/Angular only) | Authoring flat 2D crop |
+
+Grandfathered extras must gain manifest entries or be removed — do not add more.
+
+## Builder / export pipeline
+
+Chain (`docs/30-equirect-media-pipeline.md`):
+
+```
+video-source.videoFile → wasm.media.inputFile
+equirect-viewport.cropRegion → wasm.media.cropRegion
+```
+
+Filter strings from **`@rosettadash/core`** — `buildEquirectFlatCropFilter`, `buildEquirectExtractFilter`, `DEFAULT_EQUIRECT_*`. Never duplicate filter math in WC or frameworks.
+
+## WC CE rules
+
+- Shadow DOM for media CEs
+- `setProperty('inputFile', file)`, `setProperty('cropRegion', region)`, etc.
+- Events: `video-file`, `metadata`, `crop-region` — kebab-case, typed detail
+- Revoke object URLs on disconnect
+
+## Framework CE-hosts
+
+Thin wrappers only — same attrs/events as WC (`11-component-public-contract.mdc`).
+
+## Browser bundle
+
+`@rosettadash/web-components/browser/media` — esbuild ESM for vanilla/no-build apps. Rebuild via `scripts/bundle-browser-media.mjs` when API changes.
+
+## App-level headers (proof apps / wasm)
+
+For SharedArrayBuffer + YouTube embeds together:
+
+- `Cross-Origin-Opener-Policy: same-origin`
+- `Cross-Origin-Embedder-Policy: credentialless`
+- Serve `@ffmpeg/core` same-origin
+
+Document in app README — **not** inside atom components.
+
+## Autoplay and captions
+
+- Autoplay only with `muted` unless user gesture documented
+- Provide `<track kind="captions">` support where `<video>` is rendered — WCAG 2.2 (`13-accessibility.mdc`)
+- Processing progress: `aria-live="polite"`
+
+## SSR
+
+All media components are **client-only** with SSR placeholder (`16-ssr-and-runtime-environment.mdc`).
+
+## Related
+
+- `docs/30-equirect-media-pipeline.md`, `docs/31-ffmp3-web-components-integration.md`
+- `vanilla-target.mdc`, `32-storage-and-persistence.mdc` (BYOK separate from media)

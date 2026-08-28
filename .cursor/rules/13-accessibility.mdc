@@ -1,0 +1,118 @@
+---
+description: WCAG 2.2 AA accessibility requirements for all public runtime components
+globs: packages/{web-components,react,angular,vue,svelte}/**/*
+alwaysApply: false
+---
+
+# Accessibility (WCAG 2.2 AA)
+
+Every public component in all five runtimes must meet **WCAG 2.2 Level AA** before it is considered done. Parity includes accessibility — not just visual DOM.
+
+## Baseline requirements (all components)
+
+- **Keyboard operable** — all interactive controls reachable and activatable without a pointer.
+- **Visible focus** — `:focus-visible` outline or equivalent; never `outline: none` without a replacement.
+- **Name** — every control has an accessible name (visible label, `aria-label`, or `aria-labelledby`).
+- **Role** — use native semantics first; ARIA roles only when native elements insufficient.
+- **Color contrast** — text and meaningful UI icons ≥ 4.5:1 (normal text) / 3:1 (large text/UI components) against background in themed mode.
+- **Motion** — honor `prefers-reduced-motion: reduce` (disable non-essential animation/transitions).
+- **Touch targets** — interactive targets ≥ 24×24 CSS px where practical (WCAG 2.2 2.5.8).
+
+## Component-kind patterns
+
+### Accordion / collapsible
+
+- Header is a **`<button type="button">`** (not `<div onclick>`).
+- `aria-expanded` reflects open state.
+- `aria-controls` points to panel id when panel exists.
+- Enter and Space toggle; optional Arrow keys between headers in a group.
+
+### Tabs
+
+- Tab list: `role="tablist"`; tabs: `role="tab"` with `aria-selected`.
+- Panels: `role="tabpanel"`, `aria-labelledby` linked to tab.
+- Arrow Left/Right (horizontal) or Up/Down (vertical) move focus between tabs; activation follows WAI-ARIA tabs pattern.
+
+### Modal / dialog
+
+- `role="dialog"` + `aria-modal="true"`.
+- Focus trap while open; restore focus to trigger on close.
+- Escape closes unless explicitly disabled.
+- Background scroll locked while modal open.
+
+### Select / listbox / combobox
+
+- Follow WAI-ARIA APG for the chosen pattern.
+- Typeahead where list length > 10 items.
+- Selected state exposed to assistive tech.
+
+### Text inputs / textarea / checkbox / number
+
+- Native `<input>`, `<textarea>`, `<select>` preferred.
+- Associate `<label>` or `aria-label`; expose `aria-invalid` + error text when validation fails.
+- Do not rely on placeholder as sole label.
+
+### Date range
+
+- Provide accessible names for start/end fields.
+- Announce range changes if programmatically updated (`aria-live="polite"` on summary region).
+
+### Data table
+
+- Use `<table>` with `<th scope="col|row">` for tabular data.
+- Sortable columns: `aria-sort` on header button.
+- Row selection: checkbox column with header label.
+
+### Charts (bar, line, pie, 3D bar)
+
+- Root: `role="img"` with meaningful **`aria-label`** summarizing the data (not just "Bar chart").
+- Provide **text alternative**: visually hidden `<table>` or description list with the same data when data is known.
+- Decorative-only charts in demos must still have a label stating they are illustrative.
+
+### KPI / metric
+
+- Value + label association via heading or `aria-labelledby`.
+- Trend/delta communicated in text, not color alone.
+
+### 3D / globe / map
+
+- Container: `aria-label` describing purpose (e.g. "Interactive globe showing destination markers").
+- **Non-visual fallback required**: list/table of markers or destinations with same select/action affordances.
+- Do not make pointer-only interaction the only path to core functionality.
+
+### Video / media
+
+- `<video>` controls must be keyboard accessible when native controls shown.
+- Autoplay requires `muted` + user expectation documented; never autoplay with sound.
+- YouTube embed: title on iframe; provide alternative link to content.
+- Live regions for processing states (`aria-live="polite"` on wasm progress).
+
+### Loading / skeleton / empty / error
+
+- Loading: `aria-busy="true"` on region or `role="status"` with visible text ("Loading…").
+- Empty: text explaining empty state, not blank silence.
+- Error: `role="alert"` or `aria-live="assertive"` for critical failures.
+
+## Async updates
+
+- Filter results, timer ticks, wasm progress: use `aria-live="polite"` unless user action requires immediate attention (`assertive`).
+- Do not move focus unexpectedly on data refresh.
+
+## Builder palette (related)
+
+Palette accordion headers in the builder app must be buttons with `aria-expanded` — see `apps/client/.cursor/rules/builder-app.mdc`. Public `rd-*` components follow the patterns above.
+
+## Acceptance checklist (before merge)
+
+- [ ] Keyboard path documented in Storybook story description
+- [ ] Focus order logical; no keyboard traps except modals
+- [ ] All interactive elements named
+- [ ] Color not sole indicator of state
+- [ ] `prefers-reduced-motion` respected
+- [ ] Chart/3D/map has text alternative
+- [ ] Spec or Storybook `play` function covers at least one keyboard interaction where applicable
+
+## Related
+
+- `11-component-public-contract.mdc`, `33-dashboard-and-data-components.mdc`
+- `31-vr-and-3d.mdc`, `30-media-and-video.mdc`

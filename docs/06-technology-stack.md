@@ -1,5 +1,7 @@
 # Technology Stack
 
+> **Status note:** This doc mixes original decisions with current shipped state. For day-to-day versions (Node, test runners), prefer [Local Development](./13-local-development-and-components.md). For component counts, prefer [Component Taxonomy — shipped snapshot](./08-component-taxonomy.md#shipped-registry-snapshot).
+
 ## Builder application
 
 | Layer | Choice | Rationale |
@@ -9,22 +11,22 @@
 | **Monorepo** | Nx 23 (free tier, no Nx Cloud) | Shared `packages/core` between client and server |
 | **Language** | TypeScript (strict) | End-to-end type safety; shared models |
 
-### Angular client libraries (planned)
+### Angular client libraries (in use)
 
 | Concern | Library direction |
 |---------|-------------------|
 | Drag and drop | `@angular/cdk/drag-drop` |
 | Forms / inspector | Reactive forms + schema-driven renderer |
-| Charts (preview) | Chart.js or similar lightweight preview lib |
+| Charts (preview) | Lightweight preview renderers + `@rosettadash/ui-primitives` mock data |
 | HTTP | `HttpClient` to NestJS API |
-| Styling | SCSS + CSS variables; design tokens in core |
+| Styling | SCSS + CSS variables; builder chrome uses `app-*` BEM ([doc 28](./28-app-component-css-convention.md)) |
 
-### NestJS server libraries (planned)
+### NestJS server libraries (in use)
 
 | Concern | Library direction |
 |---------|-------------------|
 | Validation | `class-validator` + DTOs |
-| Persistence | Deferred — single-user MVP uses in-memory/file stub first |
+| Persistence | File-backed projects/composites (MVP); export orchestration |
 | Export orchestration | Custom job runner; zip via `archiver` |
 | Config | `@nestjs/config` |
 
@@ -32,11 +34,27 @@
 
 | Framework | Generator output | Notes |
 |-----------|------------------|-------|
-| **React** | TSX + CSS modules | Hooks-based data fetching |
+| **React** | TSX + stack styling profile | Hooks-based patterns |
 | **Angular** | Standalone components | Signals-friendly patterns |
-| **Vue** | SFC (`.vue`) | Composition API |
+| **Vue** | Composition API components | Native + CE-host for media |
+| **Svelte** | Svelte 5 components (`.svelte` source) | Shipped runtime package + exporter |
+| **Web Components** | Custom elements (`rd-*`) | Canonical DOM; also standalone export target |
 
-Future: Svelte, Solid via plugin interface.
+Solid and other frameworks remain future via exporter plugin interface.
+
+## Published runtime packages (npm)
+
+Consumers install `@rosettadash/<runtime>` — see [Public component API](./34-public-component-api.md).
+
+| Package | Role |
+|---------|------|
+| `@rosettadash/web-components` | Canonical CE implementation + vanilla HTML target |
+| `@rosettadash/react` | React wrappers / native ports |
+| `@rosettadash/angular` | Angular standalone ports |
+| `@rosettadash/vue` | Vue 3 ports |
+| `@rosettadash/svelte` | Svelte 5 ports |
+
+Five matching Storybook apps (ports 6006–6010) — [Storybook catalog](./38-storybook-component-catalog.md).
 
 ## Export targets — server partners
 
@@ -60,23 +78,28 @@ Future: Svelte, Solid via plugin interface.
 
 | Package | Contents |
 |---------|----------|
-| `packages/core` | Types, IR, validation, component schemas |
-| `packages/exporters/*` | Per-target code generators |
-| `packages/ui-primitives` | Builder preview renderers |
+| `packages/core` | Types, IR, validation, component registry, shared media/BYOK logic |
+| `packages/exporters-*` | Per-target code generators (UI, server, database) |
+| `packages/ui-primitives` | Preview mock data helpers (builder + Storybook) |
+| `packages/web-components` | Published `@rosettadash/web-components` |
+| `packages/react`, `angular`, `vue`, `svelte` | Published framework runtime ports |
+| `tools/runtime-taxonomy/` | Manifest + codegen templates (source of truth for npm subpaths) |
 
 ## Development tooling
 
 | Tool | Purpose |
 |------|---------|
 | ESLint + Prettier | Lint/format |
-| Jest / Vitest | Unit tests |
-| Playwright (future) | E2E builder flows |
+| Jest | Unit tests (runtime packages, core, client, server, exporters) |
+| Playwright | E2E builder flows (`apps/client-e2e`) — shipped |
+| Storybook 10 + Vite | Per-runtime component catalogs |
 
 ## Runtime requirements
 
 | Context | Node version |
 |---------|--------------|
-| Builder server | Node 20 LTS+ |
+| Monorepo dev + CI | **Node 22.x** (see [Local Development](./13-local-development-and-components.md)) |
+| Builder server | Node 22.x recommended |
 | Exported projects | Document per target; generally Node 18+ |
 
 ## Explicit non-choices (for now)
@@ -102,6 +125,8 @@ Future: Svelte, Solid via plugin interface.
 | 2026-08-08 | Prisma preferred for PG/MySQL export when no added cost | DAS-2 |
 | 2026-08-08 | Neutral design tokens (no brand preset) | DAS-2 |
 | 2026-08-08 | `development` branch is integration target for PRs | DAS-2 |
+| 2026-08-28 | Svelte + Web Components shipped as export targets and npm runtimes | — |
+| 2026-08-28 | Node 22.x for monorepo dev/CI; Playwright e2e shipped | — |
 
 Subsequent decisions append here with Jira references.
 

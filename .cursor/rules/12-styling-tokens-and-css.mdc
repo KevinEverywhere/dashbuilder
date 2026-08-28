@@ -1,0 +1,114 @@
+---
+description: Public npm styling — rd-* BEM, --rd-* tokens, minimal opt-in theme
+globs: packages/{web-components,react,angular,vue,svelte}/**/*
+alwaysApply: false
+---
+
+# Styling, tokens, and CSS
+
+Published runtime packages use **`rd-*` classnames** and **`--rd-*` custom properties** only. Builder app styling uses separate **`app-*`** BEM — never mix them in runtime code.
+
+## Three styling modes (consumer choice)
+
+| Mode | Import | Result |
+|------|--------|--------|
+| Minimal (default) | None | Structure, semantics, stable `rd-*` classnames; host styles everything |
+| Tokenized | `@rosettadash/web-components/tokens.css` | `--rd-*` variables available; little component chrome |
+| Themed | `@rosettadash/web-components/styles.css` (+ optional `tokens.css`) | Light borders/spacing using tokens |
+
+Consumers override via CSS variables, `className`, and descendant selectors — no required Tailwind/MUI/CSS Modules peer dependency.
+
+## Classname contract
+
+| Piece | Pattern | Example |
+|-------|---------|---------|
+| Root block | `rd-<kebab>` | `rd-accordion`, `rd-chart-bar` |
+| Element | `rd-<block>__<element>` | `rd-accordion__panel` |
+| Modifier | `rd-<block>--<modifier>` | `rd-accordion--open` |
+
+- Derive block from taxonomy: strip `visual.|domain.|layout.|logic.|infra.` prefix, dots → hyphens, prefix `rd-` (same as `taxonomyTypeToBemBlock()` in manifest).
+- **`data-testid`** equals root block class.
+- **No** generic `rd-atom` wrappers.
+
+Custom element tags align with block where practical (`<rd-accordion>`).
+
+## Tokens (`--rd-*`)
+
+- **Public contract uses `--rd-*` only** — no `--db-*` in published CSS.
+- Define shared tokens in `packages/web-components/src/styles/tokens.css`.
+- Components read tokens with fallbacks: `var(--rd-color-border, #d0d0d0)`.
+- **Never hard-code brand colors** in public component CSS — use tokens or `inherit`.
+
+Common tokens (extend, do not rename without migration):
+
+```css
+--rd-color-text, --rd-color-muted, --rd-color-surface, --rd-color-border, --rd-color-accent
+--rd-radius-sm, --rd-radius-md
+--rd-space-xs, --rd-space-sm, --rd-space-md
+--rd-font-size, --rd-line-height, --rd-font-family
+```
+
+## Drop-in rules (low opinionation)
+
+1. **One job per component** — layout belongs to the host unless the atom *is* a layout primitive.
+2. **No wrapper cards** unless the taxonomy component is explicitly a card (e.g. KPI).
+3. **Recipes compose atoms** without inventing extra chrome.
+4. **Width/height** default `auto` / `100%` of parent — no magic fixed widths.
+5. **Stack styling profiles** (Tailwind, MUI, CSS Modules) are **export-wizard** choices — not runtime peerDeps.
+
+## Library CSS prohibitions
+
+Public `styles.css` must **not** include:
+
+- Global `*` / `body` resets
+- Fixed page layouts or app shells
+- Heavy shadows, forced dark mode, or brand gradients
+- Dependency on utility frameworks
+
+## Accordion / collapsible open state
+
+Panel **stays mounted** when closed; visibility via `rd-accordion--open` (or equivalent) + CSS.
+
+If consumer skips `styles.css`, they **must** provide:
+
+```css
+.rd-accordion__panel { display: none; }
+.rd-accordion--open .rd-accordion__panel { display: block; }
+```
+
+(Same pattern for `rd-collapsible`, `rd-modal-layout` where applicable.)
+
+## Light DOM vs shadow DOM
+
+| DOM | When | Styling |
+|-----|------|---------|
+| Light (default) | Native atoms via `RosettaAtomElement` | Host can target `rd-*` classes directly |
+| Shadow | Manual media CEs only | Host styles via `--rd-*` on the CE + documented parts; frameworks pass `className` to host |
+
+## Context matrix
+
+| Context | Classes / tokens |
+|---------|------------------|
+| npm runtime packages | **Must** `rd-*` + `--rd-*` |
+| Builder app | **Must** `app-*` (`docs/28-app-component-css-convention.md`) |
+| Standalone export zip | May differ today; **new exporter work should converge on `rd-*` / `--rd-*`** |
+| Proof apps | Use runtime package styling modes; app chrome may use stack choice |
+
+## CE-host styling (React/Vue/Angular/Svelte)
+
+- Merge `className` / `class` onto the custom element host.
+- Pass `style` to host only.
+- Tune internals via `--rd-*` variables on host or wrapper — do not pierce shadow DOM except via `setProperty`.
+
+## Checklist
+
+- [ ] Root uses taxonomy-aligned `rd-*` block
+- [ ] No `--db-*` or hard-coded brand palette
+- [ ] Themed mode uses tokens, not raw hex (except token defaults in `tokens.css`)
+- [ ] Open/closed states use BEM modifiers, not inline `display:none` in TS
+- [ ] No global resets added to `styles.css`
+
+## Related
+
+- `11-component-public-contract.mdc` — DOM + `data-testid`
+- `docs/35-styling-and-classnames.md`, `docs/41-stack-styling-guides.md`

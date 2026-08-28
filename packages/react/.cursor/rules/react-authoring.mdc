@@ -1,0 +1,61 @@
+---
+description: React runtime authoring — forwardRef, CE hosts, StrictMode-safe effects
+globs: packages/react/**/*
+alwaysApply: false
+---
+
+# React authoring
+
+## File layout
+
+- Component: `{ExportName}.tsx` in manifest subpath directory
+- Spec: co-located `{kebab}.spec.tsx`
+- Barrel: `index.ts` re-exports component + types
+- CE-host lib: `src/lib/custom-element-host.ts` — do not fork per component
+
+## Component rules
+
+- **Named exports only** — `export const BarChart = forwardRef<…>(…)`
+- **Always `forwardRef`** to root `HTMLElement` (or CE host)
+- Props type: `{ExportName}Props` exported alongside component
+- Merge `className` and `style` onto root / CE host
+- **`children`** at documented composition point
+
+## CE-host pattern (media, wasm, manual WC)
+
+Use `useCustomElementHost` from `src/lib/custom-element-host.ts`:
+
+- `register` — idempotent WC register function
+- `attrs` — camelCase prop → kebab attribute map
+- `events` — CE event name → React `onXxx` prop map
+- Sync complex props via ref + `setProperty` inside the hook — not in render body
+
+Return `createElement(TAG, { ref: hostRef, className, style })`.
+
+## Native React components
+
+- Match WC BEM markup and `data-testid` from shared template
+- Post-codegen enhancements (e.g. axis labels on `BarChart`) — promote to `react-templates.mjs` when parity desired across frameworks
+- Charts: `role="img"` + `aria-label` (`13-accessibility.mdc`)
+
+## Controlled state
+
+`open` + `onOpenChange` for accordion/modal/collapsible.
+
+## StrictMode
+
+Effects that register CEs or start Three/ffmpeg must **clean up** on unmount (dispose, revoke URLs) — StrictMode double-invokes effects in dev.
+
+## Interop
+
+React may host WC tags directly; prefer typed wrappers from this package for props/events consistency (`docs/40-react-runtime-integration.md`).
+
+## Must not
+
+- Default-export components from public subpaths
+- Import from `@rosettadash/react` root in consumer docs — always subpath imports
+- Add framework-only exports without manifest entry (see charter grandfather list)
+
+## Related
+
+- `11-component-public-contract.mdc`, `16-ssr-and-runtime-environment.mdc`

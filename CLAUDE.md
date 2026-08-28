@@ -17,6 +17,53 @@ Full detail lives in `docs/01`–`docs/43` (numbered, topic-per-file). This file
 operational layer — when it and a numbered doc disagree, the doc is more likely current; flag the
 conflict rather than silently picking one.
 
+`AGENTS.md` is a symlink to this file — Cursor and Claude Code share one entry point.
+
+## Agent rules (`.cursor/rules/` and nested)
+
+Cursor loads `.mdc` rules automatically. **Claude Code:** read the files below when working in
+the matching area (same content as Cursor rules).
+
+### Process (always apply)
+
+| Rule | Purpose |
+|------|---------|
+| `.cursor/rules/00-agent-no-commits.mdc` | Agents never commit or push |
+| `.cursor/rules/01-jira-ticket-and-branch.mdc` | DAS ticket + feature branch gate |
+| `.cursor/rules/02-standalone-first-export.mdc` | Standalone export is default |
+| `.cursor/rules/10-component-library-charter.mdc` | Multi-runtime parity constitution |
+
+### Component library (glob-scoped at repo root)
+
+| Rule | When to read |
+|------|--------------|
+| `11-component-public-contract.mdc` | Any `packages/{web-components,react,angular,vue,svelte}/**` work |
+| `12-styling-tokens-and-css.mdc` | Styling, BEM, `--rd-*` tokens |
+| `13-accessibility.mdc` | WCAG 2.2 AA, keyboard, ARIA |
+| `14-parity-and-codegen.mdc` | `manifest.mjs`, `generate-*-runtime.mjs` |
+| `15-testing-and-verification.mdc` | Jest specs, verify, E2E |
+| `16-ssr-and-runtime-environment.mdc` | SSR guards, client-only components |
+| `17-performance-and-packaging.mdc` | exports map, tree-shaking, peers |
+| `18-docs-and-catalog-upkeep.mdc` | docs, Storybook, README tables |
+| `26-exporter-authoring.mdc` | `packages/exporters-*/**` |
+| `30-media-and-video.mdc` | Video, equirect, wasm media |
+| `31-vr-and-3d.mdc` | Three.js, WebXR roadmap |
+| `32-storage-and-persistence.mdc` | localStorage / sessionStorage |
+| `33-dashboard-and-data-components.mdc` | Charts, tables, KPIs, filters |
+
+### Per-language (nested under package)
+
+| Rule | Path |
+|------|------|
+| Web Components authoring | `packages/web-components/.cursor/rules/web-components-authoring.mdc` |
+| Vanilla HTML/JS/CSS target | `packages/web-components/.cursor/rules/vanilla-target.mdc` |
+| React | `packages/react/.cursor/rules/react-authoring.mdc` |
+| Angular | `packages/angular/.cursor/rules/angular-authoring.mdc` |
+| Vue | `packages/vue/.cursor/rules/vue-authoring.mdc` |
+| Svelte | `packages/svelte/.cursor/rules/svelte-authoring.mdc` |
+| Core taxonomy + IR | `packages/core/.cursor/rules/core-taxonomy-and-ir.mdc` |
+| Builder app | `apps/client/.cursor/rules/builder-app.mdc` |
+
 ## Mandatory gate — Jira ticket + branch before ANY work
 
 **This is not optional and does not bend for "it's small."** Docs-only, config, a one-line fix —
@@ -33,7 +80,7 @@ all of it needs a ticket first. See `docs/07-workflow-and-branching.md` and
 
 ### Jira access (no MCP server in this environment)
 
-`docs/07` and `.cursor/rules/jira-ticket-and-branch.mdc` describe this as "Jira MCP
+`docs/07` and `.cursor/rules/01-jira-ticket-and-branch.mdc` describe this as "Jira MCP
 `create_ticket`" — that MCP server is a Cursor thing and is **not** available to Claude Code
 here. Use the REST API directly with credentials from `.env` (`JIRA_BASE_URL`, `JIRA_EMAIL`,
 `JIRA_API_KEY`, `JIRA_PROJECT_KEY=DAS`). Lessons already paid for, so you don't re-pay them:

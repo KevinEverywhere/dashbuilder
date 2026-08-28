@@ -1,0 +1,75 @@
+---
+description: Plain HTML/JS/CSS consumption via web-components and copy-paste snippets
+globs: packages/web-components/**/*
+alwaysApply: false
+---
+
+# Vanilla target (HTML / JS / CSS)
+
+There is **no separate `packages/vanilla`** — plain HTML/JS/CSS is served by `@rosettadash/web-components` plus documented snippets. This rule defines that consumer contract.
+
+## Mental model
+
+| Need | Use |
+|------|-----|
+| Single component, no bundler | CE tag + `registerRd*()` + optional `tokens.css` |
+| Media pipeline (video, wasm) | `@rosettadash/web-components/browser/media` ESM bundle |
+| Theming | `tokens.css` and/or `styles.css` imports |
+
+Framework packages are optional sugar — vanilla consumers must reach parity via WC alone.
+
+## Minimal snippet shape
+
+Every README/snippet must include:
+
+1. **CSS imports** (optional but documented)
+2. **Module script** that registers the CE
+3. **HTML** using the `rd-*` tag
+4. **Event listening** via `addEventListener` on the element
+
+```html
+<link rel="stylesheet" href="/node_modules/@rosettadash/web-components/tokens.css" />
+
+<rd-chart-bar title="Sales"></rd-chart-bar>
+
+<script type="module">
+  import { registerRdBarChart } from '@rosettadash/web-components/visual/chart/bar';
+  registerRdBarChart();
+</script>
+```
+
+## Configuration without JS frameworks
+
+- Prefer **attributes** for scalars (`title`, `label`, `accept`)
+- Use **`element.setProperty('markers', array)`** for objects (document in snippet comments)
+- Use **`data-*`** only for progressive enhancement hooks — not as primary API
+
+## Styling
+
+- Host page sets `--rd-*` on `:root` or a wrapper — components inherit
+- Do not require Tailwind/Bootstrap in snippets
+- Document minimal vs themed modes (`12-styling-tokens-and-css.mdc`)
+
+## Media / no-build apps
+
+```html
+<script type="module" src="/node_modules/@rosettadash/web-components/browser/media.js"></script>
+```
+
+Document COOP/COEP and same-origin `@ffmpeg/core` when wasm is involved (`30-media-and-video.mdc`).
+
+## Snippet maintenance
+
+When changing a manual CE's attributes or events:
+
+- [ ] Update WC README section
+- [ ] Update Storybook catalog row (shared mount)
+- [ ] Verify snippet works without a bundler (import maps or esm.sh noted if helpful)
+
+## Future `packages/vanilla`
+
+If promoted later: move snippets to `packages/vanilla/examples/` and keep WC as implementation — this rule's API contract unchanged.
+
+## Related
+
+- `web-components-authoring.mdc`, `docs/34-public-component-api.md`

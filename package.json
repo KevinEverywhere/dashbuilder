@@ -26,6 +26,7 @@
     "e2e:prep": "node scripts/check-e2e-ports.mjs",
     "generate:angular-runtime": "node scripts/generate-angular-runtime.mjs --write",
     "generate:react-runtime": "node scripts/generate-react-runtime.mjs --write",
+    "generate:svelte-runtime": "node scripts/generate-svelte-runtime.mjs --write",
     "generate:vue-runtime": "node scripts/generate-vue-runtime.mjs --write",
     "generate:web-components-runtime": "node scripts/generate-web-components-runtime.mjs --write",
     "lint": "nx run-many -t lint -p client,server,core,ui-primitives,web-components,runtime-react,runtime-angular,runtime-vue,runtime-svelte,exporters-react,exporters-nest,exporters-angular,exporters-vue,exporters-express,exporters-next,exporters-nuxt,exporters-svelte,exporters-web-components,exporters-mongodb,exporters-mysql,exporters-supabase",

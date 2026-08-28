@@ -1,0 +1,60 @@
+---
+description: Core taxonomy registry, canvas model, Export IR, shared logic
+globs: packages/core/**/*
+alwaysApply: false
+---
+
+# Core taxonomy and IR
+
+`@rosettadash/core` owns the **component model**, **registry**, **validation**, and **Export IR** — not UI rendering.
+
+## Two graphs (never conflate)
+
+| Graph | Location | Consumers |
+|-------|----------|-----------|
+| Canvas | `model/types.ts` — `ComponentNode`, bindings, layout | Builder client only |
+| Export IR | `ir/types.ts` — `ExportIR`, `IRComponent` | Exporters only |
+
+Pipeline: Canvas → validate → `build-export-ir.ts` → exporters.
+
+**Exporters must never read canvas JSON directly.** If you need a field in export output, add it to IR build — not to exporter hacks.
+
+## Taxonomy permanence
+
+- `ComponentDefinition.type` (dotted key) is **immutable after ship**
+- `register()` / `registerPlugin()` **throws** on duplicate type
+- Palette: every type in exactly one group; groups hold **2–7 items**
+
+## Manifest sync
+
+Runtime subpaths in `tools/runtime-taxonomy/manifest.mjs` must correspond to registered palette types (or NPM recipe entries). Adding a palette component:
+
+1. `ComponentDefinition` in core registry
+2. Manifest entry
+3. WC + codegen (see `14-parity-and-codegen.mdc`)
+
+## Shared logic belongs here
+
+| Domain | Module area |
+|--------|-------------|
+| Equirect filter math | `media/equirect-filter.ts` |
+| BYOK / consumer vault | `byok/` |
+| Validation rules | `validation/` |
+| Presentation sizing | `presentation/` |
+| Defaults engine | `defaults/` |
+
+Do not duplicate equirect math or BYOK crypto in runtime packages.
+
+## Label field
+
+- `ComponentNode.label` / `IRComponent.label` — per-instance name; copied by IR build
+- `ComponentDefinition.label` — static catalog name ("Bar Chart")
+- Renaming instance label is builder UI work — IR already carries it
+
+## Validation before IR
+
+Required relationships (chart needs data source, binding type match, no illegal cycles) belong in `validation/` — not runtime checks inside components.
+
+## Related
+
+- `packages/core/CLAUDE.md`, `docs/03-component-model.md`, `docs/04-export-pipeline.md`

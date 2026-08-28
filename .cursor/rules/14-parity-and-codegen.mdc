@@ -1,0 +1,96 @@
+---
+description: Manifest, codegen, and cross-runtime parity discipline
+globs: tools/runtime-taxonomy/**,scripts/generate-*-runtime.mjs,packages/{web-components,react,angular,vue,svelte}/**/*
+alwaysApply: false
+---
+
+# Parity and codegen
+
+`tools/runtime-taxonomy/manifest.mjs` is the **only** authority for public runtime subpaths. Codegen propagates manifest entries into each package — hand-editing without updating the source chain creates drift.
+
+## Manifest entry shape
+
+Each `RuntimeAtomEntry` must define:
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `type` | Yes | Dotted taxonomy key; permanent once shipped |
+| `subpath` | Yes | kebab path after `@rosettadash/<runtime>/` |
+| `exportName` | Yes | PascalCase symbol |
+| `pattern` | Yes | `native` \| `manual` \| `ce-host` |
+| `kind` | If `native` | Template id in `*-templates.mjs` |
+| `testId` | Yes | Equals BEM root / `data-testid` |
+| `wcImport` | If CE-host | WC subpath for framework wrappers |
+
+Add NPM recipes via `NPM_RECIPE_ENTRIES`, not ad-hoc exports.
+
+## Codegen commands
+
+| Command | Package |
+|---------|---------|
+| `npm run generate:web-components-runtime` | web-components |
+| `npm run generate:react-runtime` | react |
+| `npm run generate:angular-runtime` | angular |
+| `npm run generate:vue-runtime` | vue |
+| `npm run generate:svelte-runtime` | svelte |
+
+Flags: `--write` applies changes; `--force` overwrites existing generated files.
+
+## Generated vs hand-written
+
+| Generated (skip if exists unless `--force`) | Never generated — hand-maintained |
+|---------------------------------------------|-----------------------------------|
+| Native atom component + spec + index | `pattern: 'manual'` WC CEs and CE-hosts |
+| Barrel indexes, root exports maps | NPM recipe atoms (accordion, link-list) |
+| WC native atoms from `wc-templates.mjs` | Catalog CEs, browser/media bundle |
+| | Full Three.js beyond template stub |
+| | React-only extras (see charter grandfather list) |
+| | `custom-element-host` libs per framework |
+
+**Rule:** If you edit a generated file, either (a) promote the change into `tools/runtime-taxonomy/*-templates.mjs` and re-run codegen with `--force`, or (b) change manifest `pattern` to `manual` with a parity ticket.
+
+## Pattern selection
+
+| Pattern | Choose when |
+|---------|-------------|
+| `native` | DOM is static or templated; no shadow DOM; shared markup in templates |
+| `manual` | Shadow DOM media, map providers, wasm CE, complex lifecycle |
+| `ce-host` | WC exists; framework is a thin wrapper (`wcImport` set) |
+
+## Skip-existing behavior
+
+Codegen logs `skip existing <subpath>` when a file already exists. This preserves hand-enhancements (e.g. React `BarChart` with axis labels). Before merging enhancements:
+
+1. Decide if enhancement belongs in shared template (all runtimes) or is grandfathered single-runtime debt.
+2. If shared → update `react-templates.mjs` (kind props/bodies) and `--force` all runtimes.
+
+## Legitimate divergence (rare)
+
+Allowed only with:
+
+1. DAS parity ticket naming the gap and target close date
+2. Entry in charter **Grandfathered debt** (temporary — do not extend list)
+3. Storybook/catalog note visible to consumers
+
+**Never** ship a new framework-only export without manifest + ticket.
+
+## Parity verification (manual until automated)
+
+Before calling a component done across runtimes:
+
+- [ ] Subpath in all five `package.json` exports maps
+- [ ] Same `exportName` and props surface
+- [ ] Same root `rd-*` + `data-testid`
+- [ ] Storybook catalog row in all five apps (shared `tools/storybook-shared/`)
+- [ ] Jest spec in each runtime package
+
+## Shared templates
+
+- `react-templates.mjs` — `KIND_PROPS`, `KIND_BODIES` (shared kind markup reference)
+- `wc-templates.mjs`, `angular-templates.mjs`, `vue-templates.mjs`, `svelte-templates.mjs` — per-target renderers
+- `taxonomyTypeToBemBlock()` in manifest — use for `testId`, never invent alternate BEM roots
+
+## Related
+
+- `10-component-library-charter.mdc` — workflow and grandfather list
+- `docs/37-npm-library-build.md`

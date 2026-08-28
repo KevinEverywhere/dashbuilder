@@ -1,0 +1,70 @@
+---
+description: SSR safety and client-only component guards for runtime packages
+globs: packages/{web-components,react,angular,vue,svelte}/**/*
+alwaysApply: false
+---
+
+# SSR and runtime environment
+
+Runtime packages are consumed by SSR frameworks (`exporters-next`, `exporters-nuxt`, Angular SSR). Components must be **SSR-safe where practical**; heavy client-only components must ship an explicit guard and placeholder.
+
+## Universal rules
+
+- **No `window`, `document`, `localStorage`, or `navigator` at module top level** — access only inside lifecycle/mount/effect after an environment check.
+- **Guard pattern:**
+
+```ts
+const isBrowser = typeof globalThis !== 'undefined' && typeof document !== 'undefined';
+```
+
+- **Custom element registration** — call `registerRd*()` in mount/effect/first render, not at import time (except idempotent no-op guards inside register).
+- **Dynamic import** heavy deps: `three`, `@ffmpeg/ffmpeg`, map SDKs — never static-import at module scope in SSR entry paths.
+
+## SSR-safe components (default expectation)
+
+Layout, inputs, charts (static SVG/canvas-free), KPI, table, news, domain atoms — render meaningful HTML on server with correct `rd-*` structure and ARIA.
+
+## Client-only components (allowed with guard)
+
+| Category | Examples | Requirement |
+|----------|----------|-------------|
+| Media CEs | `video-source`, `equirect-viewport`, `wasm/media` | Render placeholder `<div>` or host tag on server; mount CE in browser |
+| 3D / maps | `3d-geo-globe`, `geo-map`, three hosts | Placeholder + `aria-label`; hydrate scene client-side |
+| WASM / ffmpeg | `WasmMedia` | No wasm init on server |
+| Live capture | `live-capture` | Guard `getUserMedia` |
+
+Client-only components must export or document:
+
+1. **`ssr: false`** in README row (convention until typed metadata exists)
+2. Server placeholder with same dimensions (`minHeight` prop honored)
+3. No throw on import in Node — defer failure to mount
+
+## Framework notes
+
+| Runtime | Mount hook |
+|---------|------------|
+| React | `useEffect`; guard StrictMode double-mount (dispose in cleanup) |
+| Vue | `onMounted` |
+| Angular | `ngOnInit` / `afterNextRender` |
+| Svelte | `$effect` with `onMount` cleanup |
+| WC | `connectedCallback` / `disconnectedCallback` |
+
+## Storage and persistence
+
+See `32-storage-and-persistence.mdc` — all storage access behind browser guard; SSR returns defaults.
+
+## COOP/COEP (media apps)
+
+Proof apps and media demos requiring SharedArrayBuffer must set headers at app level — not inside components. Document in app README, not in atom code.
+
+## Checklist
+
+- [ ] Module import does not throw in Node
+- [ ] Browser APIs only after guard
+- [ ] Heavy deps dynamically imported
+- [ ] `disconnectedCallback` / effect cleanup disposes listeners, RAF, object URLs
+- [ ] Client-only components have SSR placeholder documented
+
+## Related
+
+- `30-media-and-video.mdc`, `31-vr-and-3d.mdc`, `32-storage-and-persistence.mdc`

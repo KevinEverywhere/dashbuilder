@@ -19,7 +19,7 @@ Planning guide for **single components** and **pages built from component groups
 | Grouping guides & animated hints | Shipped (DAS-43) |
 | Palette accordion groups (2–7 rule) | DAS-44 |
 
-**Registry source of truth:** `packages/core/src/lib/registry/p0-components.ts` (24 types today).
+**Registry source of truth:** `packages/core/src/lib/registry/p0-components.ts` plus `*-component-plugins.ts` (**60 types** — see [Component Taxonomy snapshot](./08-component-taxonomy.md#shipped-registry-snapshot)).
 
 ---
 
@@ -284,7 +284,7 @@ Bind `[checkbox].value → [skeleton].loading` or pair with data visuals — pre
 
 ### Phase 6 complete
 
-All planned Phase 6 tickets (DAS-39–DAS-49) are shipped. The registry now includes **27 component types** across form inputs, data display, logic/motion, charts, layout, access/onboarding, and infrastructure targets.
+All planned Phase 6 tickets (DAS-39–DAS-49) are shipped. The registry now includes **60 component types** across form inputs, data display, logic/motion, charts, layout, news, media, SVG, VR/3D, WASM, plugins, access/onboarding, and infrastructure targets — see [Component Taxonomy snapshot](./08-component-taxonomy.md#shipped-registry-snapshot).
 
 ### Timer (DAS-50)
 

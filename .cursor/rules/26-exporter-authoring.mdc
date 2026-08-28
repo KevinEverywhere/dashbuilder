@@ -1,0 +1,63 @@
+---
+description: Exporter plugins — IR-only input, standalone output, stable paths
+globs: packages/exporters-*/**/*
+alwaysApply: false
+---
+
+# Exporter authoring
+
+Exporters in `packages/exporters-*` generate **standalone framework-native source** from Export IR — they never parse canvas JSON.
+
+## Contract
+
+Implement `ExporterPlugin` (`packages/core/src/lib/export/exporter-plugin.ts`):
+
+- `generate(ir, options) => GeneratedFile[]`
+- Declare `targetKind`: `'ui' | 'server' | 'database'`
+- Register in server export dispatch — no special cases in `export.service.ts`
+
+## IR-only input
+
+- Read `ExportIR`, `IRComponent`, `IRLayout`, `IRDataSource` — not `ComponentNode`
+- If a field is missing from IR, extend `build-export-ir.ts` — do not read composite files in exporter
+
+## Standalone-first
+
+Default export options must emit **complete source** with **no required `@rosettadash/*` import** in generated app code (`02-standalone-first-export.mdc`).
+
+- Package mode (`exportMode: 'package'`) is opt-in only
+- Third-party deps (three, ffmpeg) documented in `README.export.md` — not RosettaDash runtime deps
+
+## New palette types
+
+Adding a `ComponentDefinition` requires **every UI exporter** update (or export matrix tests fail):
+
+1. React exporter minimum
+2. Angular, Vue, Svelte, web-components when touching matrix
+3. Stable generated file paths — no random suffixes
+4. UTF-8 text; binary assets out of scope unless explicitly supported
+
+## Secrets and env
+
+- Never embed secret values — env var placeholders + `.env.example` only
+- Generated config accessors read from env at runtime
+
+## Styling in exports
+
+- Prefer converging new work on `rd-*` / `--rd-*` in generated components
+- Stack profiles (Tailwind, MUI, plain CSS) follow wizard choice (`docs/41-stack-styling-guides.md`)
+
+## Server stub pattern
+
+Role header stub: `x-rosettadash-role` for generated server auth — consistent across server exporters.
+
+## Tests
+
+- Guard wrong `ir.targets.ui`
+- Fixture dashboard in matrix fixtures
+- Binding-heavy component coverage
+- Assert standalone default has no `@rosettadash/` imports
+
+## Related
+
+- `docs/16-exporter-plugin-sdk.md`, `packages/core/.cursor/rules/core-taxonomy-and-ir.mdc`

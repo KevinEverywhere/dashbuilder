@@ -1,0 +1,55 @@
+---
+description: Builder app UI — state service, app-* CSS, palette, preview
+globs: apps/client/**/*
+alwaysApply: false
+---
+
+# Builder app
+
+The Angular builder (`apps/client`) is **not** a consumer of `@rosettadash/*` runtime packages for its chrome — it uses **`app-*` BEM** and builder-specific components.
+
+## State ownership
+
+- **Single owner:** `BuilderStateService` (signals) — canvas nodes, selection, history
+- Components **must not** hold duplicate canvas graph state
+- Every user-visible mutator: `recordHistory()` (unless `historySuspended` / `skipHistory`) → immutable `nodes.update` → `markDirty()`
+- **No-op guard:** skip history if value unchanged
+
+## Labels
+
+- `ComponentNode.label` — instance rename (canvas/export)
+- `ComponentDefinition.label` — catalog name
+- Do not collapse these fields
+
+## CSS
+
+- Builder chrome: **`app-*` BEM** (`docs/28-app-component-css-convention.md`)
+- Use **`<app-collapsible>`** — never hand-roll accordion markup in builder pages
+- Do not copy collapsible CSS into page stylesheets
+- Page wrappers: `welcome__*`, `admin-page__*` — not `app-*`
+
+## Preview
+
+- Preview renderers use `data-testid="preview-…"`
+- Preview mock data via `@rosettadash/ui-primitives` — not runtime packages for fake rows
+- Extension plugins register preview adapters — no hard-coded switch for new palette types
+
+## Palette
+
+- Accordion group headers: `<button>` with `aria-expanded`, Enter/Space support
+- Add button test id: `palette-add-{dotted.type}`
+- Groups: 2–7 items
+
+## Testing
+
+- Builder interaction changes → `npm run verify:all`
+- E2E selectors: `data-testid` only — not CSS classes or visible text
+
+## Must not
+
+- Use `rd-*` classes in builder chrome (preview may render `rd-*` inside preview iframe/host as consumer simulation)
+- Commit without verify when touching canvas/inspector/palette
+
+## Related
+
+- `apps/client/src/app/builder/CLAUDE.md`, `docs/28-app-component-css-convention.md`

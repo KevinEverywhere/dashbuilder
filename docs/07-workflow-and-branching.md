@@ -17,7 +17,7 @@ All work is tracked in Jira **before** any implementation. A Jira issue and matc
 
 Using ticket numbers in commits or docs without a real Jira issue is forbidden. If git history references tickets that Jira lacks, **create the Jira tickets first**, then continue.
 
-See also: `.cursor/rules/jira-ticket-and-branch.mdc` (always-applied agent rule).
+See also: `.cursor/rules/01-jira-ticket-and-branch.mdc` (always-applied agent rule).
 
 ## Branching policy
 

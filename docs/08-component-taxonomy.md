@@ -4,6 +4,21 @@ Initial palette organization for RosettaDash. Components are grouped for palette
 
 **npm note (DAS-90):** Public imports are `@rosettadash/<runtime>/<group>/…/<component>` (one or more groups; same subpaths on every runtime). Multi-component patterns are **recipes over atoms**, not extra taxonomy rows — see [Public component API](./34-public-component-api.md).
 
+## Shipped registry snapshot
+
+**Source of truth (code):**
+
+| Artifact | Location | Count |
+|----------|----------|------:|
+| Builder registry types | `packages/core/src/lib/registry/` | **60** |
+| npm runtime manifest | `tools/runtime-taxonomy/manifest.mjs` | **60** subpaths |
+
+Re-count when adding components: `rg "^\s+type: '(visual|layout|domain|logic|infra)\." packages/core/src/lib/registry -g '*.ts' | … | sort -u | wc -l`
+
+Sections **1–8 below** describe the **full target taxonomy** (including types not yet in the registry). Do not assume every table row is implemented — check the registry or [Component & Page Design — P0 table](./15-component-and-page-design.md#p0-components--implemented-today).
+
+**Agent rules:** `.cursor/rules/10-component-library-charter.mdc` (parity + add-component workflow).
+
 ## 1. Form & Input
 
 | Component | Type key | Notes |
@@ -116,19 +131,39 @@ Initial palette organization for RosettaDash. Components are grouped for palette
 
 ## Priority tiers
 
-### P0 — MVP palette (implemented)
+### P0 — MVP palette (expanded)
 
-Registered in `packages/core`, with preview renderers and export coverage. See [Component & Page Design — P0 table](./15-component-and-page-design.md#p0-components--implemented-today) for the full list (21 types).
+Original MVP was ~21 types; the registry has grown through Phase 6–8 and plugin packs (news, media, SVG, VR/3D, WASM).
 
-Includes: text input, select, date range, data table, detail panel, KPI card, line/bar/pie chart, grid, flex, tabs, modal, role gate, person invite, role assign, env config, PostgreSQL, MongoDB, Supabase, MySQL, NestJS/Express/Next/Nuxt server nodes.
+**Authoritative implemented list:** [Component & Page Design — P0 components](./15-component-and-page-design.md#p0-components--implemented-today) (update that table when adding registry types).
 
-### P1 — Early expansion (planned)
+**Rough groups shipped today (60 registry types):**
 
-Remaining form inputs. Timer shipped (DAS-50).
+| Group | Examples |
+|-------|----------|
+| Form & input | text, select, number, checkbox, textarea, date-range |
+| Data display | table, detail, KPI, skeleton |
+| Charts | line, bar, pie, sankey, venn |
+| Layout | grid, flex, tabs, modal, collapsible, scroll-region |
+| Logic | timer |
+| Domain | role-gate, person-invite, role-assign, time-preset |
+| News | language/region/type select, search, results, article detail |
+| Media | video-source, equirect viewports, live-capture, carousel |
+| VR / 3D | 3d-bar-chart, scatter, scene, gltf-model, geo-globe |
+| SVG | inline, icon |
+| Plugins | status-badge, metric-chip |
+| WASM | asset, worker-host, module, media |
+| Infra | env, four DBs, four server targets |
+
+npm runtime packages mirror manifest subpaths; parity gaps are tracked in `.cursor/rules/10-component-library-charter.mdc` (grandfathered debt).
+
+### P1 — Early expansion
+
+Most original P1 items are **shipped** (number, checkbox, textarea, pie, flex, detail, time-preset, skeleton, timer). Remaining P1 rows in sections 1–8 above are still target taxonomy.
 
 ### P2 — Full catalog
 
-Animation, drag-drop lists, remaining charts, client/project selectors, three.js 3D displays (scope TBD).
+Animation, drag-drop lists, remaining charts, client/project selectors, geo-map/youtube-embed/i18n atoms, WebXR — see roadmap and planned tickets.
 
 ## Adding new components
 

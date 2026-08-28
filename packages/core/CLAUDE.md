@@ -61,7 +61,7 @@ importing `@rosettadash/web-components` etc.) is opt-in, built after the standal
 works, never the default. If you're implementing or touching a `generate*Files` function,
 the standalone path is the one that must work with default options — test that first, and
 don't flip a default to package mode without an explicit product decision from Kevin.
-Full rule: `docs/32-standalone-first-export.md` (mirrors `.cursor/rules/standalone-first-export.mdc`).
+Full rule: `docs/32-standalone-first-export.md` (mirrors `.cursor/rules/02-standalone-first-export.mdc`).
 
 ## Validation (`validation/`)
 
