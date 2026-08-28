@@ -1,0 +1,48 @@
+---
+description: Vue runtime authoring — composition API, defineCustomElementHost
+globs: packages/vue/**/*
+alwaysApply: false
+---
+
+# Vue authoring
+
+## File layout
+
+- `{kebab}/index.ts` exporting component + types
+- Spec: `{kebab}.spec.ts`
+- CE-host lib: `src/lib/custom-element-host.ts`
+
+## Component rules
+
+- **Vue 3 Composition API only** — no Options API in new code
+- `defineComponent` or generated native SFC-less render functions from templates
+- Props: explicit types with `default` where optional
+- `emits` array declared for all CE-backed events
+- `v-model:open` for accordion/modal/collapsible
+
+## CE-host pattern
+
+`defineCustomElementHost({ name, tagName, register, attrs, events }, propsDefinition)`:
+
+- Maps Vue props → CE attributes
+- Maps CE events → Vue emits
+- Complex props via host ref `setProperty` in `onMounted`
+
+## Native Vue components
+
+- Render function or template matching WC BEM + `data-testid`
+- `$slots.default` at documented position
+
+## SSR
+
+Guard browser APIs in `onMounted`; render placeholder in SSR (`16-ssr-and-runtime-environment.mdc`).
+
+## Must not
+
+- Options API `export default { props, data }` in new files
+- Fork `defineCustomElementHost` per component
+- Framework-only exports without manifest
+
+## Related
+
+- `11-component-public-contract.mdc`, `14-parity-and-codegen.mdc`

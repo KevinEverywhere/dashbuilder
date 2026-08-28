@@ -1,0 +1,77 @@
+---
+description: Keep docs, README export tables, and Storybook catalogs in sync with manifest
+globs: docs/**,tools/storybook-shared/**,apps/storybook-*/**,packages/{web-components,react,angular,vue,svelte}/README.md
+alwaysApply: false
+---
+
+# Docs and catalog upkeep
+
+Every manifest change must propagate to **human-facing docs** and **Storybook** — not just code.
+
+## When to update (trigger list)
+
+| Change | Update |
+|--------|--------|
+| New manifest entry | `docs/08-component-taxonomy.md`, all five runtime README export tables |
+| New recipe | `docs/34-public-component-api.md` recipe table |
+| Styling/token | `docs/35-styling-and-classnames.md`, WC `tokens.css` header comment |
+| Media/VR behavior | `docs/30`, `docs/31`, capability rule cross-link |
+| Proof app feature | `docs/43-destination-atlas-proof-apps.md` |
+| Builder-only UI | `docs/28-app-component-css-convention.md` — not public npm docs |
+
+## Storybook architecture (do not fork)
+
+Five apps on ports **6006–6010** (WC, React, Vue, Angular, Svelte).
+
+Shared engine: **`tools/storybook-shared/`**
+
+| Module | Role |
+|--------|------|
+| `palette-catalog/mount-palette-catalog.ts` | Catalog DOM + interactivity |
+| `palette-catalog/palette-group-guides.ts` | Group names and docs |
+| `palette-catalog/palette-demo-data.ts` | Demo datasets |
+| `meta-compositions/` | Dashboard recipe demos + play functions |
+| `fixtures.ts`, `storybook-actions.ts` | Shared fixtures |
+| `rosettadash-preview.css` | Imports tokens + styles |
+
+Per-runtime story files are **thin wrappers** — import shared mount functions; do not duplicate catalog HTML per framework.
+
+Sidebar taxonomy must match across all five Storybook apps (`docs/38-storybook-component-catalog.md`).
+
+## Story sections (fixed order)
+
+1. **Getting Started/** — `getting-started.stories.*`
+2. **Catalog/Components** — palette groups + "All components"
+3. **Catalog/Meta components** — live dashboard recipes
+
+## README export tables
+
+Each runtime `packages/*/README.md` maintains a table: subpath, export symbol, CE tag (if any), notes (CE-host, client-only, peers).
+
+Add a row in the **same PR** as the manifest entry.
+
+## Vanilla / HTML docs
+
+Plain HTML consumption is documented on **`packages/web-components/README.md`** — copy-paste snippets with `<script type="module">`, register call, and optional CSS imports. See `vanilla-target.mdc`.
+
+## Numbered docs convention
+
+New topic docs: next free number in `docs/`, linked from `docs/README.md` reading order. When a numbered doc contradicts manifest/code, **fix the doc** or flag in PR — do not silently ignore.
+
+## Known stale docs (prefer code + manifest)
+
+- `docs/06-technology-stack.md` — partially historical (Svelte shipped; Node version may differ from `docs/13`)
+- Component counts in `docs/08` vs registry — reconcile when touching taxonomy
+
+## Checklist
+
+- [ ] Taxonomy doc row added/updated
+- [ ] Five README tables updated
+- [ ] Shared Storybook fixture/mount updated if props or demo data changed
+- [ ] All five storybook apps build (`npm run storybook:all` smoke when feasible)
+- [ ] Meta composition added if component joins a dashboard recipe
+
+## Related
+
+- `10-component-library-charter.mdc`, `15-testing-and-verification.mdc`
+- `docs/38-storybook-component-catalog.md`, `docs/42-storybook-meta-compositions.md`

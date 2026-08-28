@@ -1,0 +1,65 @@
+---
+description: Web Components authoring — RosettaAtomElement, CE registration, light DOM
+globs: packages/web-components/**/*
+alwaysApply: false
+---
+
+# Web Components authoring
+
+`@rosettadash/web-components` is the **canonical implementation** for every component. Other runtimes port or wrap this layer.
+
+## Base classes
+
+| Pattern | Base | DOM |
+|---------|------|-----|
+| Native atoms | `RosettaAtomElement` | Light DOM |
+| Manual media | `HTMLElement` + shadow pair loader | Shadow DOM |
+
+Extend `RosettaAtomElement` (`src/lib/rosetta-atom-element.ts`) for generated natives — do not subclass `HTMLElement` directly unless `pattern: 'manual'`.
+
+## Native atom checklist
+
+- Class: `Rd{ExportName}Element extends RosettaAtomElement`
+- `static readonly tagName = RD_*_TAG` (kebab, `rd-` prefix)
+- `static get observedAttributes()` — scalar attrs only
+- `buildMarkup(): string` — BEM `rd-*` structure matching shared template
+- `registerRd{ExportName}()` — idempotent `customElements.define`
+- Export tag constant + class + register from subpath index
+
+## Manual CE checklist (media, maps, wasm)
+
+- Shadow DOM via `loadShadowPairForTag` where styles are encapsulated
+- `setProperty(key, value)` for `File`, `Blob`, object arrays, crop regions
+- `observedAttributes` for scalars only — never JSON on attributes
+- `disconnectedCallback`: revoke object URLs, abort workers, remove listeners
+
+## Events
+
+```ts
+this.dispatchEvent(new CustomEvent('video-file', { detail, bubbles: true, composed: true }));
+```
+
+Use kebab-case event names aligned with `11-component-public-contract.mdc`.
+
+## Styles
+
+- Component CSS lives with CE (shadow pair or global `styles.css` rules targeting `rd-*` in light DOM).
+- Use `--rd-*` variables with fallbacks — no `--db-*`.
+
+## Catalog CEs
+
+`src/catalog/*` (component-spec, palette-catalog) are Storybook/builder tooling — not manifest palette atoms. Do not conflate with public taxonomy exports.
+
+## Browser bundle
+
+`@rosettadash/web-components/browser/media` — esbuild bundle for no-build HTML apps. Update via `scripts/bundle-browser-media.mjs` when media CE public API changes.
+
+## Must not
+
+- Import React, Angular, Vue, or Svelte
+- Fetch network resources without documented props
+- Register globals beyond `customElements`
+
+## Related
+
+- `vanilla-target.mdc`, `11-component-public-contract.mdc`, `30-media-and-video.mdc`

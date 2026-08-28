@@ -11,6 +11,11 @@ Applies to the **RosettaDash** monorepo (npm scope `@rosettadash/*`). Jira proje
 
 ## Required order (never skip or reorder)
 
+0. **Verify the current branch** — before editing any file, run `git branch --show-current`.
+   - If the user gave instructions for **new work** and the branch is `development`, `main`, or a **different** `feature/DAS-*` than the task's ticket → **stop**. Do not implement. Tell Kevin which branch you're on and which ticket/branch the task needs.
+   - If work was started on the wrong branch, **stash or stage** changes onto the correct ticket branch before continuing — never land ticket A's diff on ticket B's branch.
+   - When Kevin says work belongs to an **open ticket** (e.g. DAS-152), confirm you're on `feature/DAS-152-…` before touching files.
+
 1. **Create the Jira ticket** in project **DAS** (`create_ticket` via Jira MCP).
    - Include summary, acceptance criteria, and planned branch name.
    - Confirm the ticket key (e.g. `DAS-37`) before continuing.
@@ -25,10 +30,11 @@ Applies to the **RosettaDash** monorepo (npm scope `@rosettadash/*`). Jira proje
 
 4. **Verify** — `npm run verify` (and `npm run verify:all` for builder UI changes).
 
-5. **Ready to commit** — summarize changes; draft a commit message only if Kevin asks. **Agents never commit and never ask to commit** (see `00-agent-no-commits.mdc`).
+5. **Ready to commit** — summarize changes; draft a commit message only if Kevin asks. **Agents never commit and never ask to commit** (see `.cursor/rules/00-agent-no-commits.mdc`).
 
 ## Hard stops — do NOT
 
+- **Implement on the wrong branch** — including finishing new work while `feature/DAS-<other>` is checked out.
 - Start implementation on `development`, `main`, or a branch without a DAS ticket number.
 - Use branch names that do not match the Jira key (e.g. `feature/docker-local-containers`).
 - Assume a ticket exists because git commits or docs mention `DAS-n` — **verify in Jira**.

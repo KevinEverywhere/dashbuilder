@@ -1,0 +1,72 @@
+---
+description: Tree-shaking, exports maps, peer dependencies, and bundle discipline
+globs: packages/{web-components,react,angular,vue,svelte}/**/package.json,packages/{web-components,react,angular,vue,svelte}/**/*
+alwaysApply: false
+---
+
+# Performance and packaging
+
+Runtime packages must stay **tree-shakeable** and **side-effect free on import** so consumers pay only for subpaths they import.
+
+## Exports map
+
+- **Identical subpaths** after `@rosettadash/<runtime>/` on all five packages (manifest-driven).
+- Each subpath entry: `{ types, import, default }` minimum.
+- Svelte adds `"svelte"` condition pointing at `.svelte` source.
+- WC adds CSS entries: `./tokens.css`, `./styles.css`, `./browser/media`.
+
+Do not add root-only barrel re-exports that pull entire library — prefer subpath imports.
+
+## Side effects
+
+- Avoid module-level registration, DOM mutation, or global listeners on import.
+- If a file must register CEs, do so lazily on first use.
+- Set `"sideEffects": false` in package.json unless CSS/assets require exception (list explicit paths).
+
+## Dependencies vs peerDependencies
+
+| Kind | Declare as |
+|------|------------|
+| `@rosettadash/core` | dependency (shared types/math) |
+| `three`, map libs, `@ffmpeg/*` | **peerDependency** + dynamic import at runtime |
+| Framework (react, vue, …) | peerDependency |
+| Tailwind, MUI, CSS Modules | **never** in runtime packages |
+
+Document third-party peer installs in package README and export `README.export.md` — not RosettaDash runtime deps in standalone export mode.
+
+## Tree-shaking patterns
+
+- Named exports only on subpaths — no default-export entire library from deep paths.
+- Split heavy optional code (Three scene, ffmpeg worker) into separate subpaths or lazy chunks.
+- `@rosettadash/web-components/browser/media` — pre-bundled ESM for no-build consumers; do not duplicate ffmpeg in each framework package.
+
+## Object URLs and memory
+
+- Revoke `URL.createObjectURL` in cleanup/disconnect.
+- Dispose Three.js geometries/materials/textures in `disconnectedCallback` / unmount.
+- Cancel `requestAnimationFrame` and `IntersectionObserver` on teardown.
+
+## Build and pack
+
+| Script | Purpose |
+|--------|---------|
+| `npm run pack:consumer` | Build core + all runtimes + browser/media bundle + pack tgz |
+| `nx build web-components` | TSC multi-entry + `bundle-browser-media.mjs` |
+
+Verify pack output: importing one subpath must not require downloading unrelated atoms.
+
+## Size discipline
+
+- Prefer CSS + tokens over JS for static visuals (bar chart fallback heights, skeleton shimmer via CSS).
+- Do not ship duplicate Three.js helpers across WC/React/Angular — shared logic in core or WC, frameworks wrap.
+
+## Checklist
+
+- [ ] New subpath added to all runtime `package.json` exports (via codegen)
+- [ ] No new module-scope side effects
+- [ ] Heavy libs peer + lazy loaded
+- [ ] Cleanup on unmount documented in component
+
+## Related
+
+- `14-parity-and-codegen.mdc`, `docs/37-npm-library-build.md`

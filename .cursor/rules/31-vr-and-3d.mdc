@@ -1,0 +1,74 @@
+---
+description: Three.js 3D components and WebXR roadmap
+globs: packages/{web-components,react,angular,vue,svelte}/**/display/3d-*/**,packages/{web-components,react,angular,vue,svelte}/**/*globe*,packages/{web-components,react,angular,vue,svelte}/**/display/geo-map/**
+alwaysApply: false
+---
+
+# VR and 3D
+
+**Today:** 360° equirect video + three.js scenes on screen. **Roadmap:** WebXR headset sessions — design for extension, do not block with non-VR-only APIs.
+
+## Palette types (manifest)
+
+| Type | Export | Kind |
+|------|--------|------|
+| `visual.display.3d-bar-chart` | `ThreeBarChart` | three-host |
+| `visual.display.3d-scatter` | `ThreeScatterPlot` | three-host |
+| `visual.display.3d-scene` | `ThreeScenePointCloud` | three-host |
+| `visual.display.3d-gltf-model` | `ThreeGltfModel` | three-host |
+| `visual.display.3d-geo-globe` | `ThreeGeoGlobe` | three-host |
+| `visual.display.geo-map` | `GeoMap` | manual (Leaflet/MapLibre/Google) |
+
+VR palette group: `vr-visuals` in builder (`docs/17-component-plugin-sdk.md`).
+
+## Three.js discipline (required now)
+
+- **One renderer per component instance** — no shared global renderer
+- **Lazy import** `three` — never module-scope in SSR paths
+- **Dispose** geometry, material, texture, renderer in disconnect/unmount
+- **Pause RAF** when offscreen — use `IntersectionObserver`
+- **Clamp DPR:** `Math.min(window.devicePixelRatio, 2)`
+- **Resize observer** on container — update camera aspect + renderer size
+
+## Parity status
+
+Full Three.js: WC, React, Angular on `3d-geo-globe`. Svelte/Vue stubs are **grandfathered debt** — close with parity ticket, do not add new stubs.
+
+Per-framework 3D binding (exports):
+
+| Framework | Preferred binding |
+|-----------|-------------------|
+| React | R3F or direct three (existing pattern) |
+| Angular | three.js canvas in component |
+| Vue | TresJS when enhancing beyond CE-host |
+| Svelte | Threlte when enhancing beyond stub |
+| WC | imperative three in CE |
+
+## Geo map
+
+- Provider via prop: `maplibre` (default), `leaflet`, `google-maps`
+- Map SDKs as peerDependencies + dynamic import
+- Keyboard-accessible marker list fallback (`13-accessibility.mdc`)
+
+## WebXR roadmap (design rules)
+
+When implementing headset support:
+
+- Feature-detect `navigator.xr` — never assume VR hardware
+- **Non-VR fallback mandatory** — same data/actions via list/table UI
+- Session lifecycle: `requestSession` → render loop → `end` with full dispose
+- Controller input mapped to documented public events — not app-private globals
+- Do not require WebXR for core dashboard functionality
+
+## Builder preview
+
+3D preview adapters: create/dispose renderer on node change; pause when panel hidden; single animation loop per preview panel (`docs/17-component-plugin-sdk.md`).
+
+## ui-primitives helpers
+
+`map-globe-markers.ts`, `map-scatter-points.ts` — convert preview rows to marker/scatter formats; use in Storybook and builder preview, not in consumer apps directly.
+
+## Related
+
+- `30-media-and-video.mdc` (equirect is separate from globe)
+- `13-accessibility.mdc`, `16-ssr-and-runtime-environment.mdc`

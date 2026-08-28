@@ -1,0 +1,85 @@
+---
+description: Testing, verify gates, and definition of done for components
+globs: packages/**,apps/client/**,apps/client-e2e/**,apps/storybook-*/**,tools/storybook-shared/**
+alwaysApply: false
+---
+
+# Testing and verification
+
+## Repo gates
+
+| Command | When required |
+|---------|---------------|
+| `npm run verify` | Every change — lint + typecheck + unit tests |
+| `npm run verify:all` | Builder UI interaction changes — adds Playwright e2e |
+| `npm run setup:e2e` | Once per machine before first e2e run |
+
+Do not propose work as ready if `verify` has not been run and passed.
+
+## Test runners
+
+| Area | Runner | Environment |
+|------|--------|-------------|
+| Runtime packages | Jest | jsdom (WC, React, Vue) or node (Angular, Svelte TS specs) |
+| `packages/core` | Jest | node |
+| Builder client | Jest | jsdom |
+| E2E | Playwright | `apps/client-e2e/` (ports 4201/3001) |
+
+Vitest is not used for runtime packages.
+
+## Spec file naming
+
+| Package | Pattern |
+|---------|---------|
+| web-components | `rd-{name}.spec.ts` co-located or adjacent |
+| react | `{Name}.spec.tsx` or `{kebab}.spec.tsx` |
+| angular | `{kebab}.spec.ts` |
+| vue | `{kebab}.spec.ts` |
+| svelte | `{kebab}.spec.ts` (tests TS module; Svelte render optional) |
+
+Specs must assert at minimum: root `data-testid`, key prop reflection, and one interaction or event where applicable.
+
+## Selector conventions
+
+| Context | Use |
+|---------|-----|
+| Public npm components | `[data-testid="rd-chart-bar"]` — equals BEM root |
+| Builder preview | `[data-testid="preview-…"]` |
+| Builder UI | `[data-testid="…"]` — never CSS classes or visible text alone |
+| Palette add button | `palette-add-{dotted.type}` e.g. `palette-add-visual.input.number` |
+
+## New component definition of done
+
+- [ ] `ComponentDefinition` + validation tests in `packages/core`
+- [ ] Manifest entry in `tools/runtime-taxonomy/manifest.mjs`
+- [ ] WC implementation + unit spec
+- [ ] Codegen / CE-host for React, Angular, Vue, Svelte + unit spec each
+- [ ] Vanilla snippet documented (WC README)
+- [ ] Storybook story in all five catalogs via `tools/storybook-shared/`
+- [ ] React exporter minimum; all UI exporters when export matrix touched
+- [ ] Taxonomy row in `docs/08-component-taxonomy.md` (or successor)
+- [ ] Accessibility checklist in `13-accessibility.mdc`
+- [ ] E2E or integration test: add → configure → preview (builder changes)
+- [ ] `npm run verify` green
+
+## Exporter tests
+
+- Fixture dashboards in export matrix — wrong `ir.targets.ui` must fail
+- Binding-heavy components covered in exporter specs
+- Re-export same composite version → stable file paths (no random suffixes)
+- Standalone output: no required `@rosettadash/*` import with default options
+
+## Storybook quality
+
+- Catalog stories: thin wrappers over `mountPaletteCatalog()` — do not fork catalog content per runtime
+- Meta compositions: Controls + Actions + `play` functions for drill-down flows
+- Component coverage audit story stays green (`docs/42-storybook-meta-compositions.md`)
+
+## WC Jest setup
+
+React/Vue specs reuse `packages/web-components/jest-setup.cjs` for CE registration. Register shadow-base CEs before mounting media components in tests.
+
+## Related
+
+- `01-jira-ticket-and-branch.mdc`, `apps/client/.cursor/rules/builder-app.mdc`
+- `docs/13-local-development-and-components.md`

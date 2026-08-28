@@ -1,0 +1,56 @@
+---
+description: Angular runtime authoring — standalone, signals, OnPush, CE hosts
+globs: packages/angular/**/*
+alwaysApply: false
+---
+
+# Angular authoring
+
+## File layout
+
+- Component file: kebab-case from export (`bar-chart.ts`)
+- Selector: **same as WC tag** (`rd-chart-bar`) for DOM parity
+- Standalone component — **no NgModules**
+- Spec: `{kebab}.spec.ts`
+
+## Component rules
+
+- `changeDetection: ChangeDetectionStrategy.OnPush`
+- Inputs: `input()` signal API — not `@Input()`
+- Outputs: `output()` — not `@Output()` decorator
+- Template: inline or external — prefer inline for small atoms matching WC markup
+- Control flow: `@if`, `@for` — not `*ngIf` / `*ngFor`
+- DI: `inject()` — avoid constructor injection in new code
+
+## CE-host pattern
+
+- `selector: DB_*_TAG` matching WC
+- `template: ''` — empty; host element is the CE
+- `implements OnInit, OnDestroy`
+- Sync `input()` values to attributes in `effect` or `ngOnInit`
+- Listen to CE events in `ngOnInit`, remove in `ngOnDestroy`
+- `ElementRef<HTMLElement>` for `setProperty` on complex props
+
+## CUSTOM_ELEMENTS_SCHEMA
+
+Required in consuming apps for raw CE tags; runtime components use Angular wrappers — consumers import `@rosettadash/angular/<subpath>`.
+
+## Native Angular components
+
+- Mirror WC BEM in template with matching `data-testid`
+- `[ngClass]` / `[class]` for BEM modifiers (e.g. open state)
+- `<ng-content />` for default slot position
+
+## Three.js / maps
+
+Full implementations allowed (e.g. `three-geo-globe.ts`) — must dispose on destroy and follow `31-vr-and-3d.mdc`.
+
+## Must not
+
+- NgModule-based declarations in this package
+- Different selector than WC tag without parity ticket
+- `@Input()` / `@Output()` in new components
+
+## Related
+
+- `11-component-public-contract.mdc`, `16-ssr-and-runtime-environment.mdc`

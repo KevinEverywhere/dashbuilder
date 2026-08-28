@@ -1,0 +1,148 @@
+---
+description: Public component API — naming, props, events, DOM contract for all runtime packages
+globs: packages/{web-components,react,angular,vue,svelte}/**/*
+alwaysApply: false
+---
+
+# Public component contract
+
+Applies to `@rosettadash/web-components`, `react`, `angular`, `vue`, and `svelte`. Every public export is a **taxonomy atom or recipe** with identical import shape after the runtime segment.
+
+## Import path (locked)
+
+```text
+@rosettadash/<runtime>/<group>/…/<component>
+```
+
+- `<runtime>` — `web-components`, `react`, `angular`, `vue`, or `svelte`
+- `<group>/…` — one or more kebab segments from the taxonomy subpath (see `manifest.mjs`)
+- `<component>` — kebab-case file segment; **same subpath on every runtime**
+- **No** `@rosettadash/vendor/…` segment
+
+```ts
+import { VideoSource } from '@rosettadash/react/visual/media/video-source';
+import { VideoSource } from '@rosettadash/web-components/visual/media/video-source';
+```
+
+Taxonomy **type keys** (dotted, e.g. `visual.media.video-source`) are permanent once shipped — never rename.
+
+## Export surface
+
+Every subpath export must provide:
+
+| Export | Rule |
+|--------|------|
+| Component | PascalCase symbol matching `exportName` in manifest |
+| Props type | `{ExportName}Props` — no public `any` |
+| Event detail types | Named interfaces for non-trivial payloads |
+| Defaults | Documented in JSDoc or prop default values |
+| Types entry | Shipped `.d.ts` on the subpath |
+
+Recipes (e.g. `AccordionLinkList`) compose atoms — they do not introduce new taxonomy `type` keys unless added to core registry **and** manifest.
+
+## File and symbol naming
+
+| Layer | Convention | Example |
+|-------|------------|---------|
+| Directory | Manifest `subpath` | `visual/media/video-source/` |
+| WC file | `rd-{kebab}.ts` | `rd-video-source.ts` |
+| WC class | `Rd{ExportName}Element` | `RdVideoSourceElement` |
+| WC register | `registerRd{ExportName}` | `registerRdVideoSource` |
+| Tag constant | `RD_*_TAG` or `DB_*_TAG` for legacy media | `DB_VIDEO_SOURCE_TAG` |
+| React file | `{ExportName}.tsx` | `VideoSource.tsx` |
+| Angular file | kebab from export | `video-source.ts` |
+| Vue file | kebab `index.ts` | `video-source/index.ts` |
+| Svelte file | `{ExportName}.svelte` + co-located `types.ts` | `VideoSource.svelte` |
+
+## Custom elements
+
+- Tag: `rd-` + kebab, aligned with BEM root block where practical (`rd-video-source`, `rd-chart-bar`).
+- Registration must be **idempotent** — safe to call `registerRd*()` more than once.
+- Framework components hosting a CE use the **same tag** as selector/host element (`selector: 'rd-video-source'` in Angular).
+
+## DOM and CSS contract
+
+Root element of every component:
+
+1. **BEM block class** — `rd-{kebab}` derived from taxonomy via `taxonomyTypeToBemBlock()` (strip top-level category prefix, dots → hyphens, prefix `rd-`).
+2. **`data-testid`** — equals the root block class (e.g. `data-testid="rd-chart-bar"`).
+3. **No generic wrappers** — never `rd-atom` or untyped container-only roots.
+4. **Elements/modifiers** — `rd-{block}__{element}`, `rd-{block}--{modifier}`.
+
+Example block mapping:
+
+| Taxonomy type | BEM root | CE tag |
+|---------------|----------|--------|
+| `visual.chart.bar` | `rd-chart-bar` | `rd-chart-bar` |
+| `visual.input.text` | `rd-text-input` | `rd-text-input` |
+| `visual.media.video-source` | `rd-video-source` | `rd-video-source` |
+
+Builder app uses **`app-*`** BEM — never in runtime packages (`docs/28-app-component-css-convention.md`).
+
+## Props and attributes
+
+| Rule | Detail |
+|------|--------|
+| Scalar props | camelCase in TS; kebab-case HTML attributes on CEs |
+| Boolean props | Reflect as presence attributes where CE-backed |
+| Object/array props | **Never** JSON-stringify on attributes — use `setProperty(name, value)` on the CE host |
+| `className` / `class` | Merged onto root; must not replace BEM block |
+| `style` | Inline on root only; prefer `--rd-*` tokens for theme |
+| Children | Default slot / `children` / `<ng-content>` / `{@render children?.()}` at documented position |
+
+### Controlled open state (accordion, collapsible, modal)
+
+| Runtime | Pattern |
+|---------|---------|
+| React | `open` + `onOpenChange` |
+| Vue | `open` + `v-model:open` |
+| Angular | `open` + `openChange` or two-way `[(open)]` |
+| Svelte | `open` + `bind:open` |
+| WC | `open` attribute + `open-change` event |
+
+## Events
+
+- CE event names: **kebab-case** (`video-file`, `crop-region`, `open-change`).
+- `CustomEvent` with typed `detail`; set `bubbles: true` when parents must listen.
+- Framework mapping:
+
+| CE event | React | Vue emit | Angular output |
+|----------|-------|----------|----------------|
+| `video-file` | `onVideoFile` | `videoFile` | `videoFile` |
+| `open-change` | `onOpenChange` | `openChange` | `openChange` |
+
+Document every public event in the component's README row and Storybook catalog entry.
+
+## Refs and host access
+
+- React: `forwardRef` to root `HTMLElement` (or CE host element).
+- Vue/Svelte/Angular: expose root element for CE-host wrappers.
+- Callers tune internals via `--rd-*` on host/wrapper, not by reaching into shadow DOM (except documented CE properties).
+
+## Component boundaries (must not)
+
+- Fetch data or read env secrets inside a component — data arrives via props/inputs.
+- Require a global context provider to render (except documented infra atoms).
+- Import from `@rosettadash/*` sibling runtime packages (WC may import `@rosettadash/core` only).
+- Import framework code into `web-components`.
+
+## Light DOM vs shadow DOM
+
+- **Default:** light DOM (`RosettaAtomElement` pattern) so host CSS and `rd-*` classes apply.
+- **Allowed shadow DOM:** manual media CEs (`video-source`, `equirect-viewport`, `wasm/media`) — frameworks still expose the same props/events via CE-host.
+
+## Typing checklist (before merge)
+
+- [ ] Subpath exists on all five runtimes (or explicit grandfather exception)
+- [ ] `{Name}Props` exported; no public `any`
+- [ ] Root `rd-*` class + matching `data-testid`
+- [ ] Complex props use `setProperty`, not attribute serialization
+- [ ] Events typed and mapped in every CE-host wrapper
+- [ ] README export table row updated
+
+## Related
+
+- `10-component-library-charter.mdc` — parity levels and add-component workflow
+- `12-styling-tokens-and-css.mdc` — `--rd-*` tokens
+- `13-accessibility.mdc` — WCAG 2.2 AA per component
+- `docs/34-public-component-api.md`

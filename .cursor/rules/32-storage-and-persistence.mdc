@@ -1,0 +1,85 @@
+---
+description: localStorage and sessionStorage conventions for runtime and core
+globs: packages/core/**/byok/**,packages/core/**/vault/**,packages/{web-components,react,angular,vue,svelte}/**/*,apps/proof-*/**
+alwaysApply: false
+---
+
+# Storage and persistence
+
+Runtime components are **presentational** — they do not read/write browser storage directly. Persistence lives in **`@rosettadash/core`** adapters or **consumer apps** (proof apps, exported apps).
+
+## Key namespace
+
+All RosettaDash keys use:
+
+```text
+rosettadash:<scope>:<name>
+```
+
+| Scope | Example | Storage |
+|-------|---------|---------|
+| `consumer` | `rosettadash:consumer:settings` | localStorage (BYOK vault) |
+| `consumer` | `rosettadash:consumer:secrets` | localStorage (encrypted) |
+| `catalog` | session scroll target | sessionStorage |
+| App-specific | `rosettadash:proof-react:theme` | localStorage — document in that app |
+
+**Never** use unprefixed keys (`theme`, `settings`) in shared core code.
+
+## Shared adapter (target — implement in core)
+
+New persistence features must go through a core module (extend `byok/consumer-secrets-store.ts` pattern):
+
+```ts
+// Conceptual API — add to @rosettadash/core when implementing app prefs
+readJson<T>(key: string, fallback: T): T
+writeJson<T>(key: string, value: T): void
+```
+
+Rules for adapter implementations:
+
+1. **Browser guard** — no-op or fallback on server (`16-ssr-and-runtime-environment.mdc`)
+2. **Try/catch** — quota exceeded, private mode, disabled storage → degrade gracefully, surface optional callback/event
+3. **Schema version** — stored object includes `{ v: number, data: … }`; migrate on read
+4. **Never store raw secrets** in plain localStorage — use encrypted BYOK vault only
+5. **Cross-tab** — use `storage` event for sync when user expects multi-tab coherence
+
+## BYOK vault (existing)
+
+`packages/core/src/lib/byok/consumer-secrets-store.ts`:
+
+- Keys: `rosettadash:consumer:settings`, `:secrets`, `:salt`
+- Encrypted at rest — not general-purpose storage
+
+Components **must not** duplicate vault logic.
+
+## sessionStorage vs localStorage
+
+| Use sessionStorage | Use localStorage |
+|--------------------|------------------|
+| Ephemeral UI (catalog scroll, wizard step) | User prefs, vault, saved drafts |
+| Tab-isolated state | Cross-session settings |
+
+## Builder app storage
+
+Builder services (`builder-state`, workspace layout, app-lock, content-library) live in `apps/client` — separate from npm runtime contract. Do not import builder storage into runtime packages.
+
+## Components exposing persistence hooks
+
+If a component emits state the host should persist (e.g. filter values):
+
+- Emit events / bind props — **host app saves**
+- Optional `storageKey` prop documented as **consumer convention**, not auto-persist inside component unless explicitly specced in manifest
+
+## Checklist (new persistence feature)
+
+- [ ] Key uses `rosettadash:<scope>:<name>`
+- [ ] Logic in `@rosettadash/core`, not duplicated per framework
+- [ ] SSR-safe read returns fallback
+- [ ] Quota/private mode handled
+- [ ] No secrets outside BYOK vault
+- [ ] Documented in proof app or export README
+
+## Related
+
+- `docs/24-app-lock.md`, `docs/43-destination-atlas-proof-apps.md`
+- `16-ssr-and-runtime-environment.mdc`

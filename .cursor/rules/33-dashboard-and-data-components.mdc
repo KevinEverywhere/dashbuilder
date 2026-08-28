@@ -1,0 +1,81 @@
+---
+description: Dashboard data components — charts, tables, KPIs, filters, detail panels
+globs: packages/{web-components,react,angular,vue,svelte}/**/chart/**,packages/{web-components,react,angular,vue,svelte}/**/table/**,packages/{web-components,react,angular,vue,svelte}/**/kpi/**,packages/{web-components,react,angular,vue,svelte}/**/filter/**,packages/{web-components,react,angular,vue,svelte}/**/detail/**,packages/ui-primitives/**/*
+alwaysApply: false
+---
+
+# Dashboard and data components
+
+Charts, tables, KPIs, filters, and detail panels form the **dashboard vocabulary**. They share data-shape and state conventions across all runtimes.
+
+## Data-in principle
+
+- Data arrives via **props/attributes** — components do not fetch
+- Row shape for tables/charts: `{ label, value, … }` or column defs documented per component
+- Filters emit change events; host binds filtered data downstream (builder graph: filters at top, no cycles — `docs/15-component-and-page-design.md`)
+
+## Required UI states
+
+Every data-bound visual must handle:
+
+| State | Requirement |
+|-------|-------------|
+| **Loading** | Skeleton or `aria-busy` region |
+| **Empty** | Text explaining no data — not blank |
+| **Error** | `role="alert"` or assertive live region |
+| **Populated** | Primary view |
+
+## Charts (bar, line, pie)
+
+- Root BEM: `rd-chart-bar`, `rd-chart-line`, `rd-chart-pie`
+- Fallback demo data when props empty — deterministic (e.g. bar heights `[40, 65, 55, 80, 48]`) for Storybook parity
+- `role="img"` + descriptive `aria-label`; hidden data table alternative when series data provided
+- Colors from `--rd-*` tokens — not hard-coded palette
+- React-only `sankey`, `venn` — grandfathered; manifest before expansion
+
+## Tables
+
+- Semantic `<table>` for tabular data
+- Sortable columns: button headers with `aria-sort`
+- Row actions: keyboard reachable
+
+## KPI cards
+
+- Label + value association (`aria-labelledby` or heading structure)
+- Delta/trend as text — not color-only
+
+## Filters
+
+- `DateRangeFilter`, news selects, `TimePreset` — emit typed change events
+- Controlled values via props + change handlers per runtime
+
+## Detail panels
+
+- Master/detail: selection id via prop; content slots for host-provided detail
+
+## Layout integration
+
+Dashboard **recipes** (Storybook meta-compositions) compose atoms — no extra chrome (`12-styling-tokens-and-css.mdc`).
+
+Preview mock data: `@rosettadash/ui-primitives` (`generate-preview-data.ts`, `mock-data.ts`) — for builder preview and Storybook only.
+
+## Sizing
+
+- Fill parent width by default; height from content or explicit `minHeight` prop
+- No magic fixed dashboard widths in components
+
+## Export / IR
+
+Data-bound components in exports must trace bindings to IR data sources — validation in core, generation in exporters (`26-exporter-authoring.mdc`).
+
+## Checklist
+
+- [ ] All four states designed (loading, empty, error, data)
+- [ ] Fallback data matches across runtimes
+- [ ] Chart accessibility (`13-accessibility.mdc`)
+- [ ] Meta-composition story if part of dashboard recipe
+
+## Related
+
+- `docs/15-component-and-page-design.md`, `docs/42-storybook-meta-compositions.md`
+- `13-accessibility.mdc`

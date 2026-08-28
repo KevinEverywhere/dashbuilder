@@ -23,5 +23,5 @@ alwaysApply: true
 
 ## Related
 
-- Agents **never push** (see `jira-ticket-and-branch.mdc`).
-- Jira ticket + feature branch before implementation (see `jira-ticket-and-branch.mdc`).
+- Agents **never push** (see `01-jira-ticket-and-branch.mdc`).
+- Jira ticket + feature branch before implementation (see `01-jira-ticket-and-branch.mdc`).

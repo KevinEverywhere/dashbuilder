@@ -1,0 +1,56 @@
+---
+description: Svelte 5 runtime authoring — runes, snippets, CE hosts, autofixer
+globs: packages/svelte/**/*
+alwaysApply: false
+---
+
+# Svelte authoring
+
+## File layout
+
+- `{ExportName}.svelte` + co-located `types.ts` (props interfaces)
+- Spec: `{kebab}.spec.ts`
+- CE-host: `src/lib/custom-element-host.ts` or shared pattern
+
+## Svelte 5 only
+
+- `$props()` for props — **no** `export let`
+- `$state`, `$derived`, `$effect` — **no** legacy stores for component state
+- Snippets: `{@render children?.()}` for default slot
+- `bind:open` for controlled accordion/modal
+
+## CE-host pattern
+
+```svelte
+<svelte:element this={TAG} bind:this={host} class={className} />
+```
+
+- Register CE in `$effect` or `onMount` with cleanup
+- Sync attrs via `$effect` when props change
+- `host.setProperty(key, value)` for complex props
+
+## Native Svelte components
+
+- Match WC markup; `class={rootClass}` with BEM block
+- Post-codegen stub (e.g. Three hosts) — track as parity debt; do not ship new stubs without ticket
+
+## Package exports
+
+Each subpath includes `"svelte"` condition in `package.json` pointing at `.svelte` source — maintain when adding subpaths.
+
+## Validation
+
+**Run Svelte MCP `svelte-autofixer`** on every `.svelte` change before merge (workspace rule).
+
+## Codegen
+
+Run `npm run generate:svelte-runtime` after manifest changes.
+
+## Must not
+
+- Svelte 4 syntax (`export let`, `$:` reactive labels for new code)
+- Duplicate Three.js stubs without closing parity ticket
+
+## Related
+
+- `11-component-public-contract.mdc`, `14-parity-and-codegen.mdc`
