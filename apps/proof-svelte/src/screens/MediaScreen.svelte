@@ -1,14 +1,14 @@
 <script module lang="ts">
   export const MEDIA_SOURCE = `<MediaScreen selectedId={selectedId}>
   <SelectInput label="Flat video (YouTube)" />
-  <SelectInput label="360° video (Authoring)" />
-  <YoutubeEmbed videoId={…} controls />
+  <AngularMount component={YoutubeEmbed} tagName="rd-youtube-embed" videoId={…} />
   <VideoMetadataPanel items={…} />
 </MediaScreen>`;
 </script>
 
 <script lang="ts">
-  import YoutubeEmbed from '@rosettadash/svelte/visual/media/youtube-embed';
+  import { YoutubeEmbed } from '@rosettadash/angular/visual/media/youtube-embed';
+  import { registerRdYoutubeEmbed } from '@rosettadash/web-components/visual/media/youtube-embed';
   import {
     EQUIRECT_VIDEO_DESTINATIONS,
     FLAT_VIDEO_DESTINATIONS,
@@ -16,6 +16,7 @@
     getDestinationById,
     isEquirectDestination,
   } from '@destination-atlas';
+  import AngularMount from '../components/AngularMount.svelte';
   import BoundSelectInput from '../components/BoundSelectInput.svelte';
   import VideoMetadataPanel from '../components/VideoMetadataPanel.svelte';
   import { localizedDestinationName } from '../lib/atlas-utils';
@@ -50,13 +51,26 @@
     flatSelected
       ? [
           { label: 'Destination', value: localizedDestinationName(flatSelected, locale) },
-          { label: 'Source', value: 'YouTube embed' },
+          { label: 'Source', value: 'YouTube embed (Angular host)' },
           { label: 'Projection', value: 'Flat / standard' },
           { label: 'Video id', value: flatSelected.youtubeId ?? '—' },
           { label: 'Region', value: flatSelected.region },
         ]
       : [],
   );
+
+  const youtubeInputs = $derived({
+    videoId: flatSelected?.youtubeId,
+    title: flatSelected
+      ? `${localizedDestinationName(flatSelected, locale)} — destination video`
+      : undefined,
+    controls: true,
+    className: 'rd-youtube-embed-host',
+  });
+
+  $effect(() => {
+    registerRdYoutubeEmbed();
+  });
 </script>
 
 <section class="da-panel">
@@ -77,11 +91,16 @@
         onValueChange={(value) => onSelectedIdChange?.(value)}
       />
       {#if flatSelected?.youtubeId}
-        <YoutubeEmbed
+        <div class="da-interop-callout" role="note">
+          <strong>Cross-framework showcase.</strong>
+          This embed is <code>@rosettadash/angular</code> <code>YoutubeEmbed</code> mounted from
+          Svelte via <code>AngularMount.svelte</code> onto <code>rd-youtube-embed</code>.
+        </div>
+        <AngularMount
+          component={YoutubeEmbed}
+          tagName="rd-youtube-embed"
           className="rd-youtube-embed-host"
-          videoId={flatSelected.youtubeId}
-          title={`${localizedDestinationName(flatSelected, locale)} — destination video`}
-          controls
+          componentInputs={youtubeInputs}
         />
       {:else}
         <p class="da-note">Select a flat destination video to play the YouTube embed.</p>

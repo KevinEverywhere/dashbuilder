@@ -11,6 +11,17 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+import {
+  cameraPositionFacingLatLng,
+  GLOBE_CAMERA_DISTANCE,
+  GLOBE_FLY_DURATION_MS,
+  GLOBE_HEIGHT_SEGMENTS,
+  GLOBE_RADIUS,
+  GLOBE_WIDTH_SEGMENTS,
+  latLngToGlobePosition,
+  patchEquirectGlobeMaterial,
+  prepareEquirectGlobeTexture,
+} from '@rosettadash/web-components/visual/display/3d-geo-globe';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -31,17 +42,8 @@ export interface ThreeGeoGlobeProps {
   className?: string;
 }
 
-const GLOBE_RADIUS = 1.6;
-
-function latLngToGlobePosition(lat: number, lng: number, radius: number): THREE.Vector3 {
-  const phi = ((90 - lat) * Math.PI) / 180;
-  const theta = ((lng + 180) * Math.PI) / 180;
-  const surfaceRadius = radius + 0.04;
-  return new THREE.Vector3(
-    -surfaceRadius * Math.sin(phi) * Math.cos(theta),
-    surfaceRadius * Math.cos(phi),
-    surfaceRadius * Math.sin(phi) * Math.sin(theta),
-  );
+function toVector3(point: { x: number; y: number; z: number }): THREE.Vector3 {
+  return new THREE.Vector3(point.x, point.y, point.z);
 }
 
 function globeGeometryDispose(globe: THREE.Mesh): void {
@@ -101,9 +103,10 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
 
   private markerMeshes = new Map<string, THREE.Mesh>();
   private syncMarkers: (() => void) | null = null;
-  private flyToLatLng: ((lat: number, lng: number) => void) | null = null;
+  private flyToLatLng: ((lat: number, lng: number, immediate?: boolean) => void) | null = null;
   private disposeRuntime: (() => void) | null = null;
   private mounted = false;
+  private hasFacedSelection = false;
 
   constructor() {
     effect(() => {
@@ -116,14 +119,11 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
 
     effect(() => {
       const selectedId = this.selectedId();
-      const markers = this.markers();
+      this.markers();
       if (!this.mounted || !selectedId) {
         return;
       }
-      const marker = markers.find((entry) => entry.id === selectedId);
-      if (marker) {
-        this.flyToLatLng?.(marker.lat, marker.lng);
-      }
+      this.faceSelection(!this.hasFacedSelection);
     });
   }
 
@@ -131,11 +131,26 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     this.mountScene();
     this.mounted = true;
     this.syncMarkers?.();
+    this.faceSelection(true);
   }
 
   ngOnDestroy(): void {
     this.disposeRuntime?.();
     this.mounted = false;
+    this.hasFacedSelection = false;
+  }
+
+  private faceSelection(immediate: boolean): void {
+    const selectedId = this.selectedId();
+    if (!selectedId) {
+      return;
+    }
+    const marker = this.markers().find((entry) => entry.id === selectedId);
+    if (!marker) {
+      return;
+    }
+    this.flyToLatLng?.(marker.lat, marker.lng, immediate);
+    this.hasFacedSelection = true;
   }
 
   private mountScene(): void {
@@ -148,10 +163,11 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     scene.background = new THREE.Color('#0b1220');
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(0, 0.4, 4.8);
+    camera.position.set(0, 0.4, GLOBE_CAMERA_DISTANCE);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
@@ -163,7 +179,11 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     scene.add(keyLight);
 
     const globeMaterial = new THREE.MeshStandardMaterial({ color: '#1d4ed8' });
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), globeMaterial);
+    patchEquirectGlobeMaterial(globeMaterial);
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(GLOBE_RADIUS, GLOBE_WIDTH_SEGMENTS, GLOBE_HEIGHT_SEGMENTS),
+      globeMaterial,
+    );
     scene.add(globe);
 
     let textureLoadId = 0;
@@ -175,6 +195,14 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
           texture.dispose();
           return;
         }
+        prepareEquirectGlobeTexture(texture, {
+          colorSpace: THREE.SRGBColorSpace,
+          wrapS: THREE.RepeatWrapping,
+          wrapT: THREE.ClampToEdgeWrapping,
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()),
+        });
         globeMaterial.map = texture;
         globeMaterial.color.set('#ffffff');
         globeMaterial.needsUpdate = true;
@@ -217,8 +245,7 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
           scene.add(mesh);
           meshes.set(marker.id, mesh);
         }
-        const position = latLngToGlobePosition(marker.lat, marker.lng, GLOBE_RADIUS);
-        mesh.position.copy(position);
+        mesh.position.copy(toVector3(latLngToGlobePosition(marker.lat, marker.lng, GLOBE_RADIUS)));
         const material = mesh.material as THREE.MeshStandardMaterial;
         const selected = marker.id === nextSelected;
         material.color.set(selected ? '#fbbf24' : '#f87171');
@@ -230,19 +257,21 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     this.syncMarkers = syncMarkers;
 
     let flyFrameId = 0;
-    this.flyToLatLng = (lat: number, lng: number) => {
+    this.flyToLatLng = (lat: number, lng: number, immediate = false) => {
       cancelAnimationFrame(flyFrameId);
+      const distance = camera.position.length() || GLOBE_CAMERA_DISTANCE;
+      const endPos = toVector3(cameraPositionFacingLatLng(lat, lng, distance));
+      if (immediate) {
+        camera.position.copy(endPos);
+        controls.update();
+        return;
+      }
       controls.autoRotate = false;
-
-      const markerPos = latLngToGlobePosition(lat, lng, GLOBE_RADIUS);
-      const distance = camera.position.length() || 4.8;
-      const endPos = markerPos.clone().normalize().multiplyScalar(distance);
       const startPos = camera.position.clone();
       const flyStart = performance.now();
-      const flyDuration = 900;
 
       const animateFly = (now: number) => {
-        const t = Math.min((now - flyStart) / flyDuration, 1);
+        const t = Math.min((now - flyStart) / GLOBE_FLY_DURATION_MS, 1);
         const eased = 1 - (1 - t) ** 3;
         camera.position.lerpVectors(startPos, endPos, eased);
         controls.update();
@@ -294,6 +323,7 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     this.disposeRuntime = () => {
       this.syncMarkers = null;
       this.flyToLatLng = null;
+      this.hasFacedSelection = false;
       cancelAnimationFrame(flyFrameId);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       cancelAnimationFrame(animationId);

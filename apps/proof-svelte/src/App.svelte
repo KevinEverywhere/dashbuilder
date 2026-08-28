@@ -100,7 +100,7 @@
 <div class="da-shell">
   <header class="da-header">
     <h1>Destination Atlas</h1>
-    <p>Current and historic information about world locations — Svelte proof (DAS-125)</p>
+    <p>Current and historic information about world locations — Svelte proof (DAS-158)</p>
   </header>
 
   <div class="da-body-row">

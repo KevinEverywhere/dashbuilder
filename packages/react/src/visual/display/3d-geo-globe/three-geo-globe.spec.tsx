@@ -33,6 +33,8 @@ jest.mock('three', () => {
     setSize: jest.fn(),
     render: jest.fn(),
     dispose: jest.fn(),
+    outputColorSpace: '',
+    capabilities: { getMaxAnisotropy: () => 1 },
   };
 
   return {
@@ -41,11 +43,21 @@ jest.mock('three', () => {
       background: null,
     })),
     PerspectiveCamera: jest.fn().mockImplementation(() => ({
-      position: { set: jest.fn() },
+      position: {
+        set: jest.fn(),
+        copy: jest.fn(),
+        clone: jest.fn(() => new MockVector3()),
+        length: jest.fn(() => 4.8),
+        lerpVectors: jest.fn(),
+      },
       aspect: 1,
       updateProjectionMatrix: jest.fn(),
     })),
     WebGLRenderer: jest.fn(() => mockRenderer),
+    RepeatWrapping: 1000,
+    ClampToEdgeWrapping: 1001,
+    LinearFilter: 1006,
+    SRGBColorSpace: 'srgb',
     Color: jest.fn(),
     AmbientLight: jest.fn(),
     DirectionalLight: jest.fn().mockImplementation(() => ({ position: { set: jest.fn() } })),

@@ -120,8 +120,10 @@
         {/each}
       </ul>
       <p class="da-about__note">
-        Open the <strong>Authoring</strong> tab to see the live Svelte → React demo. Read
-        <code>apps/proof-svelte/src/components/ReactMount.svelte</code> and the Component source panel on that tab.
+        Open the <strong>Authoring</strong>, <strong>Globe</strong>, <strong>Media</strong>, and
+        <strong>Maps</strong> tabs for the four live demos (React, Vue, Angular, custom element).
+        Read the matching mount helper under <code>apps/proof-svelte/src/components/</code> and the
+        Component source panel on each tab.
       </p>
     </section>
 

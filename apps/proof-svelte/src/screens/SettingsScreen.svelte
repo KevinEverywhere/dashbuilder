@@ -1,7 +1,9 @@
 <script module lang="ts">
   export const SETTINGS_SOURCE = `<SettingsScreen>
   <header><h2>Settings</h2><ThemeToggle /></header>
-  <AtlasContextControls highlightField={…} />
+  <AtlasContextControls highlightField={…}>
+    <AppLanguageSelect locales={DEFAULT_APP_LOCALES} value={locale} onLocaleChange={…} />
+  </AtlasContextControls>
   <Collapsible title="Integration keys (BYOK)">…</Collapsible>
   <Collapsible title="Scout / AI providers (BYOK)">…</Collapsible>
   <TextareaInput label="Feedback" />

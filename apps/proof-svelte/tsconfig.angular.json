@@ -1,0 +1,10 @@
+{
+  "extends": "../proof-angular/tsconfig.json",
+  "compilerOptions": {
+    "strict": false
+  },
+  "include": [
+    "../../packages/angular/src/visual/media/youtube-embed/**/*.ts",
+    "../../packages/angular/src/lib/custom-element-host.ts"
+  ]
+}

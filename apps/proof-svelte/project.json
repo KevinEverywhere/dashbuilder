@@ -4,7 +4,13 @@
   "projectType": "application",
   "sourceRoot": "apps/proof-svelte/src",
   "tags": ["scope:destination-atlas", "type:proof-app"],
-  "implicitDependencies": ["runtime-svelte", "web-components", "destination-atlas"],
+  "implicitDependencies": [
+    "runtime-svelte",
+    "runtime-vue",
+    "runtime-angular",
+    "web-components",
+    "destination-atlas"
+  ],
   "targets": {
     "serve": {
       "executor": "nx:run-commands",

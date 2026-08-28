@@ -1,5 +1,17 @@
 import { defineRosettaElement } from '../../../lib/element-utils.js';
 import { RosettaAtomElement } from '../../../lib/rosetta-atom-element.js';
+import {
+  cameraPositionFacingLatLng,
+  GLOBE_CAMERA_DISTANCE,
+  GLOBE_FLY_DURATION_MS,
+  GLOBE_HEIGHT_SEGMENTS,
+  GLOBE_RADIUS,
+  GLOBE_WIDTH_SEGMENTS,
+  latLngToGlobePosition,
+  parseGlobeMarkersJson,
+  patchEquirectGlobeMaterial,
+  prepareEquirectGlobeTexture,
+} from './globe-view.js';
 
 export const RD_THREE_GEO_GLOBE_TAG = 'rd-three-geo-globe';
 
@@ -19,26 +31,21 @@ export interface ThreeGeoGlobeProps {
   className?: string;
 }
 
-const GLOBE_RADIUS = 1.6;
-
-function latLngToGlobePosition(lat: number, lng: number, radius: number): { x: number; y: number; z: number } {
-  const phi = ((90 - lat) * Math.PI) / 180;
-  const theta = ((lng + 180) * Math.PI) / 180;
-  const surfaceRadius = radius + 0.04;
-  return {
-    x: -surfaceRadius * Math.sin(phi) * Math.cos(theta),
-    y: surfaceRadius * Math.cos(phi),
-    z: surfaceRadius * Math.sin(phi) * Math.sin(theta),
-  };
+interface GlobeRuntime {
+  syncMarkers: () => void;
+  faceSelection: (immediate: boolean) => void;
+  dispose: () => void;
 }
 
 /** @rosettadash/web-components/visual/display/3d-geo-globe — visual.display.3d-geo-globe */
 export class RdThreeGeoGlobeElement extends RosettaAtomElement {
   static readonly tagName = RD_THREE_GEO_GLOBE_TAG;
 
-  private sceneDispose: (() => void) | null = null;
+  private runtime: GlobeRuntime | null = null;
   private markersValue: GlobeMarker[] = [];
   private selectedIdValue = '';
+  private hasFacedSelection = false;
+  private mountGeneration = 0;
 
   static get observedAttributes(): string[] {
     return ['title', 'texture-url', 'markers', 'selected-id', 'min-height'];
@@ -50,32 +57,48 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
   }
 
   disconnectedCallback(): void {
-    this.sceneDispose?.();
-    this.sceneDispose = null;
+    this.mountGeneration += 1;
+    this.runtime?.dispose();
+    this.runtime = null;
+    this.hasFacedSelection = false;
   }
 
   override attributeChangedCallback(name: string): void {
     if (name === 'markers') {
-      this.markersValue = this.parseJsonAttr<GlobeMarker[]>('markers', []);
+      const parsed = parseGlobeMarkersJson(this.getAttribute('markers'));
+      if (parsed !== null) {
+        this.markersValue = parsed as GlobeMarker[];
+      }
+      this.syncRuntime();
+      return;
     }
     if (name === 'selected-id') {
       this.selectedIdValue = this.readAttr('selected-id');
+      this.syncRuntime();
+      return;
+    }
+    if (name === 'texture-url' || name === 'title' || name === 'min-height') {
+      this.runtime?.dispose();
+      this.runtime = null;
     }
     super.attributeChangedCallback(name);
-    if (this.isConnected && (name === 'markers' || name === 'selected-id' || name === 'texture-url')) {
+    if (this.isConnected && (name === 'texture-url' || name === 'title' || name === 'min-height')) {
       void this.mountThreeScene();
     }
   }
 
   override setProperty(name: string, value: unknown): void {
-    super.setProperty(name, value);
     if (name === 'markers' && Array.isArray(value)) {
       this.markersValue = value as GlobeMarker[];
+      this.syncRuntime();
+      return;
     }
     if (name === 'selectedId') {
       this.selectedIdValue = String(value ?? '');
       this.setAttribute('selected-id', this.selectedIdValue);
+      return;
     }
+    super.setProperty(name, value);
     if (this.isConnected) {
       void this.mountThreeScene();
     }
@@ -92,9 +115,31 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
       </section>`;
   }
 
+  private currentMarkers(): GlobeMarker[] {
+    if (this.markersValue.length) {
+      return this.markersValue;
+    }
+    const parsed = parseGlobeMarkersJson(this.getAttribute('markers'));
+    return parsed !== null ? (parsed as GlobeMarker[]) : [];
+  }
+
+  private currentSelectedId(): string {
+    return this.selectedIdValue || this.readAttr('selected-id');
+  }
+
+  private syncRuntime(): void {
+    if (!this.runtime) {
+      return;
+    }
+    this.runtime.syncMarkers();
+    this.runtime.faceSelection(!this.hasFacedSelection);
+  }
+
   private async mountThreeScene(): Promise<void> {
-    this.sceneDispose?.();
-    this.sceneDispose = null;
+    const generation = ++this.mountGeneration;
+    this.runtime?.dispose();
+    this.runtime = null;
+    this.hasFacedSelection = false;
 
     const host = this.querySelector('[data-ref="canvas-host"]') as HTMLElement | null;
     if (!host) {
@@ -105,15 +150,19 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
     try {
       const THREE = await import('three');
       const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+      if (generation !== this.mountGeneration || !this.isConnected) {
+        return;
+      }
 
       const scene = new THREE.Scene();
       scene.background = new THREE.Color('#0b1220');
 
       const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-      camera.position.set(0, 0.4, 4.8);
+      camera.position.set(0, 0.4, GLOBE_CAMERA_DISTANCE);
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.domElement.style.display = 'block';
       renderer.domElement.style.width = '100%';
       renderer.domElement.style.height = '100%';
@@ -125,12 +174,28 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
       scene.add(keyLight);
 
       const globeMaterial = new THREE.MeshStandardMaterial({ color: '#1d4ed8' });
-      const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), globeMaterial);
+      patchEquirectGlobeMaterial(globeMaterial);
+      const globe = new THREE.Mesh(
+        new THREE.SphereGeometry(GLOBE_RADIUS, GLOBE_WIDTH_SEGMENTS, GLOBE_HEIGHT_SEGMENTS),
+        globeMaterial,
+      );
       scene.add(globe);
 
       const textureUrl = this.readAttr('texture-url');
       if (textureUrl) {
         new THREE.TextureLoader().load(textureUrl, (texture) => {
+          if (generation !== this.mountGeneration) {
+            texture.dispose();
+            return;
+          }
+          prepareEquirectGlobeTexture(texture, {
+            colorSpace: THREE.SRGBColorSpace,
+            wrapS: THREE.RepeatWrapping,
+            wrapT: THREE.ClampToEdgeWrapping,
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()),
+          });
           globeMaterial.map = texture;
           globeMaterial.color.set('#ffffff');
           globeMaterial.needsUpdate = true;
@@ -147,27 +212,83 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
 
       const markerMeshes = new Map<string, import('three').Mesh>();
       const markerGeometry = new THREE.SphereGeometry(0.06, 12, 12);
-      const markers = this.markersValue.length
-        ? this.markersValue
-        : this.parseJsonAttr<GlobeMarker[]>('markers', []);
-      const selectedId = this.selectedIdValue || this.readAttr('selected-id');
 
-      for (const marker of markers) {
-        const mesh = new THREE.Mesh(
-          markerGeometry,
-          new THREE.MeshStandardMaterial({ color: '#f87171' }),
-        );
-        mesh.userData['id'] = marker.id;
-        const pos = latLngToGlobePosition(marker.lat, marker.lng, GLOBE_RADIUS);
-        mesh.position.set(pos.x, pos.y, pos.z);
-        const selected = marker.id === selectedId;
-        const material = mesh.material as import('three').MeshStandardMaterial;
-        material.color.set(selected ? '#fbbf24' : '#f87171');
-        material.emissive.set(selected ? '#92400e' : '#000000');
-        material.emissiveIntensity = selected ? 0.35 : 0;
-        scene.add(mesh);
-        markerMeshes.set(marker.id, mesh);
-      }
+      const syncMarkers = (): void => {
+        const nextMarkers = this.currentMarkers();
+        const nextSelected = this.currentSelectedId();
+
+        for (const id of [...markerMeshes.keys()]) {
+          if (!nextMarkers.some((marker) => marker.id === id)) {
+            const mesh = markerMeshes.get(id);
+            if (mesh) {
+              (mesh.material as import('three').Material).dispose();
+              mesh.removeFromParent();
+            }
+            markerMeshes.delete(id);
+          }
+        }
+
+        for (const marker of nextMarkers) {
+          let mesh = markerMeshes.get(marker.id);
+          if (!mesh) {
+            mesh = new THREE.Mesh(
+              markerGeometry,
+              new THREE.MeshStandardMaterial({ color: '#f87171' }),
+            );
+            mesh.userData['id'] = marker.id;
+            scene.add(mesh);
+            markerMeshes.set(marker.id, mesh);
+          }
+          const pos = latLngToGlobePosition(marker.lat, marker.lng, GLOBE_RADIUS);
+          mesh.position.set(pos.x, pos.y, pos.z);
+          const material = mesh.material as import('three').MeshStandardMaterial;
+          const selected = marker.id === nextSelected;
+          material.color.set(selected ? '#fbbf24' : '#f87171');
+          material.emissive.set(selected ? '#92400e' : '#000000');
+          material.emissiveIntensity = selected ? 0.35 : 0;
+        }
+      };
+
+      let flyFrameId = 0;
+      const faceLatLng = (lat: number, lng: number, immediate: boolean): void => {
+        cancelAnimationFrame(flyFrameId);
+        const distance = camera.position.length() || GLOBE_CAMERA_DISTANCE;
+        const end = cameraPositionFacingLatLng(lat, lng, distance);
+        if (immediate) {
+          camera.position.set(end.x, end.y, end.z);
+          controls.update();
+          return;
+        }
+        controls.autoRotate = false;
+        const startPos = camera.position.clone();
+        const endPos = new THREE.Vector3(end.x, end.y, end.z);
+        const flyStart = performance.now();
+        const animateFly = (now: number): void => {
+          const t = Math.min((now - flyStart) / GLOBE_FLY_DURATION_MS, 1);
+          const eased = 1 - (1 - t) ** 3;
+          camera.position.lerpVectors(startPos, endPos, eased);
+          controls.update();
+          if (t < 1) {
+            flyFrameId = requestAnimationFrame(animateFly);
+          } else {
+            controls.autoRotate = true;
+          }
+        };
+        flyFrameId = requestAnimationFrame(animateFly);
+      };
+
+      const faceSelection = (immediate: boolean): void => {
+        const selectedId = this.currentSelectedId();
+        if (!selectedId) {
+          return;
+        }
+        const marker = this.currentMarkers().find((entry) => entry.id === selectedId);
+        if (!marker) {
+          return;
+        }
+        faceLatLng(marker.lat, marker.lng, immediate);
+        this.hasFacedSelection = true;
+      };
 
       const resize = (): void => {
         const width = host.clientWidth || 1;
@@ -207,8 +328,9 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
 
       renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
-      this.sceneDispose = (): void => {
+      const dispose = (): void => {
         renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+        cancelAnimationFrame(flyFrameId);
         cancelAnimationFrame(animationId);
         resizeObserver.disconnect();
         controls.dispose();
@@ -219,11 +341,26 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
         markerMeshes.clear();
         globe.geometry.dispose();
         markerGeometry.dispose();
-        globe.material.dispose();
+        if (globeMaterial.map) {
+          globeMaterial.map.dispose();
+        }
+        globeMaterial.dispose();
         renderer.dispose();
         renderer.domElement.remove();
       };
+
+      if (generation !== this.mountGeneration || !this.isConnected) {
+        dispose();
+        return;
+      }
+
+      syncMarkers();
+      this.runtime = { syncMarkers, faceSelection, dispose };
+      faceSelection(true);
     } catch {
+      if (generation !== this.mountGeneration) {
+        return;
+      }
       host.innerHTML =
         '<p class="da-note">Three.js unavailable — install <code>three</code> as a peer dependency for the interactive globe.</p>';
     }

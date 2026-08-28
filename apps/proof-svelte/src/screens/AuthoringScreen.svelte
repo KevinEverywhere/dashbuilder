@@ -18,7 +18,7 @@
 <div class="da-interop-callout" role="note">
   <strong>Cross-framework showcase.</strong>
   This screen is a Svelte wrapper around a React subtree (<code>ReactMount.svelte</code> →
-  <code>authoring/AuthoringScreen.tsx</code>) so Authoring reuses
-  <code>@rosettadash/react</code> viewports and WasmMedia. See About → Cross-framework composition.
+  <code>authoring/AuthoringScreen.tsx</code>) — the React example of four DAS-158
+  cross-framework hosts. See About → Cross-framework composition.
 </div>
 <ReactMount component={AuthoringScreenReact} {componentProps} />

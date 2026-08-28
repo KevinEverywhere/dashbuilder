@@ -1,4 +1,4 @@
-/** Default 2:1 equirectangular world texture for globe preview (NASA Visible Earth, public domain). */
+/** Default 2:1 equirectangular world texture for globe preview (public domain). */
 export const DEFAULT_WORLD_EQUIRECT_URL =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/1280px-Equirectangular_projection_SW.jpg';
 

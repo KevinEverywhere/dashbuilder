@@ -11,7 +11,7 @@ All work is tracked in Jira **before** any implementation. A Jira issue and matc
 
 **Do not write code, edit docs, or change config until:**
 
-1. A **DAS Jira ticket exists** (created via Jira MCP `create_ticket`, key confirmed).
+1. A **DAS Jira ticket exists** (created via REST API with `.env` credentials — `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_KEY`, `JIRA_PROJECT_KEY=DAS` — key confirmed).
 2. A **feature branch** exists: `feature/DAS-<n>-<kebab-summary>` where `<n>` matches the Jira key.
 3. You are **on that branch**, branched from `development`.
 
@@ -45,7 +45,7 @@ Examples:
 
 ### Workflow steps
 
-1. **Create Jira ticket** in DAS (MCP `create_ticket`) — scope, acceptance criteria, branch name in description.
+1. **Create Jira ticket** in DAS (REST API using `.env` `JIRA_*` vars) — scope, acceptance criteria, branch name in description.
 2. **Confirm ticket key** (e.g. `DAS-37`) — do not proceed on assumption.
 3. **Create feature branch** from `development`: `feature/DAS-<n>-<kebab-case-summary>`.
 4. **Implement** on that branch only — one ticket at a time.

@@ -18,12 +18,11 @@
   {#if fieldLabel}<span class="rd-field__label">{fieldLabel}</span>{/if}
   <select
     class="rd-select"
-    {value}
     onchange={(event) => onValueChange?.((event.currentTarget as HTMLSelectElement).value)}
   >
-    {#if placeholder}<option value="">{placeholder}</option>{/if}
+    {#if placeholder}<option value="" selected={!(value ?? '')}>{placeholder}</option>{/if}
     {#each options as option (option.value)}
-      <option value={option.value}>{option.label}</option>
+      <option value={option.value} selected={option.value === (value ?? '')}>{option.label}</option>
     {/each}
   </select>
 </section>

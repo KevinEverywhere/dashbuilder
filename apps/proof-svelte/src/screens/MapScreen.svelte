@@ -1,12 +1,17 @@
 <script module lang="ts">
   export const MAP_SOURCE = `<MapScreen part="toolbar|explorer" mapProvider={mapProvider} selectedId={selectedId}>
-  <GeoMap provider={mapProvider} markers={…} />
+  <!-- Cross-framework: Svelte host mounts rd-geo-map custom element -->
+  <rd-geo-map provider={mapProvider} markers={…} selected-id={selectedId} />
 </MapScreen>`;
 </script>
 
 <script lang="ts">
-  import GeoMap from '@rosettadash/svelte/visual/display/geo-map';
   import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider } from '@destination-atlas';
+  import {
+    DB_GEO_MAP_TAG,
+    registerRdGeoMap,
+  } from '@rosettadash/web-components/visual/display/geo-map';
+  import { attachHostEvents, setHostAttribute, setHostProperty } from '../lib/ce-host';
   import GeoExplorerLayout, { type GeoExplorerListPlacement } from '../components/GeoExplorerLayout.svelte';
   import BoundSelectInput from '../components/BoundSelectInput.svelte';
   import BoundTextInput from '../components/BoundTextInput.svelte';
@@ -48,6 +53,7 @@
 
   const secrets = useConsumerSecrets();
   let locationError = $state('');
+  let mapHost = $state<HTMLElement | null>(null);
 
   const showToolbar = $derived(!embedded || part === 'toolbar');
   const showExplorer = $derived(!embedded || part === 'explorer');
@@ -104,6 +110,32 @@
   function selectDestination(id: string) {
     onSelectedIdChange?.(id);
   }
+
+  $effect(() => {
+    registerRdGeoMap();
+    const el = mapHost;
+    if (!el) {
+      return;
+    }
+    const detach = attachHostEvents(el, {
+      'marker-select': (detail) => selectDestination((detail as { id: string }).id),
+    });
+    return detach;
+  });
+
+  $effect(() => {
+    const el = mapHost;
+    if (!el) {
+      return;
+    }
+    setHostAttribute(el, 'provider', mapProvider);
+    setHostAttribute(el, 'tile-url', mapProvider === 'maplibre' ? secrets.maplibreTileUrl : undefined);
+    setHostAttribute(el, 'api-key', mapProvider === 'google-maps' ? secrets.googleMapsApiKey : undefined);
+    setHostAttribute(el, 'center', centerJson);
+    setHostAttribute(el, 'zoom', view.zoom);
+    setHostProperty(el, 'markers', markers);
+    setHostAttribute(el, 'selected-id', selectedId);
+  });
 </script>
 
 {#if showToolbar}
@@ -145,25 +177,29 @@
       <p class="da-note da-byok-cta">
         Google Maps requires an API key.
         <button type="button" class="da-locale-link" onclick={() => onOpenSettings?.()}>Configure in Settings → Integrations</button>
+        or set <code>VITE_GOOGLE_MAPS_API_KEY</code> in <code>.env.local</code>.
+      </p>
+    {/if}
+    {#if mapProvider === 'maplibre' && !secrets.maplibreTileUrl}
+      <p class="da-note">
+        Using demo MapLibre tiles. Add a MapTiler key in
+        <button type="button" class="da-locale-link" onclick={() => onOpenSettings?.()}>Settings → Integrations</button>
+        for hosted vector tiles.
       </p>
     {/if}
   </div>
 {/if}
 
 {#if showExplorer}
+  <div class="da-interop-callout" role="note">
+    <strong>Cross-framework showcase.</strong>
+    Map is a Svelte screen hosting the <code>{DB_GEO_MAP_TAG}</code> custom element directly
+    (<code>@rosettadash/web-components</code>) — not the Svelte GeoMap wrapper. Marker select
+    and <code>selected-id</code> stay bound to the same destination as the list and Settings.
+  </div>
   <GeoExplorerLayout {listPlacement} items={listItems} {selectedId} onSelect={selectDestination}>
     <div class="da-map-stage">
-      <GeoMap
-        className="da-map-stage__map"
-        provider={mapProvider}
-        center={centerJson}
-        zoom={view.zoom}
-        {markers}
-        {selectedId}
-        apiKey={mapProvider === 'google-maps' ? secrets.googleMapsApiKey : undefined}
-        tileUrl={mapProvider === 'maplibre' ? secrets.maplibreTileUrl : undefined}
-        onMarkerSelect={(detail) => selectDestination(detail.id)}
-      />
+      <svelte:element this={DB_GEO_MAP_TAG} bind:this={mapHost} class="da-map-stage__map"></svelte:element>
     </div>
   </GeoExplorerLayout>
 {/if}

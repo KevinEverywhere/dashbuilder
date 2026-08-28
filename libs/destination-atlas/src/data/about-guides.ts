@@ -94,7 +94,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
     storybookCommand: 'npm run storybook:svelte',
     storybookPort: 6010,
     summary:
-      'Svelte 5 components with the same Destination Atlas navigation and mock data as the React reference app. Authoring and Globe embed React via ReactMount; Views embeds React Sankey/Venn charts.',
+      'Svelte 5 Destination Atlas with four live cross-framework hosts: React Authoring, Vue globe, Angular YouTube embed, and rd-geo-map custom element.',
   },
 ];
 
@@ -130,34 +130,45 @@ export const DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES: DestinationAtlasCrossF
   {
     id: 'svelte-authoring-react',
     hostRuntime: 'Svelte',
-    hostTicket: 'DAS-125',
+    hostTicket: 'DAS-158',
     embeddedRuntime: 'React',
     screen: 'Authoring',
     feature: '360° / flat viewport + WasmMedia extract',
     bridge: 'ReactMount.svelte → createRoot(AuthoringScreen.tsx)',
     summary:
-      'The Svelte proof app mounts @rosettadash/react Authoring through ReactMount. Props (locale, selectedId) pass from Svelte into React.',
+      'Kept the React Authoring subtree — viewports and WasmMedia stay on @rosettadash/react. Props (locale, selectedId) pass from Svelte into React.',
   },
   {
-    id: 'svelte-globe-react',
+    id: 'svelte-globe-vue',
     hostRuntime: 'Svelte',
-    hostTicket: 'DAS-125',
-    embeddedRuntime: 'React',
+    hostTicket: 'DAS-158',
+    embeddedRuntime: 'Vue',
     screen: 'Globe',
     feature: 'Three.js geo globe + destination markers',
-    bridge: 'ReactMount.svelte → GlobeThree.tsx → ThreeGeoGlobe',
+    bridge: 'VueMount.svelte → createApp(@rosettadash/vue ThreeGeoGlobe)',
     summary:
-      '@rosettadash/svelte ThreeGeoGlobe is a taxonomy stub; the Svelte proof embeds the React implementation until the native host ships.',
+      'Globe mounts the Vue ThreeGeoGlobe wrapper around rd-three-geo-globe. Marker select stays bound to the same destination as Map and Settings.',
   },
   {
-    id: 'svelte-views-react',
+    id: 'svelte-media-angular',
     hostRuntime: 'Svelte',
-    hostTicket: 'DAS-125',
-    embeddedRuntime: 'React',
-    screen: 'Views',
-    feature: 'Journey Sankey + Venn overlap charts',
-    bridge: 'ReactMount.svelte → @rosettadash/react/visual/chart/*',
+    hostTicket: 'DAS-158',
+    embeddedRuntime: 'Angular',
+    screen: 'Media',
+    feature: 'YouTube destination embed',
+    bridge: 'AngularMount.svelte → createComponent(YoutubeEmbed) on rd-youtube-embed',
     summary:
-      'Views embeds React chart components for Sankey and Venn while the Svelte shell owns layout, scatter stub, and destination carousel.',
+      'Flat Media video is @rosettadash/angular YoutubeEmbed bootstrapped from Svelte onto the rd-youtube-embed host element.',
+  },
+  {
+    id: 'svelte-map-custom-element',
+    hostRuntime: 'Svelte',
+    hostTicket: 'DAS-158',
+    embeddedRuntime: 'Custom element',
+    screen: 'Map',
+    feature: '2D geo map + destination selection',
+    bridge: 'svelte:element → <rd-geo-map> (registerRdGeoMap)',
+    summary:
+      'Map uses the web-components GeoMap custom element directly. selected-id and marker-select stay in lockstep with the destination list and Settings Selected.',
   },
 ];

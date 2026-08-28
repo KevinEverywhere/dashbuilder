@@ -24,9 +24,17 @@
   import RoleGatePanel from '../components/RoleGatePanel.svelte';
   import { MOCK_DESTINATIONS, formatVisitorCount } from '@destination-atlas';
   import type { AtlasUserRole } from '../lib/roles';
-  import { computeVisitorDelta, localizedDestinationName } from '../lib/atlas-utils';
+  import {
+    aggregateVisitorTrend,
+    computeVisitorDelta,
+    destinationBarSeries,
+    localizedDestinationName,
+  } from '../lib/atlas-utils';
 
   let { locale, userRole }: { locale: string; userRole: AtlasUserRole } = $props();
+
+  const trend = aggregateVisitorTrend();
+  const bars = $derived(destinationBarSeries(locale, localizedDestinationName));
 </script>
 
 <section class="da-panel">
@@ -44,8 +52,19 @@
       {/each}
     </GridLayout>
     <div class="da-stack da-stack--2">
-      <LineChart title="Visitors over time (aggregate trend)" />
-      <BarChart title="2024 visitors by destination" />
+      <LineChart
+        title="Visitors over time (aggregate trend)"
+        points={trend}
+        xAxisLabel="Year"
+        yAxisLabel="Total visitors"
+        valueFormat={formatVisitorCount}
+      />
+      <BarChart
+        title="2024 visitors by destination"
+        {bars}
+        yAxisLabel="Visitors"
+        valueFormat={formatVisitorCount}
+      />
     </div>
     <RoleGatePanel
       gateLabel="Operations metrics"

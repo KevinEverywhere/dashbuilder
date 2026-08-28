@@ -16,7 +16,9 @@ Applies to the **RosettaDash** monorepo (npm scope `@rosettadash/*`). Jira proje
    - If work was started on the wrong branch, **stash or stage** changes onto the correct ticket branch before continuing — never land ticket A's diff on ticket B's branch.
    - When Kevin says work belongs to an **open ticket** (e.g. DAS-152), confirm you're on `feature/DAS-152-…` before touching files.
 
-1. **Create the Jira ticket** in project **DAS** (`create_ticket` via Jira MCP).
+1. **Create the Jira ticket** in project **DAS**.
+   - Credentials are already in repo-root `.env`: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_KEY`, `JIRA_PROJECT_KEY` (`DAS`). Optional: `JIRA_DISPLAY_NAME`.
+   - Use the REST API with those values (see **Jira access** below). Do not stall waiting for Jira MCP authentication.
    - Include summary, acceptance criteria, and planned branch name.
    - Confirm the ticket key (e.g. `DAS-37`) before continuing.
 
@@ -40,6 +42,24 @@ Applies to the **RosettaDash** monorepo (npm scope `@rosettadash/*`). Jira proje
 - Assume a ticket exists because git commits or docs mention `DAS-n` — **verify in Jira**.
 - Create docs/links to Jira tickets that have not been created yet.
 - Skip Jira because the task seems small (docs-only, Docker, fixes — all need tickets).
+
+## Jira access (credentials in `.env`)
+
+Jira MCP is optional. **Always** create and look up DAS tickets with the REST API and credentials from `.env`:
+
+- `JIRA_BASE_URL`
+- `JIRA_EMAIL`
+- `JIRA_API_KEY`
+- `JIRA_PROJECT_KEY` (`DAS`)
+
+Lessons already paid for — do not re-pay them:
+
+- The old `GET /rest/api/3/search` is **removed**. Use `POST /rest/api/3/search/jql` with a JSON body (`{"jql": "...", "maxResults": N, "fields": [...]}`) to find the latest ticket number before creating a new one — never guess the next `DAS-n`.
+- **Never use `curl -s` alone** for these calls — silent mode swallows network/auth errors, so a failed call and a successful-but-empty one look identical. Always use `curl -sS --max-time 15 -w "\nHTTP_STATUS:%{http_code}\n"` so failures are visible.
+- Write the issue JSON payload to a scratch file first (description is Atlassian Document Format — a `doc`/`paragraph`/`bulletList` tree, not markdown) and POST with `--data @file` rather than inlining a large heredoc.
+- `POST /rest/api/3/issue` with `fields.project.key: "DAS"`, `fields.issuetype.name` (one of `Story`, `Task`, `Bug`, `Feature`, `Epic`), `fields.summary`, `fields.description` (ADF).
+- **Run the create exactly once.** If a network call seems to have produced no output, verify in Jira (or retry with the `-sS -w` form above) before re-running the POST. Duplicate tickets from this exact mistake have happened; if it happens again, delete the duplicate (`DELETE /rest/api/3/issue/<key>`) rather than leaving both live.
+- `scripts/jira-close-done.mjs` shows the same auth pattern for transitioning tickets to Done.
 
 ## If Jira and git are out of sync
 

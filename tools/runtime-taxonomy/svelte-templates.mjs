@@ -79,7 +79,33 @@ function kindExtraScript(kind, bemBlock) {
 \t});`;
     case 'bar-chart':
       return `
-\tconst barHeights = [40, 65, 55, 80, 48];`;
+\tfunction defaultBarFormat(value: number): string {
+\t\tif (value >= 1_000_000) return \`\${(value / 1_000_000).toFixed(1)}M\`;
+\t\tif (value >= 1_000) return \`\${(value / 1_000).toFixed(0)}K\`;
+\t\treturn String(Math.round(value));
+\t}
+\tconst series = $derived(bars?.length ? bars : [
+\t\t{ label: 'A', value: 40 },
+\t\t{ label: 'B', value: 65 },
+\t\t{ label: 'C', value: 55 },
+\t\t{ label: 'D', value: 80 },
+\t\t{ label: 'E', value: 48 },
+\t]);
+\tconst format = $derived(valueFormat ?? defaultBarFormat);
+\tconst maxValue = $derived(Math.max(...series.map((bar) => bar.value), 1));`;
+    case 'line-chart':
+      return `
+\tconst series = $derived(points?.length ? points : [
+\t\t{ x: '2019', y: 42 },
+\t\t{ x: '2020', y: 18 },
+\t\t{ x: '2021', y: 12 },
+\t\t{ x: '2022', y: 19 },
+\t\t{ x: '2023', y: 31 },
+\t\t{ x: '2024', y: 36 },
+\t]);
+\tconst maxY = $derived(Math.max(...series.map((point) => point.y), 1));
+\tconst last = $derived(Math.max(series.length - 1, 1));
+\tconst polyline = $derived(series.map((point, index) => \`\${(index / last) * 240},\${88 - (point.y / maxY) * 72}\`).join(' '));`;
     case 'layout-grid':
       return `
 \tconst gridColumns = $derived(\`repeat(\${columns ?? 3}, 1fr)\`);
@@ -128,9 +154,9 @@ function kindRender(kind, bemBlock) {
 
     'select-input': `<section class={rootClass} data-testid="${b}">
 \t{#if label}<span class="rd-field__label">{label}</span>{/if}
-\t<select class="rd-select" value={value ?? ''}>
-\t\t<option value="">{placeholder ?? 'Select…'}</option>
-\t\t{#each options ?? [] as o (o.value)}<option value={o.value}>{o.label}</option>{/each}
+\t<select class="rd-select">
+\t\t<option value="" selected={!(value ?? '')}>{placeholder ?? 'Select…'}</option>
+\t\t{#each options ?? [] as o (o.value)}<option value={o.value} selected={o.value === (value ?? '')}>{o.label}</option>{/each}
 \t</select>
 \t${slot}
 </section>`,
@@ -322,9 +348,9 @@ function kindRender(kind, bemBlock) {
 
     'news-select': `<section class={rootClass} data-testid="${b}">
 \t{#if label}<span class="rd-field__label">{label}</span>{/if}
-\t<select class="rd-select" value={value ?? ''}>
-\t\t<option value="">{placeholder ?? 'Select…'}</option>
-\t\t{#each options ?? [] as o (o.value)}<option value={o.value}>{o.label}</option>{/each}
+\t<select class="rd-select">
+\t\t<option value="" selected={!(value ?? '')}>{placeholder ?? 'Select…'}</option>
+\t\t{#each options ?? [] as o (o.value)}<option value={o.value} selected={o.value === (value ?? '')}>{o.label}</option>{/each}
 \t</select>
 \t${slot}
 </section>`,

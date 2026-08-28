@@ -78,12 +78,11 @@ all of it needs a ticket first. See `docs/07-workflow-and-branching.md` and
 4. If git history references a `DAS-n` that Jira doesn't have, stop and create the ticket
    first — don't paper over the gap.
 
-### Jira access (no MCP server in this environment)
+### Jira access (credentials in `.env`)
 
-`docs/07` and `.cursor/rules/01-jira-ticket-and-branch.mdc` describe this as "Jira MCP
-`create_ticket`" — that MCP server is a Cursor thing and is **not** available to Claude Code
-here. Use the REST API directly with credentials from `.env` (`JIRA_BASE_URL`, `JIRA_EMAIL`,
-`JIRA_API_KEY`, `JIRA_PROJECT_KEY=DAS`). Lessons already paid for, so you don't re-pay them:
+Use the REST API directly with credentials from `.env` (`JIRA_BASE_URL`, `JIRA_EMAIL`,
+`JIRA_API_KEY`, `JIRA_PROJECT_KEY=DAS`). Do not wait on Jira MCP auth. Lessons already
+paid for, so you don't re-pay them:
 
 - The old `GET /rest/api/3/search` is **removed**. Use `POST /rest/api/3/search/jql` with a
   JSON body (`{"jql": "...", "maxResults": N, "fields": [...]}`) to find the latest ticket

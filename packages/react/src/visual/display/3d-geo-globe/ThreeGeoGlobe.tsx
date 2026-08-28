@@ -1,4 +1,15 @@
 import { forwardRef, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import {
+  cameraPositionFacingLatLng,
+  GLOBE_CAMERA_DISTANCE,
+  GLOBE_FLY_DURATION_MS,
+  GLOBE_HEIGHT_SEGMENTS,
+  GLOBE_RADIUS,
+  GLOBE_WIDTH_SEGMENTS,
+  latLngToGlobePosition,
+  patchEquirectGlobeMaterial,
+  prepareEquirectGlobeTexture,
+} from '@rosettadash/web-components/visual/display/3d-geo-globe';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -21,17 +32,8 @@ export interface ThreeGeoGlobeProps {
   children?: ReactNode;
 }
 
-const GLOBE_RADIUS = 1.6;
-
-function latLngToGlobePosition(lat: number, lng: number, radius: number): THREE.Vector3 {
-  const phi = ((90 - lat) * Math.PI) / 180;
-  const theta = ((lng + 180) * Math.PI) / 180;
-  const surfaceRadius = radius + 0.04;
-  return new THREE.Vector3(
-    -surfaceRadius * Math.sin(phi) * Math.cos(theta),
-    surfaceRadius * Math.cos(phi),
-    surfaceRadius * Math.sin(phi) * Math.sin(theta),
-  );
+function toVector3(point: { x: number; y: number; z: number }): THREE.Vector3 {
+  return new THREE.Vector3(point.x, point.y, point.z);
 }
 
 /** @rosettadash/react/visual/display/3d-geo-globe — Three.js globe with destination markers */
@@ -52,7 +54,10 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
   const hostRef = useRef<HTMLDivElement>(null);
   const markerMeshesRef = useRef<Map<string, THREE.Mesh>>(new Map());
   const syncMarkersRef = useRef<(() => void) | null>(null);
-  const flyToLatLngRef = useRef<((lat: number, lng: number) => void) | null>(null);
+  const flyToLatLngRef = useRef<((lat: number, lng: number, immediate?: boolean) => void) | null>(
+    null,
+  );
+  const hasFacedSelectionRef = useRef(false);
   const propsRef = useRef({ markers, selectedId, onMarkerSelect });
   propsRef.current = { markers, selectedId, onMarkerSelect };
 
@@ -72,10 +77,11 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
     scene.background = new THREE.Color('#0b1220');
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(0, 0.4, 4.8);
+    camera.position.set(0, 0.4, GLOBE_CAMERA_DISTANCE);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
@@ -87,7 +93,11 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
     scene.add(keyLight);
 
     const globeMaterial = new THREE.MeshStandardMaterial({ color: '#1d4ed8' });
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), globeMaterial);
+    patchEquirectGlobeMaterial(globeMaterial);
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(GLOBE_RADIUS, GLOBE_WIDTH_SEGMENTS, GLOBE_HEIGHT_SEGMENTS),
+      globeMaterial,
+    );
     scene.add(globe);
 
     let textureLoadId = 0;
@@ -98,6 +108,14 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
           texture.dispose();
           return;
         }
+        prepareEquirectGlobeTexture(texture, {
+          colorSpace: THREE.SRGBColorSpace,
+          wrapS: THREE.RepeatWrapping,
+          wrapT: THREE.ClampToEdgeWrapping,
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          anisotropy: Math.min(16, renderer.capabilities.getMaxAnisotropy()),
+        });
         globeMaterial.map = texture;
         globeMaterial.color.set('#ffffff');
         globeMaterial.needsUpdate = true;
@@ -139,8 +157,7 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
           scene.add(mesh);
           meshes.set(marker.id, mesh);
         }
-        const position = latLngToGlobePosition(marker.lat, marker.lng, GLOBE_RADIUS);
-        mesh.position.copy(position);
+        mesh.position.copy(toVector3(latLngToGlobePosition(marker.lat, marker.lng, GLOBE_RADIUS)));
         const material = mesh.material as THREE.MeshStandardMaterial;
         const selected = marker.id === nextSelected;
         material.color.set(selected ? '#fbbf24' : '#f87171');
@@ -153,19 +170,21 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
     syncMarkersRef.current = syncMarkers;
 
     let flyFrameId = 0;
-    flyToLatLngRef.current = (lat: number, lng: number) => {
+    flyToLatLngRef.current = (lat: number, lng: number, immediate = false) => {
       cancelAnimationFrame(flyFrameId);
+      const distance = camera.position.length() || GLOBE_CAMERA_DISTANCE;
+      const endPos = toVector3(cameraPositionFacingLatLng(lat, lng, distance));
+      if (immediate) {
+        camera.position.copy(endPos);
+        controls.update();
+        return;
+      }
       controls.autoRotate = false;
-
-      const markerPos = latLngToGlobePosition(lat, lng, GLOBE_RADIUS);
-      const distance = camera.position.length() || 4.8;
-      const endPos = markerPos.clone().normalize().multiplyScalar(distance);
       const startPos = camera.position.clone();
       const flyStart = performance.now();
-      const flyDuration = 900;
 
       const animateFly = (now: number) => {
-        const t = Math.min((now - flyStart) / flyDuration, 1);
+        const t = Math.min((now - flyStart) / GLOBE_FLY_DURATION_MS, 1);
         const eased = 1 - (1 - t) ** 3;
         camera.position.lerpVectors(startPos, endPos, eased);
         controls.update();
@@ -217,6 +236,7 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
     return () => {
       syncMarkersRef.current = null;
       flyToLatLngRef.current = null;
+      hasFacedSelectionRef.current = false;
       cancelAnimationFrame(flyFrameId);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       cancelAnimationFrame(animationId);
@@ -239,15 +259,16 @@ export const ThreeGeoGlobe = forwardRef<HTMLElement, ThreeGeoGlobeProps>(functio
     syncMarkersRef.current?.();
   }, [markers, selectedId]);
 
+  const selectedMarker = markers.find((entry) => entry.id === selectedId);
+
   useEffect(() => {
-    if (!selectedId) {
+    if (!selectedMarker) {
       return;
     }
-    const marker = markers.find((entry) => entry.id === selectedId);
-    if (marker) {
-      flyToLatLngRef.current?.(marker.lat, marker.lng);
-    }
-  }, [selectedId, markers]);
+    const immediate = !hasFacedSelectionRef.current;
+    hasFacedSelectionRef.current = true;
+    flyToLatLngRef.current?.(selectedMarker.lat, selectedMarker.lng, immediate);
+  }, [selectedId, selectedMarker?.lat, selectedMarker?.lng]);
 
   return (
     <section
