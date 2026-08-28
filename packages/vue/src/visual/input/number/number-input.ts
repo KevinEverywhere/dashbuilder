@@ -7,6 +7,7 @@ export interface NumberInputProps {
   max?: number;
   step?: number;
   value?: number;
+  disabled?: boolean;
   onChange?: (value: number) => void;
   className?: string;
 }
@@ -22,16 +23,42 @@ export const NumberInput = defineComponent({
     max: { type: Number as PropType<number | undefined>, default: undefined },
     step: { type: Number as PropType<number | undefined>, default: undefined },
     value: { type: Number as PropType<number | undefined>, default: undefined },
+    disabled: { type: Boolean as PropType<boolean | undefined>, default: undefined },
+    onChange: { type: Function as PropType<((value: number) => void) | undefined>, default: undefined },
   },
+  emits: ['change', 'update:value'],
   slots: Object as SlotsType<{ default?: () => VNode[] }>,
-  setup(props, { slots, attrs }) {
+  setup(props, { slots, attrs, emit }) {
+    const onNativeChange = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+      const next = Number(target.value);
+      props.onChange?.(next);
+      emit('change', next);
+      emit('update:value', next);
+    };
+
     return () => {
-      const rootClass = ['rd-input-number', props.className, typeof attrs.class === 'string' ? attrs.class : ''].filter(Boolean).join(' ');
+      const rootClass = ['rd-input-number', props.className, typeof attrs.class === 'string' ? attrs.class : '']
+        .filter(Boolean)
+        .join(' ');
       return h('section', { class: rootClass, 'data-testid': 'rd-input-number' }, [
-      props.label ? h('span', { class: 'rd-field__label' }, props.label) : null,
-      h('input', { type: 'number', class: 'rd-input', placeholder: props.placeholder ?? '', min: props.min, max: props.max, step: props.step, value: props.value }),
-      slots.default?.(),
-    ]);
+        props.label ? h('span', { class: 'rd-field__label' }, props.label) : null,
+        h('input', {
+          type: 'number',
+          class: 'rd-input',
+          placeholder: props.placeholder ?? '',
+          min: props.min,
+          max: props.max,
+          step: props.step,
+          value: props.value,
+          disabled: props.disabled ?? false,
+          onChange: onNativeChange,
+        }),
+        slots.default?.(),
+      ]);
     };
   },
 });

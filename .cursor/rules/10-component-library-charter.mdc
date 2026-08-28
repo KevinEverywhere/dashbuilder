@@ -91,7 +91,7 @@ _(None — `generate:svelte-runtime` added to root `package.json`.)_
 
 ### Cross-runtime embed exceptions (proof apps only)
 
-- Vue/Svelte proof apps may embed React for Authoring/Globe ahead-of-parity — documented in `docs/43-destination-atlas-proof-apps.md`. Not a license for runtime package skew.
+- Svelte proof may embed React for Authoring/Globe/Views ahead-of-parity — documented in `docs/43-destination-atlas-proof-apps.md`. Vue proof is Vue-only (DAS-157). Not a license for runtime package skew.
 
 ## Rule index
 

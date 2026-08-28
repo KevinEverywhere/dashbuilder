@@ -121,10 +121,6 @@ const CURRENT_RUNTIME_ID: DestinationAtlasRuntimeId = 'vue';
             </p>
           </li>
         </ul>
-        <p class="da-about__note">
-          Open the <strong>Authoring</strong> tab to see the live Vue → React demo. Read
-          <code>apps/proof-vue/src/components/ReactMount.vue</code> and the Component source panel on that tab.
-        </p>
       </section>
 
       <section class="da-about__section">

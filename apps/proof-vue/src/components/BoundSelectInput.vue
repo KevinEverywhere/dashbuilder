@@ -17,8 +17,13 @@ const emit = defineEmits<{ 'update:value': [string] }>();
       :value="value ?? ''"
       @change="emit('update:value', ($event.target as HTMLSelectElement).value)"
     >
-      <option v-if="placeholder" value="">{{ placeholder }}</option>
-      <option v-for="option in options ?? []" :key="option.value" :value="option.value">
+      <option v-if="placeholder" value="" :selected="!(value ?? '')">{{ placeholder }}</option>
+      <option
+        v-for="option in options ?? []"
+        :key="option.value"
+        :value="option.value"
+        :selected="option.value === (value ?? '')"
+      >
         {{ option.label }}
       </option>
     </select>

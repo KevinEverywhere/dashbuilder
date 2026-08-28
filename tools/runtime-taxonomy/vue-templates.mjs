@@ -138,8 +138,10 @@ function kindRender(kind, bemBlock) {
     'select-input': `return h('section', { class: rootClass, 'data-testid': '${b}' }, [
       props.label ? h('span', { class: 'rd-field__label' }, props.label) : null,
       h('select', { class: 'rd-select', value: props.value ?? '' }, [
-        h('option', { value: '' }, props.placeholder ?? 'Select…'),
-        ...(props.options ?? []).map((o) => h('option', { key: o.value, value: o.value }, o.label)),
+        h('option', { value: '', selected: !(props.value ?? '') }, props.placeholder ?? 'Select…'),
+        ...(props.options ?? []).map((o) =>
+          h('option', { key: o.value, value: o.value, selected: o.value === (props.value ?? '') }, o.label),
+        ),
       ]),
       slots.default?.(),
     ]);`,
@@ -333,8 +335,10 @@ function kindRender(kind, bemBlock) {
     'news-select': `return h('section', { class: rootClass, 'data-testid': '${b}' }, [
       props.label ? h('span', { class: 'rd-field__label' }, props.label) : null,
       h('select', { class: 'rd-select', value: props.value ?? '' }, [
-        h('option', { value: '' }, props.placeholder ?? 'Select…'),
-        ...(props.options ?? []).map((o) => h('option', { key: o.value, value: o.value }, o.label)),
+        h('option', { value: '', selected: !(props.value ?? '') }, props.placeholder ?? 'Select…'),
+        ...(props.options ?? []).map((o) =>
+          h('option', { key: o.value, value: o.value, selected: o.value === (props.value ?? '') }, o.label),
+        ),
       ]),
       slots.default?.(),
     ]);`,

@@ -15,18 +15,27 @@ export const OVERVIEW_SOURCE = `<OverviewScreen locale={locale} userRole={userRo
 </script>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { BarChart } from '@rosettadash/vue/visual/chart/bar';
 import { LineChart } from '@rosettadash/vue/visual/chart/line';
 import { GridLayout } from '@rosettadash/vue/layout/grid';
-import RoleGatePanel from '../components/RoleGatePanel.vue';
+import { RoleGate } from '@rosettadash/vue/domain/role-gate';
 import { KpiCard } from '@rosettadash/vue/visual/kpi';
 import { MetricChip } from '@rosettadash/vue/visual/plugin/metric-chip';
 import { StatusBadge } from '@rosettadash/vue/visual/plugin/status-badge';
 import { MOCK_DESTINATIONS, formatVisitorCount } from '@destination-atlas';
 import type { AtlasUserRole } from '../lib/roles';
-import { computeVisitorDelta, localizedDestinationName } from '../lib/atlas-utils';
+import {
+  aggregateVisitorTrend,
+  computeVisitorDelta,
+  destinationBarSeries,
+  localizedDestinationName,
+} from '../lib/atlas-utils';
 
-defineProps<{ locale: string; userRole: AtlasUserRole }>();
+const props = defineProps<{ locale: string; userRole: AtlasUserRole }>();
+
+const trend = aggregateVisitorTrend();
+const bars = computed(() => destinationBarSeries(props.locale, localizedDestinationName));
 </script>
 
 <template>
@@ -45,11 +54,22 @@ defineProps<{ locale: string; userRole: AtlasUserRole }>();
         />
       </GridLayout>
       <div class="da-stack da-stack--2">
-        <LineChart title="Visitors over time (aggregate trend)" />
-        <BarChart title="2024 visitors by destination" />
+        <LineChart
+          title="Visitors over time (aggregate trend)"
+          :points="trend"
+          x-axis-label="Year"
+          y-axis-label="Total visitors"
+          :value-format="formatVisitorCount"
+        />
+        <BarChart
+          title="2024 visitors by destination"
+          :bars="bars"
+          y-axis-label="Visitors"
+          :value-format="formatVisitorCount"
+        />
       </div>
-      <RoleGatePanel
-        gate-label="Operations metrics"
+      <RoleGate
+        label="Operations metrics"
         :current-role="userRole"
         :allowed-roles="['admin']"
         status-text="Admin operations panel"
@@ -59,7 +79,7 @@ defineProps<{ locale: string; userRole: AtlasUserRole }>();
           <MetricChip chip-label="Avg. stay" chip-value="4.2 nights" />
           <StatusBadge status-text="Data freshness: current" tone="success" />
         </div>
-      </RoleGatePanel>
+      </RoleGate>
     </div>
   </section>
 </template>

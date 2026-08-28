@@ -81,6 +81,9 @@
       "@rosettadash/web-components/domain/i18n/app-language-select": [
         "./packages/web-components/src/domain/i18n/app-language-select/index.ts"
       ],
+      "@rosettadash/web-components/visual/display/3d-geo-globe": [
+        "./packages/web-components/src/visual/display/3d-geo-globe/index.ts"
+      ],
       "@rosettadash/web-components/visual/display/geo-map": [
         "./packages/web-components/src/visual/display/geo-map/index.ts"
       ],

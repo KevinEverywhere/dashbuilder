@@ -230,30 +230,37 @@ test.describe('Builder export wizard', () => {
     });
   });
 
-  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
-  test.skip('previews Vue UI files when Vue target is selected', async ({ page }) => {
-    await addFromPalette(page, 'infra.postgresql');
-    await addFromPalette(page, 'infra.server.nest');
-    await addFromPalette(page, 'visual.table');
-    await expect(page.getByTestId('canvas-node')).toHaveCount(3);
+  test.describe('Vue stack', () => {
+    test.beforeEach(async ({ page }) => {
+      await openBuilder(page, { ui: 'vue' });
+    });
 
-    const postgresNode = page.getByTestId('canvas-node').nth(0);
-    const tableNode = page.getByTestId('canvas-node').nth(2);
+    test('previews Vue UI files for the chosen Vue stack', async ({ page }) => {
+      await addFromPalette(page, 'infra.postgresql');
+      await addFromPalette(page, 'infra.server.nest');
+      await addFromPalette(page, 'visual.table');
+      await expect(page.getByTestId('canvas-node')).toHaveCount(3);
 
-    await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
-    await tableNode.getByTestId(/^port-input-.*-data$/).click();
+      const postgresNode = page.getByTestId('canvas-node').nth(0);
+      const tableNode = page.getByTestId('canvas-node').nth(2);
 
-    await page.getByTestId('export-button').click();
-    await expect(page.getByTestId('export-wizard')).toBeVisible();
-    await page.getByTestId('export-wizard-ui-vue').click();
-    await expect(page.getByTestId('export-wizard-ui-vue')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
-    await expect(page.getByTestId('export-wizard-targets')).toContainText('vue UI');
-    await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.vue');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
-    await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
+      await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
+      await tableNode.getByTestId(/^port-input-.*-data$/).click();
+
+      await page.getByTestId('export-button').click();
+      await expect(page.getByTestId('export-wizard')).toBeVisible();
+      await expect(page.getByTestId('export-wizard-ui-vue')).toBeVisible();
+      await expect(page.getByTestId('export-wizard-ui-vue')).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByTestId('export-wizard-ui-react')).toHaveCount(0);
+      await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
+      await expect(page.getByTestId('export-wizard-targets')).toContainText('vue UI');
+      await expect(page.getByTestId('export-wizard-files')).toContainText('src/Dashboard.vue');
+      await expect(page.getByTestId('export-wizard-files')).not.toContainText('src/Main.tsx');
+      await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
+    });
   });
 
+  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
   test.skip('previews Svelte UI files when Svelte target is selected', async ({ page }) => {
     await addFromPalette(page, 'infra.postgresql');
     await addFromPalette(page, 'infra.server.nest');

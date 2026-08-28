@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { roleAllows, roleLabel, type AtlasUserRole } from '../lib/roles';
+import { RoleGate } from '@rosettadash/vue/domain/role-gate';
+import { roleLabel, type AtlasUserRole } from '../lib/roles';
 
 const props = withDefaults(
   defineProps<{
@@ -14,18 +14,16 @@ const props = withDefaults(
     allowedRoles: () => ['admin'],
   },
 );
-
-const allowed = computed(() => roleAllows(props.currentRole, props.allowedRoles));
-const hiddenMessage = computed(
-  () => props.hiddenStatusText ?? `This section is hidden for ${roleLabel(props.currentRole)} role.`,
-);
 </script>
 
 <template>
-  <section v-if="allowed" class="rd-role-gate">
-    <span v-if="gateLabel" class="rd-field__label">{{ gateLabel }}</span>
-    <p v-if="statusText" class="rd-role-gate__status">{{ statusText }}</p>
+  <RoleGate
+    :label="gateLabel"
+    :current-role="currentRole"
+    :allowed-roles="allowedRoles"
+    :status-text="statusText"
+    :hidden-status-text="hiddenStatusText ?? `This section is hidden for ${roleLabel(props.currentRole)} role.`"
+  >
     <slot />
-  </section>
-  <p v-else class="rd-role-gate__status">{{ hiddenMessage }}</p>
+  </RoleGate>
 </template>

@@ -1,12 +1,13 @@
 <script lang="ts">
 export const GLOBE_SOURCE = `<GlobeScreen part="explorer" locale={locale} selectedId={selectedId}>
   <GeoExplorerLayout items={…} selectedId={selectedId} />
-  <ReactMount component={GlobeThree} textureUrl markers selectedId />
+  <ThreeGeoGlobe textureUrl markers selectedId />
 </GlobeScreen>`;
 </script>
 
 <script setup lang="ts">
-import { computed, markRaw } from 'vue';
+import { computed } from 'vue';
+import { ThreeGeoGlobe } from '@rosettadash/vue/visual/display/3d-geo-globe';
 import {
   DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
   DEFAULT_WORLD_EQUIRECT_URL,
@@ -14,8 +15,6 @@ import {
   MOCK_DESTINATIONS,
 } from '@destination-atlas';
 import GeoExplorerLayout, { type GeoExplorerListPlacement } from '../components/GeoExplorerLayout.vue';
-import ReactMount from '../components/ReactMount.vue';
-import { GlobeThree } from '../globe/GlobeThree';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
 
 const props = withDefaults(
@@ -62,15 +61,6 @@ function selectFromGlobe(id: string) {
   }
   emit('update:selectedId', id);
 }
-
-const globeMountProps = computed(() =>
-  markRaw({
-    textureUrl: DEFAULT_WORLD_EQUIRECT_URL,
-    markers: markers.value,
-    selectedId: props.selectedId,
-    onMarkerSelect: selectFromGlobe,
-  }),
-);
 </script>
 
 <template>
@@ -82,10 +72,13 @@ const globeMountProps = computed(() =>
     @select="selectFromList"
   >
     <div class="da-globe-stage">
-      <ReactMount
-        :key="selectedId"
-        :component="GlobeThree"
-        :component-props="globeMountProps"
+      <ThreeGeoGlobe
+        class="da-globe-stage__globe"
+        title="Destination globe (Three.js)"
+        :texture-url="DEFAULT_WORLD_EQUIRECT_URL"
+        :markers="markers"
+        :selected-id="selectedId"
+        @marker-select="selectFromGlobe($event.id)"
       />
     </div>
   </GeoExplorerLayout>

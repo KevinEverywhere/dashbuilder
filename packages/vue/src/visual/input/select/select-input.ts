@@ -52,8 +52,10 @@ export const SelectInput = defineComponent({
             onChange: onNativeChange,
           },
           [
-            h('option', { value: '' }, props.placeholder ?? 'Select…'),
-            ...(props.options ?? []).map((o) => h('option', { key: o.value, value: o.value }, o.label)),
+            h('option', { value: '', selected: !(props.value ?? '') }, props.placeholder ?? 'Select…'),
+            ...(props.options ?? []).map((o) =>
+              h('option', { key: o.value, value: o.value, selected: o.value === (props.value ?? '') }, o.label),
+            ),
           ],
         ),
         slots.default?.(),

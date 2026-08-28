@@ -84,9 +84,9 @@ Default camera framing for Cusco and other destinations comes from `libs/destina
 
 **Dev setup (proof-react / proof-angular):** from repo root run `npm install` (includes `@ffmpeg/ffmpeg`, `@ffmpeg/util`, and `@ffmpeg/core` as devDependencies). Proof and Storybook Vite configs serve `@ffmpeg/core` from same-origin `/ffmpeg-core/*` (see `tools/vite/ffmpeg-core-vite-plugin.mjs`) and set COOP + `Cross-Origin-Embedder-Policy: credentialless` so ffmpeg.wasm can use SharedArrayBuffer while YouTube embeds still load. `<rd-wasm-media>` accepts `inputFile`, `cropRegion`, `recordRange`, and `reverse` — loads core via `@rosettadash/core` helpers (no unpkg CDN fetch).
 
-Implemented in React + Angular proof apps: [DAS-131](https://planetkevin.atlassian.net/browse/DAS-131) (tab shell); [DAS-132](https://planetkevin.atlassian.net/browse/DAS-132) (sphere + WASM); [DAS-140](https://planetkevin.atlassian.net/browse/DAS-140) / [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141) (playback bar, flat crop, record trim). Editor/Admin roles only.
+Implemented in React + Angular + Vue proof apps: [DAS-131](https://planetkevin.atlassian.net/browse/DAS-131) (tab shell); [DAS-132](https://planetkevin.atlassian.net/browse/DAS-132) (sphere + WASM); [DAS-140](https://planetkevin.atlassian.net/browse/DAS-140) / [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141) (playback bar, flat crop, record trim). Editor/Admin roles only.
 
-**proof-vue (DAS-124):** Authoring is intentionally a **Vue → React** cross-framework showcase — `AuthoringScreen.vue` wraps `ReactMount.vue`, which mounts `authoring/AuthoringScreen.tsx` from `@rosettadash/react`. See About → Cross-framework composition and the callout on the Authoring tab.
+**proof-vue (DAS-124 / DAS-157):** Not a Vue → React showcase. Globe uses `@rosettadash/vue` wrapping `<rd-three-geo-globe>`.
 
 ### Cross-framework composition showcases
 
@@ -94,13 +94,11 @@ Proof apps are native to their runtime by default. These screens **deliberately 
 
 | Host | Embedded | Screen | Feature | Bridge | Ticket |
 |------|----------|--------|---------|--------|--------|
-| Vue | React | Authoring | Viewports + WasmMedia extract | `ReactMount.vue` → `createRoot(AuthoringScreen.tsx)` | DAS-124 |
-| Vue | React | Globe | Three.js geo globe + markers | `ReactMount.vue` → `GlobeThree.tsx` | DAS-124 |
 | Svelte | React | Authoring | Viewports + WasmMedia extract | `ReactMount.svelte` → `createRoot(AuthoringScreen.tsx)` | DAS-125 |
 | Svelte | React | Globe | Three.js geo globe + markers | `ReactMount.svelte` → `GlobeThree.tsx` | DAS-125 |
 | Svelte | React | Views | Sankey + Venn charts | `ReactMount.svelte` → `@rosettadash/react/visual/chart/*` | DAS-125 |
 
-Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`).
+Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`). Vue proof is Vue-only (DAS-157). A later Svelte ticket should show one React, one Angular, one Vue component, and one WC custom element.
 
 **proof-svelte (DAS-125):** Native Svelte 5 for most screens; Authoring, Globe, and Views chart panels embed React via `ReactMount.svelte` when `@rosettadash/svelte` hosts are stubs or chart parity lives in React first.
 

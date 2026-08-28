@@ -1,32 +1,45 @@
-import { defineComponent, h, type PropType, type SlotsType, type VNode } from 'vue';
+import {
+  RD_THREE_GEO_GLOBE_TAG,
+  registerRdThreeGeoGlobe,
+  type GlobeMarker,
+} from '@rosettadash/web-components/visual/display/3d-geo-globe';
+import { defineCustomElementHost } from '../../../lib/custom-element-host';
+
+export type { GlobeMarker };
 
 export interface ThreeGeoGlobeProps {
   title?: string;
-  mode?: string;
+  textureUrl?: string;
+  markers?: GlobeMarker[];
+  selectedId?: string;
+  minHeight?: string | number;
   className?: string;
+  onMarkerSelect?: (detail: { id: string }) => void;
 }
 
-/** @rosettadash/vue/visual/display/3d-geo-globe — visual.display.3d-geo-globe */
-export const ThreeGeoGlobe = defineComponent({
-  name: 'RdThreeGeoGlobe',
-  props: {
-    className: { type: String as PropType<string | undefined>, default: undefined },
-    title: { type: String as PropType<string | undefined>, default: undefined },
-    mode: { type: String as PropType<string | undefined>, default: undefined },
+/** Vue wrapper around `<rd-three-geo-globe>`. */
+export const ThreeGeoGlobe = defineCustomElementHost(
+  {
+    name: 'RdThreeGeoGlobe',
+    tagName: RD_THREE_GEO_GLOBE_TAG,
+    register: registerRdThreeGeoGlobe,
+    attrs: {
+      textureUrl: 'texture-url',
+      selectedId: 'selected-id',
+      minHeight: 'min-height',
+    },
+    properties: ['markers'],
+    events: {
+      'marker-select': 'onMarkerSelect',
+    },
   },
-  slots: Object as SlotsType<{ default?: () => VNode[] }>,
-  setup(props, { slots, attrs }) {
-    return () => {
-      const rootClass = ['rd-display-3d-geo-globe', props.className, typeof attrs.class === 'string' ? attrs.class : ''].filter(Boolean).join(' ');
-      return h('section', {
-      class: rootClass,
-      'data-testid': 'rd-display-3d-geo-globe',
-      'data-three-mode': props.mode,
-      'data-three-title': props.title,
-      'aria-label': props.title ?? '3D host',
-    }, slots.default?.());
-    };
+  {
+    title: { type: String, default: undefined },
+    textureUrl: { type: String, default: undefined },
+    markers: { type: Array, default: undefined },
+    selectedId: { type: String, default: undefined },
+    minHeight: { type: [String, Number], default: undefined },
   },
-});
+);
 
 export type ThreeGeoGlobeComponent = typeof ThreeGeoGlobe;

@@ -81,7 +81,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
     storybookCommand: 'npm run storybook:vue',
     storybookPort: 6008,
     summary:
-      'Vue 3 SFC wrappers with the same Destination Atlas navigation and mock data as the React reference app. Authoring embeds a React subtree via ReactMount to demonstrate cross-framework composition.',
+      'Vue 3 SFC wrappers with the same Destination Atlas navigation and mock data as the React reference app.',
   },
   {
     id: 'svelte',
@@ -128,17 +128,6 @@ export interface DestinationAtlasCrossFrameworkShowcase {
 
 export const DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES: DestinationAtlasCrossFrameworkShowcase[] = [
   {
-    id: 'vue-authoring-react',
-    hostRuntime: 'Vue',
-    hostTicket: 'DAS-124',
-    embeddedRuntime: 'React',
-    screen: 'Authoring',
-    feature: '360° / flat viewport + WasmMedia extract',
-    bridge: 'ReactMount.vue → createRoot(AuthoringScreen.tsx)',
-    summary:
-      'The Vue proof app is idiomatic Vue everywhere except Authoring, which mounts @rosettadash/react viewports and WasmMedia through a small ReactMount bridge. Props (locale, selectedId) pass from Vue into React; inspect AuthoringScreen.vue and the Component source panel.',
-  },
-  {
     id: 'svelte-authoring-react',
     hostRuntime: 'Svelte',
     hostTicket: 'DAS-125',
@@ -147,7 +136,7 @@ export const DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES: DestinationAtlasCrossF
     feature: '360° / flat viewport + WasmMedia extract',
     bridge: 'ReactMount.svelte → createRoot(AuthoringScreen.tsx)',
     summary:
-      'The Svelte proof app mounts @rosettadash/react Authoring through ReactMount — same bridge pattern as proof-vue. Props (locale, selectedId) pass from Svelte into React.',
+      'The Svelte proof app mounts @rosettadash/react Authoring through ReactMount. Props (locale, selectedId) pass from Svelte into React.',
   },
   {
     id: 'svelte-globe-react',
