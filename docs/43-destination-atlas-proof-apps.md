@@ -43,7 +43,7 @@ Shared mock data and screen definitions: **`libs/destination-atlas/`**.
 
 ### WC vs framework parity
 
-The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-map, media, wasm, i18n) and catalog meta elements. `proof-web-components` uses `<rd-*>` custom elements across all Destination Atlas screens except Stack (infra out of scope). Regenerate atoms: `npm run generate:web-components-runtime`.
+The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-map, media, wasm, i18n) and catalog meta elements. `proof-web-components` uses `<rd-*>` custom elements across Destination Atlas screens except Stack (infra out of scope) and Authoring (React subtree via `createRoot`, DAS-159). Regenerate atoms: `npm run generate:web-components-runtime`.
 
 ## Screens
 
@@ -98,10 +98,13 @@ Proof apps are native to their runtime by default. These screens **deliberately 
 | Svelte | Vue | Globe | Three.js geo globe + markers | `VueMount.svelte` → `@rosettadash/vue` ThreeGeoGlobe | DAS-158 |
 | Svelte | Angular | Media | YouTube destination embed | `AngularMount.svelte` → `YoutubeEmbed` on `rd-youtube-embed` | DAS-158 |
 | Svelte | Custom element | Map | Geo map + destination selection | `svelte:element` → `<rd-geo-map>` | DAS-158 |
+| Web Components | React | Authoring | Viewports + WasmMedia extract | `createRoot` → `authoring/AuthoringScreen.tsx` | DAS-159 |
 
-Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`). Vue proof is Vue-only (DAS-157). **proof-svelte (DAS-158)** shows one React, one Vue, one Angular, and one WC custom element.
+Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`). Vue proof is Vue-only (DAS-157). **proof-svelte (DAS-158)** shows one React, one Vue, one Angular, and one WC custom element. **proof-web-components (DAS-159)** is the custom-element host: Map/Globe stay native `rd-*`; Authoring mounts React.
 
 **proof-svelte (DAS-125 / DAS-158):** Native Svelte 5 for most screens. Authoring keeps React; Globe hosts Vue; Media hosts Angular; Map hosts `<rd-geo-map>`. Views Sankey/Venn are native Svelte.
+
+**proof-web-components (DAS-121 / DAS-159):** Native custom elements for most screens, including geo-explorer Map/Globe with destination-list lockstep. Authoring hosts the React subtree. Views Sankey/Venn are native SVG using `.rd-chart-sankey` / `.rd-chart-venn`.
 
 ### Consumer BYOK (integrations)
 

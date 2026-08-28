@@ -16,4 +16,15 @@ describe('rd-bar-chart', () => {
     expect(root).toBeTruthy();
     el.remove();
   });
+
+  it('renders bar labels, values, and a y-axis', () => {
+    const el = document.createElement(RD_BAR_CHART_TAG);
+    el.setAttribute('bars', JSON.stringify([{ label: 'Tokyo', value: 15_800_000 }]));
+    el.setAttribute('y-axis-label', 'Visitors');
+    document.body.appendChild(el);
+    expect(el.querySelector('.rd-chart-bar__x-label')?.textContent).toBe('Tokyo');
+    expect(el.querySelector('.rd-chart-bar__value')?.textContent).toBe('15.8M');
+    expect(el.querySelector('.rd-chart-bar__y-label')?.textContent).toBe('Visitors');
+    el.remove();
+  });
 });

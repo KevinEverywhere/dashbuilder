@@ -1,536 +1,752 @@
 import { registerRosettaDashElements } from '@rosettadash/web-components';
 import '../../../packages/web-components/src/styles/styles.css';
-
+import {
+  buildAtlasLocation,
+  DEFAULT_CLIENT_ROUTER_MODE,
+  CLIENT_ROUTER_MODE_OPTIONS,
+  type ClientRouterMode,
+} from '@rosettadash/core';
 import {
   DEFAULT_APP_LOCALES,
-  DESTINATION_ATLAS_ABOUT_INTRO,
-  DESTINATION_ATLAS_CURRENT_RUNTIME_BADGE,
-  DESTINATION_ATLAS_RUNTIME_GUIDES,
-  DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS,
-  DESTINATION_ATLAS_SCREENS,
-  DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
   DEFAULT_WORLD_EQUIRECT_URL,
-  GEO_MAP_PROVIDERS,
+  DESTINATION_ATLAS_SCREENS,
   MOCK_DESTINATIONS,
-  formatVisitorCount,
-  type Destination,
-  type DestinationAtlasRuntimeId,
+  getDestinationById,
   type DestinationAtlasScreenId,
-  type GeoMapProvider,
 } from '@destination-atlas';
-
+import { AuthoringScreen as AuthoringScreenReact } from './authoring/AuthoringScreen';
+import { destinationListMarkup } from './geo-explorer.js';
+import { createDestinationAtlasState } from './lib/atlas-state.js';
+import { getConsumerSecrets, subscribeSecrets } from './lib/consumer-secrets.js';
+import { formatRegionLabel, localizedDestinationName } from './atlas-utils.js';
+import { resolveMapLocationQuery } from './lib/map-location.js';
+import { screenAllowedForRole } from './lib/roles.js';
+import { subscribeRouter } from './lib/router.js';
+import { createThemePreference, type ThemePreference } from './lib/theme.js';
+import { fetchLiveNewsArticles, type LiveNewsArticle } from './lib/news-api.js';
+import { mountReactComponent, unmountReactComponent } from './react-host.js';
 import {
-  MOCK_NEWS,
-  REGION_OPTIONS,
-  TIME_PRESETS,
-  aggregateVisitorTrend,
-  computeVisitorDelta,
-  filterDestinations,
-  formatRegionLabel,
-  localizedDestinationName,
-} from './atlas-utils.js';
-
-const CURRENT_RUNTIME_ID: DestinationAtlasRuntimeId = 'web-components';
-
-type UserRole = 'viewer' | 'editor' | 'admin';
-
-interface AppState {
-  screen: DestinationAtlasScreenId;
-  mapsPanel: 'map' | 'globe';
-  selectedId: string;
-  locale: string;
-  mapProvider: GeoMapProvider;
-  userRole: UserRole;
-  destSearch: string;
-  destRegion: string;
-  timePreset: string;
-  visitPeriodStart: string;
-  visitPeriodEnd: string;
-  newsQuery: string;
-  newsRegion: string;
-  selectedArticleId: string;
-}
-
-const state: AppState = {
-  screen: 'overview',
-  mapsPanel: 'map',
-  selectedId: MOCK_DESTINATIONS[0]?.id ?? '',
-  locale: 'en',
-  mapProvider: 'leaflet',
-  userRole: 'admin',
-  destSearch: '',
-  destRegion: '',
-  timePreset: '5y',
-  visitPeriodStart: '2019-01',
-  visitPeriodEnd: '2024-12',
-  newsQuery: '',
-  newsRegion: '',
-  selectedArticleId: '',
-};
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
+  contextSummaryMarkup,
+  globeFooterMarkup,
+  mapsExplorerMarkup,
+  renderAbout,
+  renderAuthoring,
+  renderDestinations,
+  renderIntel,
+  renderMaps,
+  renderMapsToolbar,
+  renderMedia,
+  renderOverview,
+  renderPlan,
+  renderSettings,
+  renderStack,
+  renderViews,
+  routerModeMarkup,
+} from './screens.js';
+import { SCREEN_SOURCES } from './screens/sources.js';
 
 registerRosettaDashElements();
 
-function renderAbout(): string {
-  const matrixHead = DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS.map(
-    (column) => `<span>${column.label}</span>`,
-  ).join('');
+const STORAGE_ROUTER = 'rosettadash.clientRouterMode';
+const initialDestId = MOCK_DESTINATIONS[0]?.id ?? '';
+const atlas = createDestinationAtlasState(initialDestId);
+const themeStore = createThemePreference();
+let routerMode: ClientRouterMode = (() => {
+  const stored = localStorage.getItem(STORAGE_ROUTER);
+  if (stored && CLIENT_ROUTER_MODE_OPTIONS.some((option) => option.id === stored)) {
+    return stored as ClientRouterMode;
+  }
+  return DEFAULT_CLIENT_ROUTER_MODE;
+})();
 
-  const runtimeRows = DESTINATION_ATLAS_RUNTIME_GUIDES.map((runtime) => {
-    const isCurrent = runtime.id === CURRENT_RUNTIME_ID;
-    return `
-      <li class="da-about__runtime-card${isCurrent ? ' da-about__runtime-card--current' : ''}"${isCurrent ? ' aria-current="true"' : ''}>
-        <header>
-          <h4>${runtime.label}</h4>
-          ${isCurrent ? `<span class="da-about__runtime-current-badge">${DESTINATION_ATLAS_CURRENT_RUNTIME_BADGE}</span>` : ''}
-        </header>
-        <p>${runtime.summary}</p>
-        <div class="da-about__runtime-matrix">
-          <div class="da-about__runtime-matrix-col"><code>${runtime.npmPackage}</code></div>
-          <div class="da-about__runtime-matrix-col"><code>${runtime.proofCommand}</code></div>
-          <div class="da-about__runtime-matrix-col"><code>${runtime.storybookCommand}</code></div>
-        </div>
-      </li>`;
-  }).join('');
-
-  return `
-    <section class="da-panel da-panel--about">
-      <rd-scroll-region title="About Destination Atlas" max-height="100%" overlay-scrollbar>
-      <h2>About Destination Atlas</h2>
-      <p class="da-about__lead">${DESTINATION_ATLAS_ABOUT_INTRO.lead}</p>
-      <div class="da-about__runtime-matrix-wrap">
-        <div class="da-about__runtime-matrix-head" aria-hidden="true">${matrixHead}</div>
-        <ul class="da-about__runtime-list">${runtimeRows}</ul>
-      </div>
-      </rd-scroll-region>
-    </section>`;
-}
-
-function renderOverview(): string {
-  const kpiCards = MOCK_DESTINATIONS.map(
-    (dest) =>
-      `<rd-kpi-card title="${localizedDestinationName(dest, state.locale)}" value="${formatVisitorCount(dest.visitorsCurrent)}" delta="${computeVisitorDelta(dest)}"></rd-kpi-card>`,
-  ).join('');
-
-  const visitorTrend = JSON.stringify(aggregateVisitorTrend());
-  const visitorBars = JSON.stringify(
-    MOCK_DESTINATIONS.map((dest) => ({
-      label: localizedDestinationName(dest, state.locale),
-      value: dest.visitorsCurrent,
-    })),
-  );
-
-  return `
-    <section class="da-panel">
-      <h2>Overview</h2>
-      <p>Current visitor KPIs and historic trends across sample destinations.</p>
-      <div class="da-stack">
-        <rd-grid-layout title="Destination KPIs" columns="3" gap="12">${kpiCards}</rd-grid-layout>
-        <div class="da-stack da-stack--2">
-          <rd-line-chart title="Visitors over time (aggregate trend)" points='${visitorTrend}'></rd-line-chart>
-          <rd-bar-chart title="2024 visitors by destination" bars='${visitorBars}'></rd-bar-chart>
-        </div>
-        <rd-role-gate label="Operations metrics" status-text="Admin operations panel" allowed-roles='["admin"]' current-role="${state.userRole}">
-          <rd-metric-chip chip-label="Avg. stay" chip-value="4.2 nights"></rd-metric-chip>
-          <rd-status-badge status-text="Data freshness: current" tone="success"></rd-status-badge>
-        </rd-role-gate>
-      </div>
-    </section>`;
-}
-
-function renderDestinations(): string {
-  const filtered = filterDestinations(state.locale, state.destSearch, state.destRegion);
-  const rows = filtered.map((dest) => ({
-    id: dest.id,
-    name: localizedDestinationName(dest, state.locale),
-    status: dest.region,
-    amount: dest.visitorsCurrent,
-    date: state.timePreset,
-  }));
-  const selected = MOCK_DESTINATIONS.find((d) => d.id === state.selectedId);
-
-  return `
-    <section class="da-panel">
-      <h2>Destinations</h2>
-      <p>Browse destinations with filters, table selection, and detail panel.</p>
-      <div class="da-stack">
-        <div class="da-filter-row">
-          <rd-text-input label="Search" placeholder="Destination name…" data-ref="dest-search"></rd-text-input>
-          <rd-select-input label="Region" placeholder="All regions" data-ref="dest-region"></rd-select-input>
-          <rd-date-range label="Visit period" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}" data-ref="visit-period"></rd-date-range>
-        </div>
-        <rd-time-preset label="Historic window" presets='${JSON.stringify(TIME_PRESETS)}' active-preset-id="${state.timePreset}" data-ref="time-preset"></rd-time-preset>
-        <rd-flex-layout direction="row" gap="16">
-          <rd-data-table title="Destinations" rows='${JSON.stringify(rows)}' data-ref="dest-table"></rd-data-table>
-          <rd-detail-panel title="Destination detail" data-ref="dest-detail">
-            ${
-              selected
-                ? `<div class="da-detail-card">
-                    <h3>${localizedDestinationName(selected, state.locale)}</h3>
-                    <p>${formatRegionLabel(selected.region)} · ${formatVisitorCount(selected.visitorsCurrent)} visitors</p>
-                    <ul>${selected.visitorsHistoric.map((h) => `<li>${h.year}: ${formatVisitorCount(h.visitors)}</li>`).join('')}</ul>
-                   </div>`
-                : ''
-            }
-          </rd-detail-panel>
-        </rd-flex-layout>
-      </div>
-    </section>`;
-}
-
-function renderMapPanel(): string {
-  const active = GEO_MAP_PROVIDERS.find((p) => p.id === state.mapProvider);
-  return `
-    <p>2D slippy map with developer-selectable provider.</p>
-    <div class="da-provider-select">
-      <label for="map-provider">Map provider</label>
-      <select id="map-provider" data-map-provider>
-        ${GEO_MAP_PROVIDERS.map((p) => `<option value="${p.id}" ${p.id === state.mapProvider ? 'selected' : ''}>${p.label}</option>`).join('')}
-      </select>
-    </div>
-    ${active ? `<p class="da-note">${active.notes}</p>` : ''}
-    <rd-geo-map class="da-geo-map" data-ref="geo-map"></rd-geo-map>
-  `;
-}
-
-function renderGlobePanel(): string {
-  return `
-    <p>Three.js globe with destination markers — click a marker to select.</p>
-    <rd-three-geo-globe title="Destination globe (Three.js)" texture-url="${DEFAULT_WORLD_EQUIRECT_URL}" data-ref="geo-globe"></rd-three-geo-globe>
-    <p class="da-note">${DEFAULT_WORLD_EQUIRECT_ATTRIBUTION}</p>
-  `;
-}
-
-function renderMaps(): string {
-  return `
-    <section class="da-panel">
-      <h2>Maps</h2>
-      <rd-tabs-layout tabs='[{"id":"map","label":"Map"},{"id":"globe","label":"Globe"}]' active-tab-id="${state.mapsPanel}" data-ref="maps-tabs"></rd-tabs-layout>
-      <div class="da-maps-body">${state.mapsPanel === 'map' ? renderMapPanel() : renderGlobePanel()}</div>
-    </section>`;
-}
-
-function renderMedia(): string {
-  return `
-    <section class="da-panel">
-      <h2>Media</h2>
-      <p>YouTube embed and local video source for destination highlights.</p>
-      <rd-select-input label="Destination video" data-ref="media-dest"></rd-select-input>
-      <rd-youtube-embed class="da-youtube" data-ref="youtube-embed"></rd-youtube-embed>
-      <rd-video-source label="Local / file video source" data-ref="video-source"></rd-video-source>
-    </section>`;
-}
-
-function renderAuthoring(): string {
-  return `
-    <section class="da-panel">
-      <h2>Authoring</h2>
-      <p>Upload source video, preview equirect crop, and extract with ffmpeg.wasm.</p>
-      <div class="da-stack">
-        <rd-video-source label="Upload source video" data-ref="authoring-source"></rd-video-source>
-        <rd-equirect-viewport label="Equirect preview" data-ref="equirect-viewport"></rd-equirect-viewport>
-        <rd-wasm-media label="Extract output" data-ref="wasm-media"></rd-wasm-media>
-      </div>
-    </section>`;
-}
-
-function renderIntel(): string {
-  const filtered = MOCK_NEWS.filter((article) => {
-    const q = state.newsQuery.toLowerCase();
-    const matchesQuery =
-      !q ||
-      article.headline.toLowerCase().includes(q) ||
-      article.summary.toLowerCase().includes(q);
-    const matchesRegion = !state.newsRegion || article.region === state.newsRegion;
-    return matchesQuery && matchesRegion;
-  });
-  const selected = filtered.find((a) => a.id === state.selectedArticleId) ?? filtered[0];
-
-  return `
-    <section class="da-panel">
-      <h2>Intel</h2>
-      <p>Regional news discovery with mock headlines.</p>
-      <div class="da-stack">
-        <rd-role-gate label="News editor tools" status-text="Editor access" allowed-roles='["editor","admin"]' current-role="${state.userRole}">
-          <rd-news-search-box label="Search" placeholder="Search news…" value="${state.newsQuery}" data-ref="news-search"></rd-news-search-box>
-          <rd-news-region-select label="Region" placeholder="All regions" data-ref="news-region"></rd-news-region-select>
-        </rd-role-gate>
-        <rd-flex-layout direction="row" gap="16">
-          <rd-news-results-table title="News results" rows='${JSON.stringify(filtered)}' data-ref="news-table"></rd-news-results-table>
-          <rd-news-article-detail title="${selected?.headline ?? 'Article'}" data-ref="news-detail">
-            ${selected ? `<p>${selected.summary}</p><p><em>${selected.source} · ${selected.published}</em></p>` : ''}
-          </rd-news-article-detail>
-        </rd-flex-layout>
-      </div>
-    </section>`;
-}
-
-function renderPlan(): string {
-  const destOptions = MOCK_DESTINATIONS.map((d) => ({
-    value: d.id,
-    label: localizedDestinationName(d, state.locale),
-  }));
-
-  return `
-    <section class="da-panel">
-      <h2>Plan trip</h2>
-      <p>Trip planning, collaboration, and role-gated editor access.</p>
-      <div class="da-stack">
-        <rd-role-gate label="Trip editor" status-text="Editor workspace unlocked" allowed-roles='["editor","admin"]' current-role="${state.userRole}">
-          <rd-person-invite email-placeholder="planner@company.com"></rd-person-invite>
-          <rd-role-assign summary="Confirm collaborator access for this itinerary." role-options='[{"value":"viewer","label":"Viewer"},{"value":"editor","label":"Editor"},{"value":"admin","label":"Admin"}]'></rd-role-assign>
-          <rd-text-input label="Trip name" placeholder="Spring heritage tour" data-ref="trip-name"></rd-text-input>
-          <rd-select-input label="Primary destination" placeholder="Select destination…" options='${JSON.stringify(destOptions)}' data-ref="trip-dest"></rd-select-input>
-          <rd-date-range label="Trip dates" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}"></rd-date-range>
-          <rd-number-input label="Travelers" value="2" min="1"></rd-number-input>
-          <rd-checkbox-input label="Share itinerary with team" default-checked></rd-checkbox-input>
-          <rd-textarea-input label="Notes" placeholder="Visa requirements, rail passes…"></rd-textarea-input>
-        </rd-role-gate>
-        <rd-timer label="Itinerary refresh" tick-count="3"></rd-timer>
-      </div>
-    </section>`;
-}
-
-function renderViews(): string {
-  return `
-    <section class="da-panel">
-      <h2>Views</h2>
-      <p>Chart placeholders for journey and distribution views.</p>
-      <div class="da-stack da-stack--2">
-        <rd-pie-chart title="Visitor share by region"></rd-pie-chart>
-        <rd-line-chart title="Seasonal trend"></rd-line-chart>
-      </div>
-    </section>`;
-}
-
-function renderStack(): string {
-  return `
-    <section class="da-panel">
-      <h2>Stack</h2>
-      <p class="da-note">Infra panels (EnvConfig, database nodes, server scaffolds) ship in framework runtimes — out of scope for Web Components proof.</p>
-    </section>`;
-}
-
-function renderSettings(): string {
-  return `
-    <section class="da-panel">
-      <h2>Settings</h2>
-      <p>App base locale for developer i18n (<code>domain.i18n.app-language-select</code>).</p>
-      <rd-app-language-select data-ref="app-language-select"></rd-app-language-select>
-      <p class="da-note">Demo: destination names use <code>labels[locale]</code> from mock data when available.</p>
-    </section>`;
-}
-
-const SCREEN_RENDERERS: Record<DestinationAtlasScreenId, () => string> = {
-  about: renderAbout,
-  overview: renderOverview,
-  destinations: renderDestinations,
-  maps: renderMaps,
-  media: renderMedia,
-  authoring: renderAuthoring,
-  intel: renderIntel,
-  plan: renderPlan,
-  views: renderViews,
-  stack: renderStack,
-  settings: renderSettings,
+const mounted = {
+  shell: false,
+  screen: '' as DestinationAtlasScreenId | '',
+  mapsPanel: '' as 'map' | 'globe' | '',
 };
 
-function buildMapMarkers(): Array<{ id: string; lat: number; lng: number; label: string }> {
+let carouselIndex = 0;
+let tripStart = '2026-04-10';
+let tripEnd = '2026-04-17';
+let tripDuration = 8;
+let liveNews: { articles: LiveNewsArticle[] | null; warning: string | null; mode: string } = {
+  articles: null,
+  warning: null,
+  mode: 'mock',
+};
+let liveNewsRequest = 0;
+
+function setRouterMode(mode: ClientRouterMode): void {
+  routerMode = mode;
+  localStorage.setItem(STORAGE_ROUTER, mode);
+  render();
+}
+
+function screenHref(screenId: DestinationAtlasScreenId): string {
+  const mapsPanel = screenId === 'maps' ? atlas.mapsPanel : 'map';
+  const { pathname, search } = buildAtlasLocation(screenId, atlas.atlasQuery(), atlas.urlDefaults, mapsPanel);
+  return `${pathname}${search}`;
+}
+
+function wireOnce(el: Element | null, event: string, handler: EventListener): void {
+  if (!el || el.hasAttribute('data-wired')) {
+    return;
+  }
+  el.setAttribute('data-wired', event);
+  el.addEventListener(event, handler);
+}
+
+function destinationItems() {
+  return MOCK_DESTINATIONS.map((dest) => ({
+    id: dest.id,
+    label: localizedDestinationName(dest, atlas.locale),
+    meta: formatRegionLabel(dest.region),
+  }));
+}
+
+function buildMapMarkers() {
   return MOCK_DESTINATIONS.map((dest) => ({
     id: dest.id,
     lat: dest.lat,
     lng: dest.lng,
-    label: localizedDestinationName(dest, state.locale),
+    label: localizedDestinationName(dest, atlas.locale),
   }));
 }
 
-function mapView(): { lat: number; lng: number; zoom: number } {
-  const selected = MOCK_DESTINATIONS.find((dest) => dest.id === state.selectedId);
-  if (selected) {
-    return { lat: selected.lat, lng: selected.lng, zoom: 5 };
+function applyGeoMap(geoMap: Element): void {
+  const secrets = getConsumerSecrets();
+  const selected = getDestinationById(atlas.selectedId);
+  const view = atlas.mapViewOverride ?? (selected
+    ? { lat: selected.lat, lng: selected.lng, zoom: 10 }
+    : { lat: 20, lng: 0, zoom: 2 });
+  geoMap.setAttribute('provider', atlas.mapProvider);
+  geoMap.setAttribute('center', JSON.stringify({ lat: view.lat, lng: view.lng }));
+  geoMap.setAttribute('zoom', String(view.zoom));
+  geoMap.setAttribute('selected-id', atlas.selectedId);
+  const setProperty = (geoMap as { setProperty?: (name: string, value: unknown) => void }).setProperty;
+  if (typeof setProperty === 'function') {
+    setProperty.call(geoMap, 'markers', buildMapMarkers());
+  } else {
+    geoMap.setAttribute('markers', JSON.stringify(buildMapMarkers()));
   }
-  return { lat: 20, lng: 0, zoom: 2 };
+  if (atlas.mapProvider === 'google-maps' && secrets.googleMapsApiKey) {
+    geoMap.setAttribute('api-key', secrets.googleMapsApiKey);
+  } else {
+    geoMap.removeAttribute('api-key');
+  }
+  if (atlas.mapProvider === 'maplibre' && secrets.maplibreTileUrl) {
+    geoMap.setAttribute('tile-url', secrets.maplibreTileUrl);
+  } else {
+    geoMap.removeAttribute('tile-url');
+  }
+}
+
+function applyGlobe(globe: Element): void {
+  const setProperty = (globe as { setProperty?: (name: string, value: unknown) => void }).setProperty;
+  globe.setAttribute('texture-url', DEFAULT_WORLD_EQUIRECT_URL);
+  globe.setAttribute('selected-id', atlas.selectedId);
+  if (typeof setProperty === 'function') {
+    setProperty.call(globe, 'markers', buildMapMarkers());
+  } else {
+    globe.setAttribute('markers', JSON.stringify(buildMapMarkers()));
+  }
+}
+
+function wireDestinationList(root: HTMLElement): void {
+  root.querySelectorAll<HTMLButtonElement>('[data-dest-id]').forEach((button) => {
+    if (button.hasAttribute('data-wired')) {
+      return;
+    }
+    button.setAttribute('data-wired', 'click');
+    button.addEventListener('click', () => {
+      const id = button.dataset.destId;
+      if (id) {
+        atlas.setSelectedId(id);
+      }
+    });
+  });
 }
 
 function wireGeoMap(root: HTMLElement): void {
   const geoMap = root.querySelector('[data-ref="geo-map"]');
-  if (!geoMap) return;
-  const view = mapView();
-  geoMap.setAttribute('provider', state.mapProvider);
-  geoMap.setAttribute('center', JSON.stringify({ lat: view.lat, lng: view.lng }));
-  geoMap.setAttribute('zoom', String(view.zoom));
-  geoMap.setAttribute('markers', JSON.stringify(buildMapMarkers()));
-  geoMap.setAttribute('selected-id', state.selectedId);
-  if (state.mapProvider === 'google-maps' && GOOGLE_MAPS_API_KEY) {
-    geoMap.setAttribute('api-key', GOOGLE_MAPS_API_KEY);
+  if (!geoMap) {
+    return;
   }
-  geoMap.addEventListener('marker-select', (event) => {
-    state.selectedId = (event as CustomEvent<{ id: string }>).detail.id;
-    render();
+  applyGeoMap(geoMap);
+  wireOnce(geoMap, 'marker-select', (event) => {
+    const id = (event as CustomEvent<{ id?: string }>).detail?.id;
+    if (id) {
+      atlas.setSelectedId(id);
+    }
   });
 }
 
 function wireGlobe(root: HTMLElement): void {
   const globe = root.querySelector('[data-ref="geo-globe"]');
-  if (!globe) return;
-  globe.setAttribute('markers', JSON.stringify(buildMapMarkers()));
-  globe.setAttribute('selected-id', state.selectedId);
-  globe.addEventListener('marker-select', (event) => {
-    state.selectedId = (event as CustomEvent<{ id: string }>).detail.id;
-    render();
+  if (!globe) {
+    return;
+  }
+  applyGlobe(globe);
+  wireOnce(globe, 'marker-select', (event) => {
+    const id = (event as CustomEvent<{ id?: string }>).detail?.id;
+    if (!id) {
+      return;
+    }
+    if (id === atlas.selectedId) {
+      atlas.focusDestinationOnMap(id);
+      return;
+    }
+    atlas.setSelectedId(id);
   });
 }
 
-function wireMapsTabs(root: HTMLElement): void {
-  root.querySelector('[data-ref="maps-tabs"]')?.addEventListener('tab-change', (event) => {
-    state.mapsPanel = (event as CustomEvent<{ tabId: 'map' | 'globe' }>).detail.tabId;
+function wireMapsChrome(root: HTMLElement): void {
+  root.querySelectorAll<HTMLButtonElement>('[data-maps-panel]').forEach((button) => {
+    wireOnce(button, 'click', () => {
+      const panel = button.dataset.mapsPanel as 'map' | 'globe';
+      atlas.setMapsPanel(panel);
+    });
+  });
+  root.querySelector('[data-ref="map-provider"]')?.addEventListener('value-change', (event) => {
+    atlas.setMapProvider((event as CustomEvent<{ value: string }>).detail.value as typeof atlas.mapProvider);
+  });
+  root.querySelector('[data-ref="list-placement"]')?.addEventListener('value-change', (event) => {
+    atlas.setListPlacement((event as CustomEvent<{ value: string }>).detail.value as typeof atlas.listPlacement);
     render();
   });
+  root.querySelector('[data-ref="map-location"]')?.addEventListener('value-change', (event) => {
+    atlas.setMapLocationQuery((event as CustomEvent<{ value: string }>).detail.value);
+  });
+  root.querySelector('[data-ref="go-location"]')?.addEventListener('click', () => {
+    const resolved = resolveMapLocationQuery(atlas.mapLocationQuery, atlas.locale);
+    if (!resolved) {
+      atlas.setLocationError(
+        'No match — try a dataset destination (Tokyo, Paris, New York City…) or lat, lng (40.71, -74.01).',
+      );
+      render();
+      return;
+    }
+    atlas.setLocationError('');
+    const matched = MOCK_DESTINATIONS.find(
+      (dest) => localizedDestinationName(dest, atlas.locale).toLowerCase() === resolved.label.toLowerCase(),
+    );
+    if (matched) {
+      atlas.focusDestinationOnMap(matched.id);
+      return;
+    }
+    atlas.goToMapView(resolved);
+  });
+  root.querySelectorAll('[data-ref="open-integrations"]').forEach((el) => {
+    el.addEventListener('click', () => atlas.openSetting('integrations'));
+  });
+}
+
+function syncMaps(root: HTMLElement): void {
+  const explorer = root.querySelector('[data-ref="maps-explorer"]');
+  const toolbar = root.querySelector('[data-ref="maps-toolbar"]');
+  if (toolbar) {
+    toolbar.innerHTML = renderMapsToolbar(atlas);
+    wireMapsChrome(root);
+  }
+  if (!explorer) {
+    return;
+  }
+  if (mounted.mapsPanel !== atlas.mapsPanel) {
+    explorer.innerHTML = mapsExplorerMarkup(atlas);
+    mounted.mapsPanel = atlas.mapsPanel;
+    const footerHost = root.querySelector('.da-maps-panel__body');
+    footerHost?.querySelector('.da-maps-footer')?.remove();
+    if (atlas.mapsPanel === 'globe' && footerHost) {
+      footerHost.insertAdjacentHTML('beforeend', globeFooterMarkup());
+    }
+    wireDestinationList(root);
+    if (atlas.mapsPanel === 'map') {
+      wireGeoMap(root);
+    } else {
+      wireGlobe(root);
+    }
+    root.querySelectorAll<HTMLButtonElement>('[data-maps-panel]').forEach((button) => {
+      if (button.dataset.mapsPanel === atlas.mapsPanel) {
+        button.setAttribute('aria-current', 'page');
+      } else {
+        button.removeAttribute('aria-current');
+      }
+    });
+    return;
+  }
+  const list = root.querySelector('.rd-geo-explorer__list');
+  if (list) {
+    list.innerHTML = destinationListMarkup(destinationItems(), atlas.selectedId);
+    wireDestinationList(root);
+  }
+  const body = root.querySelector('.rd-geo-explorer__body');
+  body?.classList.toggle('rd-geo-explorer__body--list-left', atlas.listPlacement === 'left');
+  body?.classList.toggle('rd-geo-explorer__body--list-right', atlas.listPlacement === 'right');
+  const geoMap = root.querySelector('[data-ref="geo-map"]');
+  if (geoMap) {
+    applyGeoMap(geoMap);
+  }
+  const globe = root.querySelector('[data-ref="geo-globe"]');
+  if (globe) {
+    applyGlobe(globe);
+  }
+}
+
+function wireMaps(root: HTMLElement): void {
+  wireMapsChrome(root);
+  wireDestinationList(root);
+  if (atlas.mapsPanel === 'map') {
+    wireGeoMap(root);
+  } else {
+    wireGlobe(root);
+  }
+  mounted.mapsPanel = atlas.mapsPanel;
 }
 
 function wireDestinations(root: HTMLElement): void {
-  const search = root.querySelector('[data-ref="dest-search"]');
-  search?.addEventListener('value-change', (event) => {
-    state.destSearch = (event as CustomEvent<{ value: string }>).detail.value;
+  root.querySelector('[data-ref="dest-search"]')?.addEventListener('value-change', (event) => {
+    atlas.setDestSearch((event as CustomEvent<{ value: string }>).detail.value);
     render();
   });
-
-  const region = root.querySelector('[data-ref="dest-region"]');
-  region?.setAttribute('options', JSON.stringify([{ value: '', label: 'All regions' }, ...REGION_OPTIONS]));
-  region?.setAttribute('value', state.destRegion);
-  region?.addEventListener('value-change', (event) => {
-    state.destRegion = (event as CustomEvent<{ value: string }>).detail.value;
+  root.querySelector('[data-ref="dest-region"]')?.addEventListener('value-change', (event) => {
+    atlas.setDestRegion((event as CustomEvent<{ value: string }>).detail.value);
     render();
   });
-
+  root.querySelector('[data-ref="visit-period"]')?.addEventListener('range-change', (event) => {
+    const detail = (event as CustomEvent<{ startDate: string; endDate: string }>).detail;
+    atlas.setVisitPeriod(detail);
+    render();
+  });
   root.querySelector('[data-ref="time-preset"]')?.addEventListener('preset-change', (event) => {
-    state.timePreset = (event as CustomEvent<{ presetId: string }>).detail.presetId;
+    atlas.setTimePreset((event as CustomEvent<{ presetId: string }>).detail.presetId);
     render();
   });
-
   root.querySelector('[data-ref="dest-table"]')?.addEventListener('row-select', (event) => {
-    state.selectedId = (event as CustomEvent<{ id: string }>).detail.id;
-    render();
+    if (atlas.userRole === 'viewer') {
+      return;
+    }
+    atlas.setSelectedId((event as CustomEvent<{ id: string }>).detail.id);
   });
-}
-
-function wireIntel(root: HTMLElement): void {
-  root.querySelector('[data-ref="news-search"]')?.addEventListener('search', (event) => {
-    state.newsQuery = (event as CustomEvent<{ query: string }>).detail.query;
-    render();
-  });
-
-  const region = root.querySelector('[data-ref="news-region"]');
-  region?.setAttribute('options', JSON.stringify([{ value: '', label: 'All regions' }, ...REGION_OPTIONS]));
-  region?.setAttribute('value', state.newsRegion);
-  region?.addEventListener('value-change', (event) => {
-    state.newsRegion = (event as CustomEvent<{ value: string }>).detail.value;
-    render();
-  });
-
-  root.querySelector('[data-ref="news-table"]')?.addEventListener('row-select', (event) => {
-    state.selectedArticleId = (event as CustomEvent<{ id: string }>).detail.id;
-    render();
+  root.querySelector('[data-ref="view-on-map"]')?.addEventListener('click', () => {
+    atlas.focusDestinationOnMap(atlas.selectedId);
   });
 }
 
 function wireMedia(root: HTMLElement): void {
-  const select = root.querySelector('[data-ref="media-dest"]');
-  const withVideo = MOCK_DESTINATIONS.filter((d) => d.youtubeId);
-  select?.setAttribute(
-    'options',
-    JSON.stringify(withVideo.map((d) => ({ value: d.id, label: localizedDestinationName(d, state.locale) }))),
-  );
-  select?.setAttribute('value', state.selectedId);
-  select?.addEventListener('value-change', (event) => {
-    state.selectedId = (event as CustomEvent<{ value: string }>).detail.value;
+  root.querySelector('[data-ref="media-flat"]')?.addEventListener('value-change', (event) => {
+    atlas.setSelectedId((event as CustomEvent<{ value: string }>).detail.value);
+  });
+  root.querySelector('[data-ref="media-360"]')?.addEventListener('value-change', (event) => {
+    atlas.openAuthoringForDestination((event as CustomEvent<{ value: string }>).detail.value);
+  });
+}
+
+let liveNewsKey = '';
+
+function wireIntel(root: HTMLElement): void {
+  root.querySelector('[data-ref="news-search"]')?.addEventListener('search', (event) => {
+    atlas.setNewsQuery((event as CustomEvent<{ query: string }>).detail.query);
     render();
   });
-
-  const embed = root.querySelector('[data-ref="youtube-embed"]');
-  const selected = MOCK_DESTINATIONS.find((d) => d.id === state.selectedId);
-  if (embed && selected?.youtubeId) {
-    embed.setAttribute('video-id', selected.youtubeId);
-    embed.setAttribute('embed-title', `${localizedDestinationName(selected, state.locale)} — destination video`);
+  root.querySelector('[data-ref="news-region"]')?.addEventListener('value-change', (event) => {
+    atlas.setNewsRegion((event as CustomEvent<{ value: string }>).detail.value);
+    render();
+  });
+  root.querySelector('[data-ref="news-table"]')?.addEventListener('row-select', (event) => {
+    atlas.setSelectedArticleId((event as CustomEvent<{ id: string }>).detail.id);
+    render();
+  });
+  root.querySelectorAll('[data-ref="open-integrations"]').forEach((el) => {
+    el.addEventListener('click', () => atlas.openSetting('integrations'));
+  });
+  const requestId = ++liveNewsRequest;
+  const apiKey = getConsumerSecrets().newsApiKey;
+  const newsKey = `${apiKey}|${atlas.newsQuery}|${atlas.newsRegion}`;
+  if (!apiKey) {
+    liveNews = { articles: null, warning: null, mode: 'mock' };
+    liveNewsKey = newsKey;
+    return;
   }
+  if (newsKey === liveNewsKey) {
+    return;
+  }
+  liveNewsKey = newsKey;
+  void fetchLiveNewsArticles({ apiKey, query: atlas.newsQuery, region: atlas.newsRegion }).then((result) => {
+    if (requestId !== liveNewsRequest || atlas.screen !== 'intel') {
+      return;
+    }
+    if (!result) {
+      liveNews = {
+        articles: null,
+        warning:
+          'NEWS_API_KEY is configured but the browser blocked the request (typical NewsAPI CORS). Showing mock headlines.',
+        mode: 'mock',
+      };
+    } else if (result.articles.length) {
+      liveNews = { articles: result.articles, warning: result.warning ?? null, mode: 'live' };
+    } else {
+      liveNews = {
+        articles: null,
+        warning: result.warning ?? 'News API returned no results — showing mock headlines.',
+        mode: 'mock',
+      };
+    }
+    render();
+  });
+}
+
+function wireViews(root: HTMLElement): void {
+  const slidesCount = MOCK_DESTINATIONS.length;
+  root.querySelectorAll<HTMLButtonElement>('[data-carousel-dir]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const dir = Number(button.dataset.carouselDir);
+      carouselIndex = (carouselIndex + dir + slidesCount) % slidesCount;
+      atlas.setSelectedId(MOCK_DESTINATIONS[carouselIndex]?.id ?? atlas.selectedId);
+    });
+  });
+  root.querySelectorAll<HTMLButtonElement>('[data-carousel-index]').forEach((button) => {
+    button.addEventListener('click', () => {
+      carouselIndex = Number(button.dataset.carouselIndex);
+      atlas.setSelectedId(MOCK_DESTINATIONS[carouselIndex]?.id ?? atlas.selectedId);
+    });
+  });
+}
+
+function bindLocaleSelect(root: ParentNode): void {
+  root.querySelectorAll('[data-ref="app-language-select"]').forEach((el) => {
+    el.setAttribute('locales', JSON.stringify(DEFAULT_APP_LOCALES));
+    el.setAttribute('value', atlas.locale);
+    el.setAttribute('label', 'App locale');
+    wireOnce(el, 'locale-change', (event) => {
+      const locale = (event as CustomEvent<{ locale: string }>).detail.locale;
+      if (locale) {
+        atlas.setLocale(locale);
+      }
+    });
+  });
 }
 
 function wireSettings(root: HTMLElement): void {
-  const languageSelect = root.querySelector('[data-ref="app-language-select"]');
-  if (!languageSelect) return;
-  languageSelect.setAttribute('locales', JSON.stringify(DEFAULT_APP_LOCALES));
-  languageSelect.setAttribute('value', state.locale);
-  languageSelect.setAttribute('label', 'App language');
-  languageSelect.setAttribute('placeholder', 'Select language…');
-  languageSelect.addEventListener('locale-change', (event) => {
-    state.locale = (event as CustomEvent<{ locale: string }>).detail.locale;
+  bindLocaleSelect(root);
+  root.querySelector('[data-ref="settings-role"]')?.addEventListener('value-change', (event) => {
+    atlas.setUserRole((event as CustomEvent<{ value: string }>).detail.value as typeof atlas.userRole);
+  });
+  root.querySelector('[data-ref="settings-map-provider"]')?.addEventListener('value-change', (event) => {
+    atlas.setMapProvider((event as CustomEvent<{ value: string }>).detail.value as typeof atlas.mapProvider);
+  });
+  root.querySelector('[data-ref="settings-selected"]')?.addEventListener('value-change', (event) => {
+    atlas.setSelectedId((event as CustomEvent<{ value: string }>).detail.value);
+  });
+  root.querySelector('[data-ref="theme-select"]')?.addEventListener('change', (event) => {
+    themeStore.setTheme((event.target as HTMLSelectElement).value as ThemePreference);
     render();
+  });
+  const secrets = getConsumerSecrets();
+  root.querySelector('[data-ref="integrations"] rd-collapsible')?.addEventListener('open-change', (event) => {
+    atlas.setIntegrationsOpen((event as CustomEvent<{ open: boolean }>).detail.open);
+  });
+  root.querySelector('[data-ref="ai-settings"] rd-collapsible')?.addEventListener('open-change', (event) => {
+    atlas.setAiOpen((event as CustomEvent<{ open: boolean }>).detail.open);
+  });
+  root.querySelectorAll('[data-byok-key]').forEach((el) => {
+    el.addEventListener('value-change', (event) => {
+      const key = (el as HTMLElement).dataset.byokKey;
+      if (key) {
+        secrets.setDraftValue(key, (event as CustomEvent<{ value: string }>).detail.value);
+      }
+    });
+  });
+  root.querySelectorAll('[data-ref="remember-keys"]').forEach((el) => {
+    el.addEventListener('change', (event) => {
+      secrets.setRememberKeys((event.target as HTMLInputElement).checked);
+    });
+  });
+  root.querySelectorAll('[data-ref="save-keys"]').forEach((el) => {
+    el.addEventListener('click', () => {
+      void secrets.save();
+    });
+  });
+  root.querySelectorAll('[data-ref="clear-keys"]').forEach((el) => {
+    el.addEventListener('click', () => {
+      void secrets.clearAll();
+    });
+  });
+  root.querySelector('[data-ref="feedback-draft"]')?.addEventListener('value-change', (event) => {
+    atlas.setFeedbackDraft((event as CustomEvent<{ value: string }>).detail.value);
+  });
+  root.querySelector('[data-ref="send-feedback"]')?.addEventListener('click', () => {
+    atlas.setFeedbackDraft('');
+    atlas.setFeedbackSent(true);
+    render();
+  });
+
+  if (atlas.highlightTarget) {
+    const target =
+      atlas.highlightTarget === 'theme'
+        ? root.querySelector('[data-ref="theme-toggle"]')
+        : atlas.highlightTarget === 'integrations'
+          ? root.querySelector('[data-ref="integrations"]')
+          : atlas.highlightTarget === 'ai'
+            ? root.querySelector('[data-ref="ai-settings"]')
+            : atlas.highlightTarget === 'feedback'
+              ? root.querySelector('[data-ref="feedback"]')
+              : root.querySelector(`[data-setting="${atlas.highlightTarget}"]`);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.setTimeout(() => {
+      atlas.setHighlightTarget(null);
+      render();
+    }, 2400);
+  }
+}
+
+function wireAuthoring(root: HTMLElement): void {
+  const host = root.querySelector<HTMLElement>('[data-ref="react-authoring-host"]');
+  if (!host) {
+    return;
+  }
+  mountReactComponent(host, AuthoringScreenReact as never, {
+    locale: atlas.locale,
+    selectedId: atlas.selectedId,
   });
 }
 
-function render(): void {
-  const root = document.getElementById('app');
-  if (!root) return;
-
-  const nav = DESTINATION_ATLAS_SCREENS.flatMap((s) => {
-    if (s.id === 'settings') {
-      return [
-        `<button type="button" data-screen="settings">Settings</button>`,
-        `<select data-role aria-label="User role">
-          <option value="viewer" ${state.userRole === 'viewer' ? 'selected' : ''}>Viewer</option>
-          <option value="editor" ${state.userRole === 'editor' ? 'selected' : ''}>Editor</option>
-          <option value="admin" ${state.userRole === 'admin' ? 'selected' : ''}>Admin</option>
-        </select>`,
-      ];
+function renderScreenHtml(): string {
+  switch (atlas.screen) {
+    case 'about':
+      return renderAbout();
+    case 'overview':
+      return renderOverview(atlas);
+    case 'destinations':
+      return renderDestinations(atlas);
+    case 'maps':
+      return renderMaps(atlas);
+    case 'media':
+      return renderMedia(atlas);
+    case 'authoring':
+      return renderAuthoring();
+    case 'intel':
+      return renderIntel(atlas, liveNews);
+    case 'plan':
+      return renderPlan(atlas, { start: tripStart, end: tripEnd, duration: tripDuration });
+    case 'views': {
+      const selectedIndex = MOCK_DESTINATIONS.findIndex((dest) => dest.id === atlas.selectedId);
+      if (selectedIndex >= 0) {
+        carouselIndex = selectedIndex;
+      }
+      return renderViews(atlas, carouselIndex);
     }
-    return [
-      `<button type="button" data-screen="${s.id}" aria-current="${state.screen === s.id ? 'page' : 'false'}">${s.label}</button>`,
-    ];
-  }).join('');
+    case 'stack':
+      return renderStack(atlas);
+    case 'settings':
+      return renderSettings(atlas, themeStore.theme);
+    default:
+      return renderAbout();
+  }
+}
 
+function wireScreen(root: HTMLElement): void {
+  if (atlas.screen === 'maps') {
+    wireMaps(root);
+  }
+  if (atlas.screen === 'destinations') {
+    wireDestinations(root);
+  }
+  if (atlas.screen === 'media') {
+    wireMedia(root);
+  }
+  if (atlas.screen === 'intel') {
+    wireIntel(root);
+  }
+  if (atlas.screen === 'views') {
+    wireViews(root);
+  }
+  if (atlas.screen === 'settings') {
+    wireSettings(root);
+  }
+  if (atlas.screen === 'authoring') {
+    wireAuthoring(root);
+  }
+  if (atlas.screen === 'plan') {
+    root.querySelector('[data-ref="trip-dest"]')?.addEventListener('value-change', (event) => {
+      atlas.setSelectedId((event as CustomEvent<{ value: string }>).detail.value);
+    });
+    root.querySelector('[data-ref="trip-dates"]')?.addEventListener('range-change', (event) => {
+      const detail = (event as CustomEvent<{ startDate: string; endDate: string }>).detail;
+      tripStart = detail.startDate;
+      tripEnd = detail.endDate;
+      const start = Date.parse(`${tripStart}T12:00:00`);
+      const end = Date.parse(`${tripEnd}T12:00:00`);
+      if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {
+        tripDuration = Math.round((end - start) / 86_400_000) + 1;
+        root.querySelector('[data-ref="trip-duration"]')?.setAttribute('value', String(tripDuration));
+      }
+    });
+    root.querySelector('[data-ref="trip-duration"]')?.addEventListener('value-change', (event) => {
+      const value = Number((event as CustomEvent<{ value: string | number }>).detail.value);
+      if (Number.isFinite(value) && value >= 1) {
+        tripDuration = value;
+      }
+    });
+  }
+}
+
+function updateChrome(root: HTMLElement): void {
+  const summary = root.querySelector('[data-ref="context-summary"]');
+  if (summary) {
+    summary.innerHTML = contextSummaryMarkup(atlas, themeStore.theme);
+    summary.querySelectorAll<HTMLButtonElement>('[data-setting-chip]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.settingChip;
+        if (key === 'theme' || key === 'role' || key === 'locale' || key === 'map' || key === 'selected') {
+          atlas.openSetting(key);
+        }
+      });
+    });
+  }
+  const routerSelect = root.querySelector<HTMLSelectElement>('[data-ref="router-mode"]');
+  if (routerSelect) {
+    routerSelect.value = routerMode;
+  }
+  const visibleScreens = DESTINATION_ATLAS_SCREENS.filter((screen) =>
+    screenAllowedForRole(screen.id, atlas.userRole),
+  );
+  const settingsIndex = visibleScreens.findIndex((screen) => screen.id === 'settings');
+  const before = settingsIndex >= 0 ? visibleScreens.slice(0, settingsIndex) : visibleScreens;
+  const after = settingsIndex >= 0 ? visibleScreens.slice(settingsIndex) : [];
+  const nav = root.querySelector('[data-ref="screen-nav"]');
+  if (nav) {
+    nav.innerHTML = [
+      ...before.map(
+        (screen) =>
+          `<a href="${screenHref(screen.id)}" class="da-tabbar__tab" data-screen="${screen.id}"${atlas.screen === screen.id ? ' aria-current="page"' : ''}>${screen.label}</a>`,
+      ),
+      `<button type="button" class="da-tabbar__tab" data-ref="scout-tab"${atlas.settingsScoutFocus ? ' aria-current="page"' : ''}>Scout</button>`,
+      ...after.map(
+        (screen) =>
+          `<a href="${screenHref(screen.id)}" class="da-tabbar__tab" data-screen="${screen.id}"${atlas.screen === screen.id && !atlas.settingsScoutFocus ? ' aria-current="page"' : ''}>${screen.label}</a>`,
+      ),
+    ].join('');
+    nav.querySelectorAll<HTMLAnchorElement>('[data-screen]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        atlas.setScreen(link.dataset.screen as DestinationAtlasScreenId);
+      });
+    });
+    nav.querySelector('[data-ref="scout-tab"]')?.addEventListener('click', () => atlas.openScoutSettings());
+  }
+  const source = root.querySelector('[data-ref="source-code"]');
+  if (source) {
+    source.textContent = SCREEN_SOURCES[atlas.screen] ?? '';
+  }
+  root.querySelector('[data-ref="source-blurb"]')?.replaceChildren(
+    document.createTextNode(
+      'Custom elements, props, and nested structure for this screen.',
+    ),
+  );
+  root.querySelectorAll('[data-mobile-view]').forEach((el) => {
+    const view = (el as HTMLElement).dataset.mobileView;
+    el.classList.toggle('is-active', view === atlas.mobileView);
+    el.setAttribute('aria-selected', view === atlas.mobileView ? 'true' : 'false');
+  });
+  root.querySelector('[data-ref="preview-pane"]')?.classList.toggle(
+    'da-workbench__pane--hidden-mobile',
+    atlas.mobileView === 'source',
+  );
+  root.querySelector('[data-ref="source-pane"]')?.classList.toggle(
+    'da-workbench__pane--hidden-mobile',
+    atlas.mobileView === 'preview',
+  );
+}
+
+function ensureShell(root: HTMLElement): void {
+  if (mounted.shell) {
+    return;
+  }
   root.innerHTML = `
     <div class="da-shell">
       <header class="da-header">
         <h1>Destination Atlas</h1>
-        <p>Web Components proof — full Destination Atlas UX with <code>&lt;rd-*&gt;</code> custom elements</p>
-        <div class="da-locale-bar">
-          <span>Locale: <strong>${state.locale}</strong></span>
-          <span>Role: <strong>${state.userRole}</strong></span>
-          <span>Selected: <strong>${state.selectedId || 'none'}</strong></span>
-        </div>
+        <p>Current and historic information about world locations — Web Components proof (DAS-159)</p>
       </header>
-      <nav class="da-nav" aria-label="Screens">${nav}</nav>
-      ${SCREEN_RENDERERS[state.screen]()}
+      <div class="da-body-row">
+        <div class="da-preview-column">
+          <div class="da-context-strip">
+            ${routerModeMarkup(routerMode)}
+            <div class="da-context-summary" role="group" aria-label="Current app context" data-ref="context-summary"></div>
+          </div>
+          <nav class="da-nav da-tabbar" aria-label="Screens" data-ref="screen-nav"></nav>
+          <div class="da-workbench-host">
+            <div class="da-workbench__mobile-toggle" role="tablist" aria-label="Preview or source">
+              <button type="button" role="tab" data-mobile-view="preview">Atlas preview</button>
+              <button type="button" role="tab" data-mobile-view="source">Component source</button>
+            </div>
+            <div class="da-workbench__preview" data-ref="preview-pane">
+              <div data-ref="screen-root"></div>
+            </div>
+          </div>
+        </div>
+        <aside class="da-workbench__source" data-ref="source-pane" aria-label="Component source">
+          <header class="da-workbench__source-header">
+            <h3>Component source</h3>
+            <p data-ref="source-blurb"></p>
+          </header>
+          <pre class="da-workbench__code"><code data-ref="source-code"></code></pre>
+        </aside>
+      </div>
     </div>
   `;
-
-  root.querySelectorAll('[data-screen]').forEach((el) => {
+  root.querySelector('[data-ref="router-mode"]')?.addEventListener('change', (event) => {
+    setRouterMode((event.target as HTMLSelectElement).value as ClientRouterMode);
+  });
+  root.querySelectorAll('[data-mobile-view]').forEach((el) => {
     el.addEventListener('click', () => {
-      state.screen = (el as HTMLElement).dataset.screen as DestinationAtlasScreenId;
+      atlas.setMobileView((el as HTMLElement).dataset.mobileView as 'preview' | 'source');
       render();
     });
   });
-
-  root.querySelector('[data-role]')?.addEventListener('change', (event) => {
-    state.userRole = (event.target as HTMLSelectElement).value as UserRole;
-    render();
-  });
-
-  root.querySelector('[data-map-provider]')?.addEventListener('change', (event) => {
-    state.mapProvider = (event.target as HTMLSelectElement).value as GeoMapProvider;
-    render();
-  });
-
-  if (state.screen === 'maps') {
-    wireMapsTabs(root);
-    if (state.mapsPanel === 'map') wireGeoMap(root);
-    else wireGlobe(root);
-  }
-  if (state.screen === 'destinations') wireDestinations(root);
-  if (state.screen === 'intel') wireIntel(root);
-  if (state.screen === 'media') wireMedia(root);
-  if (state.screen === 'settings') wireSettings(root);
+  mounted.shell = true;
 }
 
+function render(): void {
+  const root = document.getElementById('app');
+  if (!root) {
+    return;
+  }
+  atlas.reconcileRoute();
+  ensureShell(root);
+  updateChrome(root);
+
+  const screenRoot = root.querySelector<HTMLElement>('[data-ref="screen-root"]');
+  if (!screenRoot) {
+    return;
+  }
+
+  const screenChanged = mounted.screen !== atlas.screen;
+  if (screenChanged) {
+    if (mounted.screen === 'authoring' && atlas.screen !== 'authoring') {
+      unmountReactComponent();
+    }
+    screenRoot.innerHTML = renderScreenHtml();
+    mounted.screen = atlas.screen;
+    mounted.mapsPanel = atlas.screen === 'maps' ? atlas.mapsPanel : '';
+    wireScreen(root);
+    return;
+  }
+
+  if (atlas.screen === 'maps') {
+    syncMaps(root);
+    return;
+  }
+  if (atlas.screen === 'authoring') {
+    wireAuthoring(root);
+    return;
+  }
+
+  screenRoot.innerHTML = renderScreenHtml();
+  wireScreen(root);
+}
+
+subscribeRouter(render);
+subscribeSecrets(render);
+atlas.reconcileRoute();
 render();

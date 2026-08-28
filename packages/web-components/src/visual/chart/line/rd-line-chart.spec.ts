@@ -22,8 +22,18 @@ describe('rd-line-chart', () => {
     el.setAttribute('points', JSON.stringify([{ x: 'a', y: 10 }, { x: 'b', y: 90 }]));
     document.body.appendChild(el);
     const polyline = el.querySelector('polyline');
-    expect(polyline?.getAttribute('points')).toContain('0,');
-    expect(polyline?.getAttribute('points')).toContain('240,');
+    expect(polyline?.getAttribute('points')).toContain('58,');
+    expect(polyline?.getAttribute('points')).toContain('308,');
+    el.remove();
+  });
+
+  it('renders axis labels when provided', () => {
+    const el = document.createElement(RD_LINE_CHART_TAG);
+    el.setAttribute('x-axis-label', 'Year');
+    el.setAttribute('y-axis-label', 'Total visitors');
+    document.body.appendChild(el);
+    expect(el.textContent).toContain('Year');
+    expect(el.textContent).toContain('Total visitors');
     el.remove();
   });
 });

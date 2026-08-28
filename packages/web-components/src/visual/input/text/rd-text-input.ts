@@ -20,7 +20,7 @@ export class RdTextInputElement extends RosettaAtomElement {
   static readonly tagName = RD_TEXT_INPUT_TAG;
 
   static get observedAttributes(): string[] {
-    return ["label","placeholder","required","value","default-value"];
+    return ['label', 'placeholder', 'required', 'value', 'default-value', 'input-type'];
   }
 
   protected buildMarkup(): string {
@@ -28,10 +28,11 @@ export class RdTextInputElement extends RosettaAtomElement {
     const placeholder = this.readAttr('placeholder');
     const value = this.readAttr('value') || this.readAttr('default-value');
     const required = this.hasAttribute('required') ? ' required' : '';
+    const inputType = this.readAttr('input-type', 'text') === 'password' ? 'password' : 'text';
     return `
       <section class="rd-input-text" data-testid="rd-input-text">
         ${label ? `<span class="rd-field__label" id="${this.id || 'rd-input-text'}-label">${this.esc(label)}</span>` : ''}
-        <input type="text" class="rd-input" data-ref="input" placeholder="${this.esc(placeholder)}" value="${this.esc(value)}"${required}${label ? ` aria-labelledby="${this.id || 'rd-input-text'}-label"` : ''} />
+        <input type="${inputType}" class="rd-input" data-ref="input" placeholder="${this.esc(placeholder)}" value="${this.esc(value)}"${required}${label ? ` aria-labelledby="${this.id || 'rd-input-text'}-label"` : ''} />
         <div data-ref="slot"></div>
       </section>`;
   }
