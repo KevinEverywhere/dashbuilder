@@ -56,8 +56,8 @@
             [class.preview__node--fullscreen]="isFullscreenNode(node)"
             [style.left.px]="node.layout?.x ?? 24"
             [style.top.px]="node.layout?.y ?? 24"
-            [style.width.px]="node.layout?.width ?? 220"
-            [style.height.px]="node.layout?.height ?? 72"
+            [style.width.px]="previewNodeWidth(node)"
+            [style.height.px]="previewNodeHeight(node)"
             [style.zIndex]="sortedPreviewNodes().length - index"
           >
             <app-preview-node [node]="node" />

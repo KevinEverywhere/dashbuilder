@@ -54,14 +54,14 @@ const FORM_INPUT_TYPES = new Set([
   'visual.input.date-range',
 ]);
 
-const LABEL_LINE_HEIGHT = 20;
-const FIELD_GAP = 6;
-const INPUT_HEIGHT = 38;
-const FORM_FIELD_PADDING = 8;
-const CHECKBOX_HEIGHT = 32;
+const LABEL_LINE_HEIGHT = 18;
+const FIELD_GAP = 4;
+const INPUT_HEIGHT = 36;
+const FORM_FIELD_PADDING = 0;
+const CHECKBOX_HEIGHT = 28;
 const TEXTAREA_ROW_HEIGHT = 22;
 /** Extra preview height beyond single-line before text becomes multiline. */
-const TEXT_MULTILINE_THRESHOLD_PX = 16;
+const TEXT_MULTILINE_THRESHOLD_PX = 24;
 
 const DEFAULT_FORM_FIELD_WIDTH = 280;
 const DEFAULT_FORM_FIELD_HEIGHT =

@@ -147,6 +147,14 @@ export class PreviewPanelComponent {
     return resolvePresentationDimensions(node)?.fullscreen === true;
   }
 
+  protected previewNodeWidth(node: ComponentNode): number {
+    return resolvePresentationDimensions(node)?.width ?? node.layout?.width ?? 220;
+  }
+
+  protected previewNodeHeight(node: ComponentNode): number {
+    return estimatePreviewNodeHeight(node);
+  }
+
   private buildPreviewLoadPayload(): PreviewLoadPayload {
     const project = this.state.project();
     const composite = this.state.composite();

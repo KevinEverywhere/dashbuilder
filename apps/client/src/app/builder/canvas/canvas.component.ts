@@ -448,10 +448,12 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     const deltaY = event.clientY - resizeState.startClientY;
     const node = this.state.nodes().find((item) => item.id === resizeState.nodeId);
     const minHeight = node ? estimateCanvasNodeHeight(node) : CANVAS_MIN_NODE_HEIGHT;
+    const rawHeight = resizeState.originHeight + deltaY;
+    const nextHeight = clampCanvasNodeHeight(Math.max(minHeight, rawHeight));
 
     this.state.updateNodeLayout(resizeState.nodeId, {
       width: clampCanvasNodeWidth(resizeState.originWidth + deltaX),
-      height: clampCanvasNodeHeight(Math.max(minHeight, resizeState.originHeight + deltaY)),
+      height: nextHeight,
     }, { skipHistory: true });
   }
 

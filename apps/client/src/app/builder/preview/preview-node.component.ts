@@ -159,13 +159,6 @@ export class PreviewNodeComponent {
     return textInputUsesMultiline(this.node());
   }
 
-  protected onBorderToggle(event: Event): void {
-    const target = event.target;
-    if (!(target instanceof HTMLInputElement)) {
-      return;
-    }
-    this.state.updateNodeProperty(this.node().id, 'border', target.checked);
-  }
   protected readonly chartPoints = computed(
     () => this.slice()?.chartPoints ?? this.previewData.bundle().chartPoints,
   );
