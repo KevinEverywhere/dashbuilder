@@ -12,4 +12,10 @@ describe('BarChart', () => {
     render(<BarChart ref={ref} />);
     expect(ref.current).toBeTruthy();
   });
+
+  it('renders provided bar labels', () => {
+    render(<BarChart title="2024 visitors" bars={[{ label: 'Cusco', value: 12 }]} />);
+    expect(screen.getByRole('img', { name: '2024 visitors' })).toBeTruthy();
+    expect(screen.getByText('Cusco')).toBeTruthy();
+  });
 });

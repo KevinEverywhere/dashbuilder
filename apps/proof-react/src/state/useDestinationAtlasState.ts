@@ -148,6 +148,8 @@ export function useDestinationAtlasState(initialSelectedId: string): Destination
 
   const setSelectedId = useCallback(
     (id: string) => {
+      setMapViewOverride(null);
+      setMapLocationQuery('');
       navigateAtlas(screen, { ...atlasQuery, dest: id });
     },
     [atlasQuery, navigateAtlas, screen],

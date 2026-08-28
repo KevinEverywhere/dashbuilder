@@ -6,19 +6,19 @@ test.describe('Builder export wizard', () => {
     await openBuilder(page);
   });
 
-  test('shows UI framework picker on open', async ({ page }) => {
+  test('locks the UI picker to the chosen React stack', async ({ page }) => {
     await page.getByTestId('export-button').click();
     await expect(page.getByTestId('export-wizard')).toBeVisible();
     await expect(page.getByTestId('export-wizard-ui-targets')).toBeVisible();
     await expect(page.getByTestId('export-wizard-ui-react')).toBeVisible();
-    await expect(page.getByTestId('export-wizard-ui-angular')).toBeVisible();
-    await expect(page.getByTestId('export-wizard-ui-vue')).toBeVisible();
-    await expect(page.getByTestId('export-wizard-ui-svelte')).toBeVisible();
+    await expect(page.getByTestId('export-wizard-ui-angular')).toHaveCount(0);
+    await expect(page.getByTestId('export-wizard-ui-vue')).toHaveCount(0);
+    await expect(page.getByTestId('export-wizard-ui-svelte')).toHaveCount(0);
     await expect(page.getByTestId('export-wizard-server-targets')).toBeVisible();
     await expect(page.getByTestId('export-wizard-server-nest')).toBeVisible();
     await expect(page.getByTestId('export-wizard-server-express')).toBeVisible();
     await expect(page.getByTestId('export-wizard-server-next')).toBeVisible();
-    await expect(page.getByTestId('export-wizard-server-nuxt')).toBeVisible();
+    await expect(page.getByTestId('export-wizard-server-nuxt')).toHaveCount(0);
     await expect(page.getByTestId('export-wizard-database-targets')).toBeVisible();
     await expect(page.getByTestId('export-wizard-database-postgresql')).toBeVisible();
     await expect(page.getByTestId('export-wizard-database-mongodb')).toBeVisible();
@@ -62,7 +62,8 @@ test.describe('Builder export wizard', () => {
     expect(download.suggestedFilename()).toMatch(/-export\.zip$/);
   });
 
-  test('previews Angular UI files when Angular target is selected', async ({ page }) => {
+  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
+  test.skip('previews Angular UI files when Angular target is selected', async ({ page }) => {
     await addFromPalette(page, 'infra.postgresql');
     await addFromPalette(page, 'infra.server.nest');
     await addFromPalette(page, 'visual.table');
@@ -85,7 +86,8 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
-  test('previews Vue UI files when Vue target is selected', async ({ page }) => {
+  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
+  test.skip('previews Vue UI files when Vue target is selected', async ({ page }) => {
     await addFromPalette(page, 'infra.postgresql');
     await addFromPalette(page, 'infra.server.nest');
     await addFromPalette(page, 'visual.table');
@@ -108,7 +110,8 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
-  test('previews Svelte UI files when Svelte target is selected', async ({ page }) => {
+  // Re-enable on the matching runtime ticket. Export UI is locked to the welcome stack (DAS-154).
+  test.skip('previews Svelte UI files when Svelte target is selected', async ({ page }) => {
     await addFromPalette(page, 'infra.postgresql');
     await addFromPalette(page, 'infra.server.nest');
     await addFromPalette(page, 'visual.table');

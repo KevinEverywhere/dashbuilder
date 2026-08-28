@@ -1,12 +1,19 @@
-import type { ExportIR } from '@rosettadash/core';
+import type { ExportIR, IRComponent } from '@rosettadash/core';
 import { generateNumericFieldsRuntimeFile, irUsesNumericPresentation, numericPresentationCssLines } from '@rosettadash/core';
 import { collectExportRoleIds, irHasRoleGates } from '@rosettadash/core';
 import { buildDashboardContext } from './binding-resolver';
-import { generateComponentFile } from './component-templates';
+import { generateComponentFile, generateScrollRegion } from './component-templates';
 import { generateEquirectFilterHelperFile } from './media-component-templates';
 import type { GeneratedFile, ReactExportOptions } from './types';
 import { ReactExportError } from './types';
 import { componentExportName, joinLines, pascalFromId, rootComponentName } from './utils';
+
+interface ScrollRegionExport {
+  exportName: string;
+  title: string;
+  maxHeight: string;
+  overlayScrollbar: boolean;
+}
 
 export function generateReactUiFiles(
   ir: ExportIR,
@@ -42,6 +49,37 @@ export function generateReactUiFiles(
       content: generateComponentFile(component, exportName),
       encoding: 'utf-8',
       description: `React component for ${component.label}`,
+    });
+  }
+
+  const scrollRegions: ScrollRegionExport[] = [];
+  for (const layout of ir.layouts) {
+    if (layout.type !== 'layout.scroll-region') {
+      continue;
+    }
+    const layoutAsComponent: IRComponent = {
+      id: layout.id,
+      type: layout.type,
+      label: layout.label,
+      category: 'layout',
+      properties: { ...layout.properties },
+      inputs: [],
+      outputs: [],
+    };
+    const exportName = componentExportName(layoutAsComponent, usedNames);
+    componentImports.push(exportName);
+    scrollRegions.push({
+      exportName,
+      title: typeof layout.properties['title'] === 'string' ? layout.properties['title'] : '',
+      maxHeight:
+        typeof layout.properties['maxHeight'] === 'string' ? layout.properties['maxHeight'] : '28rem',
+      overlayScrollbar: layout.properties['overlayScrollbar'] !== false,
+    });
+    files.push({
+      path: `${root}/components/${exportName}.tsx`,
+      content: generateScrollRegion(exportName),
+      encoding: 'utf-8',
+      description: `Scroll region layout for ${layout.label}`,
     });
   }
 
@@ -109,7 +147,7 @@ export function generateReactUiFiles(
 
   files.push({
     path: `${root}/${rootName}.tsx`,
-    content: generateDashboardFile(ir, exportNames, componentImports, rootName),
+    content: generateDashboardFile(ir, exportNames, componentImports, rootName, scrollRegions),
     encoding: 'utf-8',
     description: `Composed ${rootName} page wired from ExportIR bindings`,
   });
@@ -213,7 +251,7 @@ function generateTokensCss(ir: ExportIR): string {
     `  background: var(--db-surface);`,
     `}`,
     ``,
-    `.field, .input, .select, .table, .kpi-card, .chart-card {`,
+    `.field, .input, .select, .table, .kpi-card, .chart-card, .rd-chart-line, .rd-chart-bar {`,
     `  border: 1px solid var(--db-border);`,
     `  border-radius: 0.5rem;`,
     `}`,
@@ -221,9 +259,11 @@ function generateTokensCss(ir: ExportIR): string {
     `.table { width: 100%; border-collapse: collapse; }`,
     `.table th, .table td { padding: 0.5rem 0.75rem; text-align: left; }`,
     ...numericPresentationCssLines(),
-    `.kpi-card, .chart-card, .table-card { padding: 1rem; }`,
-    `.bar-chart { display: flex; align-items: flex-end; gap: 0.25rem; height: 8rem; }`,
-    `.bar { flex: 1; background: var(--db-accent); min-height: 0.25rem; }`,
+    `.rd-chart-line, .rd-chart-bar, .kpi-card, .chart-card, .table-card { padding: 1rem; }`,
+    `.rd-chart-line__header, .rd-chart-bar__header { margin: 0 0 0.5rem; font-weight: 600; }`,
+    `.rd-chart-bar__bars { display: flex; align-items: flex-end; gap: 0.25rem; height: 8rem; }`,
+    `.rd-chart-bar__bar-wrap { flex: 1; display: flex; align-items: flex-end; min-height: 0.25rem; }`,
+    `.rd-chart-bar__bar { width: 100%; background: var(--db-accent); min-height: 0.25rem; }`,
     `.pie-chart { width: 8rem; height: 8rem; margin: 0 auto; border-radius: 999px; border: 1px solid var(--db-border); }`,
     `.pie-chart--donut { mask: radial-gradient(circle, transparent 42%, #000 43%); }`,
     `.pie-chart__legend { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.75rem; }`,
@@ -253,9 +293,14 @@ function generateTokensCss(ir: ExportIR): string {
     `.timer__header { display: flex; align-items: center; gap: 0.5rem; }`,
     `.timer__mode { font-size: 0.75rem; color: var(--db-muted); text-transform: capitalize; }`,
     `.timer__value { margin: 0; font-size: 1.125rem; font-weight: 600; font-variant-numeric: tabular-nums; }`,
-    `.role-gate { padding: 1rem; border: 1px dashed var(--db-border); border-radius: 0.5rem; }`,
-    `.role-gate__header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }`,
-    `.role-gate__badge { font-size: 0.75rem; color: var(--db-muted); }`,
+    `.rd-role-gate { padding: 1rem; border: 1px dashed var(--db-border); border-radius: 0.5rem; }`,
+    `.rd-role-gate--hidden { border-style: solid; }`,
+    `.rd-role-gate__status { margin: 0.35rem 0 0.5rem; font-size: 0.8125rem; font-weight: 600; }`,
+    `.rd-role-gate__status--hidden { color: var(--db-muted); }`,
+    `.rd-scroll-region { display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--db-border); border-radius: 0.5rem; }`,
+    `.rd-scroll-region__header { flex: 0 0 auto; padding: 0.75rem 1rem 0.35rem; font-weight: 600; }`,
+    `.rd-scroll-region__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0.75rem 1rem 1rem; }`,
+    `.rd-scroll-region--overlay-scrollbar .rd-scroll-region__body { scrollbar-width: thin; }`,
     `/* styling: ${ir.styles.framework} · generated for ${ir.meta.compositeName} */`,
     ``,
   ]);
@@ -315,6 +360,7 @@ function generateDashboardFile(
   exportNames: Map<string, string>,
   componentImports: string[],
   rootName: string,
+  scrollRegions: ScrollRegionExport[],
 ): string {
   const context = buildDashboardContext(ir, exportNames);
   const hookImportLines = context.hookImports.map(
@@ -328,6 +374,24 @@ function generateDashboardFile(
     const propLines = Object.entries(component.props).map(([key, value]) => `        ${key}={${value}}`);
     return [`      <${component.exportName}`, ...propLines, `      />`].join('\n');
   });
+
+  const scrollRegion = scrollRegions[0];
+  const bodyLines = scrollRegion
+    ? [
+        `      <${scrollRegion.exportName}`,
+        `        title={${JSON.stringify(scrollRegion.title)}}`,
+        `        maxHeight={${JSON.stringify(scrollRegion.maxHeight)}}`,
+        `        overlayScrollbar={${scrollRegion.overlayScrollbar}}`,
+        `      >`,
+        ...renderLines.map((line) =>
+          line
+            .split('\n')
+            .map((part) => `  ${part}`)
+            .join('\n'),
+        ),
+        `      </${scrollRegion.exportName}>`,
+      ]
+    : renderLines;
 
   return joinLines([
     `'use client';`,
@@ -347,7 +411,7 @@ function generateDashboardFile(
     `      <header>`,
     `        <h1>${ir.meta.compositeName}</h1>`,
     `      </header>`,
-    ...renderLines,
+    ...bodyLines,
     `    </main>`,
     `  );`,
     `}`,

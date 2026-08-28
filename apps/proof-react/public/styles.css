@@ -321,6 +321,12 @@ body {
   min-width: 100%;
 }
 
+.da-context-grid rd-app-language-select {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
 .da-context-grid__cell {
   display: grid;
   gap: 0.35rem;
@@ -1679,9 +1685,18 @@ rd-wasm-media {
   min-width: 0;
 }
 
+.da-panel--about {
+  padding: 0;
+  min-height: 0;
+}
+
+.da-panel--about .rd-scroll-region {
+  max-height: calc(100vh - 12rem);
+}
+
 .da-about {
   color: var(--da-panel-fg);
-  padding-bottom: 3rem;
+  padding-bottom: 1rem;
 }
 
 .da-about__note {

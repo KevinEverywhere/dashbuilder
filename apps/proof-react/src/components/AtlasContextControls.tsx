@@ -1,4 +1,5 @@
 import { DEFAULT_APP_LOCALES, GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, type GeoMapProvider } from '@destination-atlas';
+import { AppLanguageSelect } from '@rosettadash/react/domain/i18n/app-language-select';
 import { SelectInput } from '@rosettadash/react/visual/input/select';
 import { ATLAS_USER_ROLES, type AtlasUserRole } from '../lib/roles';
 import { localizedDestinationName } from '../lib/atlas-utils';
@@ -36,85 +37,56 @@ export function AtlasContextControls({
 }: AtlasContextControlsProps) {
   const rootClass = ['da-context-grid', className].filter(Boolean).join(' ');
 
-  const localeOptions = DEFAULT_APP_LOCALES.map((entry) => ({
-    value: entry.code,
-    label: entry.nativeLabel ? `${entry.label} (${entry.nativeLabel})` : entry.label,
-  }));
-
-  const mapOptions = GEO_MAP_PROVIDERS.map((entry) => ({
-    value: entry.id,
-    label: entry.label,
-  }));
-
-  const destinationOptions = MOCK_DESTINATIONS.map((dest) => ({
-    value: dest.id,
-    label: localizedDestinationName(dest, locale),
-  }));
-
-  const fields: Array<{
-    key: SettingFieldTarget;
-    label: string;
-    hint: string;
-    value: string;
-    options: Array<{ value: string; label: string }>;
-    onChange: (value: string) => void;
-  }> = [
-    {
-      key: 'role',
-      label: 'Role',
-      hint: ROLE_HINT,
-      value: userRole,
-      options: ATLAS_USER_ROLES.map((entry) => ({ value: entry.id, label: entry.label })),
-      onChange: (value: string) => setUserRole(value as AtlasUserRole),
-    },
-    {
-      key: 'locale',
-      label: 'App locale',
-      hint: LOCALE_HINT,
-      value: locale,
-      options: localeOptions,
-      onChange: setLocale,
-    },
-    {
-      key: 'map',
-      label: 'Map provider',
-      hint: MAP_HINT,
-      value: mapProvider,
-      options: mapOptions,
-      onChange: (value: string) => setMapProvider(value as GeoMapProvider),
-    },
-    {
-      key: 'selected',
-      label: 'Selected',
-      hint: SELECTED_HINT,
-      value: selectedId,
-      options: destinationOptions,
-      onChange: setSelectedId,
-    },
-  ];
+  const cellClass = (key: SettingFieldTarget) =>
+    ['da-context-grid__cell', highlightField === key ? 'rd-highlight-target' : undefined]
+      .filter(Boolean)
+      .join(' ');
 
   return (
     <div className={rootClass}>
-      {fields.map((field) => (
-        <div
-          key={field.key}
-          data-setting={field.key}
-          className={[
-            'da-context-grid__cell',
-            highlightField === field.key ? 'rd-highlight-target' : undefined,
-          ]
-            .filter(Boolean)
-            .join(' ')}
-        >
-          <SelectInput
-            label={field.label}
-            options={field.options}
-            value={field.value}
-            onChange={field.onChange}
-          />
-          <p className="da-context-grid__hint">{field.hint}</p>
-        </div>
-      ))}
+      <div data-setting="role" className={cellClass('role')}>
+        <SelectInput
+          label="Role"
+          options={ATLAS_USER_ROLES.map((entry) => ({ value: entry.id, label: entry.label }))}
+          value={userRole}
+          onChange={(value) => setUserRole(value as AtlasUserRole)}
+        />
+        <p className="da-context-grid__hint">{ROLE_HINT}</p>
+      </div>
+      <div data-setting="locale" className={cellClass('locale')}>
+        <AppLanguageSelect
+          label="App locale"
+          locales={DEFAULT_APP_LOCALES}
+          value={locale}
+          onLocaleChange={({ locale: next }) => {
+            if (next) {
+              setLocale(next);
+            }
+          }}
+        />
+        <p className="da-context-grid__hint">{LOCALE_HINT}</p>
+      </div>
+      <div data-setting="map" className={cellClass('map')}>
+        <SelectInput
+          label="Map provider"
+          options={GEO_MAP_PROVIDERS.map((entry) => ({ value: entry.id, label: entry.label }))}
+          value={mapProvider}
+          onChange={(value) => setMapProvider(value as GeoMapProvider)}
+        />
+        <p className="da-context-grid__hint">{MAP_HINT}</p>
+      </div>
+      <div data-setting="selected" className={cellClass('selected')}>
+        <SelectInput
+          label="Selected"
+          options={MOCK_DESTINATIONS.map((dest) => ({
+            value: dest.id,
+            label: localizedDestinationName(dest, locale),
+          }))}
+          value={selectedId}
+          onChange={setSelectedId}
+        />
+        <p className="da-context-grid__hint">{SELECTED_HINT}</p>
+      </div>
     </div>
   );
 }

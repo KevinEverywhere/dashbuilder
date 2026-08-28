@@ -36,6 +36,8 @@ const DEFAULT_NAMES: Record<string, string> = {
   'visual.news.search-box': 'NewsSearchBox',
   'visual.news.results-table': 'NewsResultsTable',
   'visual.news.article-detail': 'NewsArticleDetail',
+  'domain.role-gate': 'RoleGate',
+  'layout.scroll-region': 'ScrollRegion',
 };
 
 export function pascalCase(value: string): string {

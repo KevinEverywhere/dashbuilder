@@ -1,3 +1,4 @@
+import { ScrollRegion } from '@rosettadash/react/layout/scroll-region';
 import {
   DESTINATION_ATLAS_ABOUT_INTRO,
   DESTINATION_ATLAS_CURRENT_RUNTIME_BADGE,
@@ -9,16 +10,17 @@ import {
 const CURRENT_RUNTIME_ID: DestinationAtlasRuntimeId = 'react';
 
 export const ABOUT_SOURCE = `<AboutScreen>
-  <section className="da-panel da-panel--about">
+  <ScrollRegion title="About Destination Atlas" maxHeight="calc(100vh - 12rem)" overlayScrollbar>
     {/* Intro, runtime npm packages, Component source panel, docs */}
-  </section>
+  </ScrollRegion>
 </AboutScreen>`;
 
 export function AboutScreen() {
   return (
     <section className="da-panel da-panel--about">
-      <h2>About Destination Atlas</h2>
-      <div className="da-about">
+      <ScrollRegion title="About Destination Atlas" maxHeight="calc(100vh - 12rem)">
+        <h2>About Destination Atlas</h2>
+        <div className="da-about">
         <p className="da-about__lead">{DESTINATION_ATLAS_ABOUT_INTRO.lead}</p>
 
         <section className="da-about__section">
@@ -131,7 +133,8 @@ export function AboutScreen() {
             </li>
           </ul>
         </section>
-      </div>
+        </div>
+      </ScrollRegion>
     </section>
   );
 }

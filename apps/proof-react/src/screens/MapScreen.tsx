@@ -7,7 +7,7 @@ import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapPr
 import type { AtlasContext } from '../state/useDestinationAtlasState';
 import { useConsumerSecrets } from '../state/consumer-secrets-context';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
-import { destinationByIdMapView, destinationMapView, resolveMapLocationQuery } from '../lib/map-location';
+import { destinationMapView, resolveMapLocationQuery } from '../lib/map-location';
 
 export const MAP_SOURCE = `<MapScreen part="toolbar|explorer" mapProvider={mapProvider} selectedId={selectedId}>
   <TextInput label="Request location" value={mapLocationQuery} />
@@ -105,10 +105,6 @@ export function MapScreen({
 
   const selectDestination = (id: string) => {
     setSelectedId(id);
-    const destView = destinationByIdMapView(id, locale);
-    if (destView) {
-      goToMapView(destView);
-    }
   };
 
   const renderToolbar = () => (

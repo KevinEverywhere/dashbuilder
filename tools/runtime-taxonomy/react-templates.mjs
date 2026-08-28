@@ -8,6 +8,7 @@ export function renderNativeComponent(entry, bemBlock) {
   const body = KIND_BODIES[kind] ?? KIND_BODIES['fallback'];
   const propsFn = KIND_PROPS[kind] ?? KIND_PROPS['fallback'];
   const propsInterface = propsFn(exportName);
+  const setup = KIND_SETUP[kind] ?? '';
 
   return `import { forwardRef, type CSSProperties, type ReactNode } from 'react';
 
@@ -20,7 +21,7 @@ export const ${exportName} = forwardRef<HTMLElement, ${exportName}Props>(functio
 ) {
   const { className, style, children } = props;
   const rootClass = ['${bemBlock}', className].filter(Boolean).join(' ');
-
+${setup}
   return (
     ${body
       .replace(/\{\{exportName\}\}/g, exportName)
@@ -212,15 +213,32 @@ export interface ${name}Props {
   children?: ReactNode;
 }`,
 
-  'line-chart': (name) => `export interface ${name}Props {
+  'line-chart': (name) => `export interface ${name}Point {
+  x: string | number;
+  y: number;
+}
+
+export interface ${name}Props {
   title?: string;
+  points?: ${name}Point[];
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  valueFormat?: (value: number) => string;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
 }`,
 
-  'bar-chart': (name) => `export interface ${name}Props {
+  'bar-chart': (name) => `export interface ${name}Bar {
+  label: string;
+  value: number;
+}
+
+export interface ${name}Props {
   title?: string;
+  bars?: ${name}Bar[];
+  yAxisLabel?: string;
+  valueFormat?: (value: number) => string;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -299,7 +317,10 @@ export interface ${name}Props {
   'role-gate': (name) => `export interface ${name}Props {
   label?: string;
   allowedRoles?: string[];
+  /** Active session role — when omitted, content is always shown (builder/demo mode). */
+  currentRole?: string;
   statusText?: string;
+  hiddenStatusText?: string;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -600,19 +621,21 @@ const KIND_BODIES = {
       {children}
     </section>`,
 
-  'line-chart': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">
+  'line-chart': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}" role="img" aria-label={rest.title ?? 'Line chart'}>
       <header className="{{bemBlock}}__header"><span>{rest.title ?? 'Line chart'}</span></header>
-      <svg viewBox="0 0 240 96" className="{{bemBlock}}__svg" aria-hidden="true">
-        <polyline className="{{bemBlock}}__line" points="0,80 40,60 80,65 120,40 160,45 200,20 240,30" />
-      </svg>
+      <div className="{{bemBlock}}__body">
+        <svg viewBox="0 0 240 96" className="{{bemBlock}}__svg" aria-hidden="true">
+          <polyline className="{{bemBlock}}__line" points={polyline} />
+        </svg>
+      </div>
       {children}
     </section>`,
 
-  'bar-chart': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">
+  'bar-chart': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}" role="img" aria-label={rest.title ?? 'Bar chart'}>
       <header className="{{bemBlock}}__header"><span>{rest.title ?? 'Bar chart'}</span></header>
       <div className="{{bemBlock}}__bars" aria-hidden="true">
-        {[40, 65, 55, 80, 48].map((h, i) => (
-          <div key={i} className="{{bemBlock}}__bar-wrap"><div className="{{bemBlock}}__bar" style={{ height: \`\${h}%\` }} /></div>
+        {series.map((bar) => (
+          <div key={bar.label} className="{{bemBlock}}__bar-wrap"><div className="{{bemBlock}}__bar" style={{ height: \`\${Math.round((bar.value / maxValue) * 100)}%\` }} /></div>
         ))}
       </div>
       {children}
@@ -671,11 +694,16 @@ const KIND_BODIES = {
       <div className="rd-scroll-region__body">{children}</div>
     </section>`,
 
-  'role-gate': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">
+  'role-gate': `<section ref={ref as React.RefObject<HTMLElement>} className={[rootClass, visible ? 'rd-role-gate--visible' : 'rd-role-gate--hidden'].filter(Boolean).join(' ')} style={style} data-testid="{{testId}}">
       {rest.label ? <span className="rd-field__label">{rest.label}</span> : null}
-      <p className="rd-role-gate__status">{rest.statusText ?? 'Visible'}</p>
-      {rest.allowedRoles?.length ? <code>{JSON.stringify(rest.allowedRoles)}</code> : null}
-      {children}
+      {visible ? (
+        <>
+          <p className="rd-role-gate__status" data-testid="rd-role-gate-visible">{rest.statusText ?? 'Visible'}</p>
+          {children}
+        </>
+      ) : (
+        <p className="rd-role-gate__status rd-role-gate__status--hidden" data-testid="rd-role-gate-hidden">{rest.hiddenStatusText ?? 'Hidden for current role'}</p>
+      )}
     </section>`,
 
   'person-invite': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">
@@ -784,6 +812,44 @@ const KIND_BODIES = {
     </section>`,
 
   fallback: `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">{children}</section>`,
+};
+
+const KIND_SETUP = {
+  'line-chart': `  const series = props.points?.length
+    ? props.points
+    : [
+        { x: 'A', y: 80 },
+        { x: 'B', y: 60 },
+        { x: 'C', y: 65 },
+        { x: 'D', y: 40 },
+        { x: 'E', y: 45 },
+        { x: 'F', y: 20 },
+        { x: 'G', y: 30 },
+      ];
+  const maxY = Math.max(...series.map((point) => point.y), 1);
+  const last = Math.max(series.length - 1, 1);
+  const polyline = series
+    .map((point, index) => \`\${(index / last) * 240},\${88 - (point.y / maxY) * 72}\`)
+    .join(' ');
+`,
+  'bar-chart': `  const series = props.bars?.length
+    ? props.bars
+    : [
+        { label: 'A', value: 40 },
+        { label: 'B', value: 65 },
+        { label: 'C', value: 55 },
+        { label: 'D', value: 80 },
+        { label: 'E', value: 48 },
+      ];
+  const maxValue = Math.max(...series.map((bar) => bar.value), 1);
+`,
+  'role-gate': `  const allowedRoles = props.allowedRoles ?? [];
+  const hasRoleContext = props.currentRole !== undefined && props.currentRole !== '';
+  const visible =
+    !hasRoleContext ||
+    allowedRoles.length === 0 ||
+    allowedRoles.some((allowed) => allowed === (props.currentRole ?? '').trim());
+`,
 };
 
 export { KIND_PROPS };

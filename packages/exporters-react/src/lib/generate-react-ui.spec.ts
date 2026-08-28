@@ -121,6 +121,9 @@ describe('generateReactUiFiles', () => {
     const roleGateFile = files.find((file) => file.path.includes('RoleGate'));
     expect(roleGateFile?.content).toContain('useCurrentRole');
     expect(roleGateFile?.content).toContain('allowedRoles');
+    expect(roleGateFile?.content).toContain('rd-role-gate');
+    expect(roleGateFile?.content).toContain('hiddenStatusText');
+    expect(roleGateFile?.content).not.toContain('return null;');
   });
 
   it('generates React files for P1 form input components', () => {
@@ -568,6 +571,82 @@ describe('generateReactUiFiles', () => {
     expect(mediaFile?.content).toContain('buildEquirectExtractFilter');
     expect(mediaFile?.content).toContain('runEquirectExtract');
     expect(files.find((file) => file.path === 'README.export.md')?.content).toContain('@ffmpeg/ffmpeg');
+  });
+
+  it('emits layout.scroll-region as a designated scroller wrapping dashboard content', () => {
+    const scroll = registry.createNode('layout.scroll-region', {
+      id: 'sr1',
+      properties: { title: 'About Destination Atlas', maxHeight: '24rem', overlayScrollbar: true },
+    });
+    const kpi = registry.createNode('visual.kpi', { id: 'k1' });
+
+    const ir = buildExportIR(
+      {
+        id: 'comp1',
+        name: 'Atlas About',
+        version: 1,
+        exportTargets: { ui: 'react' },
+        nodes: [scroll, kpi],
+        bindings: [],
+      },
+      registry,
+    );
+
+    const files = generateReactUiFiles(ir);
+    const scrollFile = files.find((file) => file.path.includes('ScrollRegion') || file.content.includes('rd-scroll-region__body'));
+    expect(scrollFile?.path).toMatch(/src\/components\/.*\.tsx$/);
+    expect(scrollFile?.content).toContain('rd-scroll-region');
+    expect(scrollFile?.content).not.toContain('@rosettadash/');
+
+    const dashboard = files.find((file) => file.path === 'src/AtlasAbout.tsx');
+    expect(dashboard?.content).toContain('maxHeight={"24rem"}');
+    expect(dashboard?.content).toContain('About Destination Atlas');
+    expect(dashboard?.content).toMatch(/<[^>]*ScrollRegion[\s\S]*KpiCard[\s\S]*<\/[^>]*ScrollRegion>/);
+  });
+
+  it('emits line and bar charts with rd-* BEM and img roles', () => {
+    const line = registry.createNode('visual.chart.line', { id: 'c1' });
+    const bar = registry.createNode('visual.chart.bar', { id: 'c2' });
+    const postgres = registry.createNode('infra.postgresql', {
+      id: 'pg1',
+      properties: { connectionEnvKey: 'DATABASE_URL', table: 'sales' },
+    });
+    const server = registry.createNode('infra.server.nest', { id: 's1' });
+
+    const ir = buildExportIR(
+      {
+        id: 'comp1',
+        name: 'Charts',
+        version: 1,
+        exportTargets: { ui: 'react', server: 'nest' },
+        nodes: [line, bar, postgres, server],
+        bindings: [
+          {
+            id: 'b1',
+            sourceNodeId: 'pg1',
+            sourcePortId: 'rowset',
+            targetNodeId: 'c1',
+            targetPortId: 'data',
+          },
+          {
+            id: 'b2',
+            sourceNodeId: 'pg1',
+            sourcePortId: 'rowset',
+            targetNodeId: 'c2',
+            targetPortId: 'data',
+          },
+        ],
+      },
+      registry,
+    );
+
+    const files = generateReactUiFiles(ir);
+    const lineFile = files.find((file) => file.path.includes('LineChart') || file.content.includes('rd-chart-line__line'));
+    const barFile = files.find((file) => file.content.includes('rd-chart-bar__bar'));
+    expect(lineFile?.content).toContain('rd-chart-line');
+    expect(lineFile?.content).toContain('role="img"');
+    expect(barFile?.content).toContain('rd-chart-bar');
+    expect(barFile?.content).toContain('role="img"');
   });
 
   it('rejects non-react UI targets', () => {
