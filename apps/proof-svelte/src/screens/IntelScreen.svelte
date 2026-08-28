@@ -12,7 +12,7 @@
   import NewsSearchBox from '@rosettadash/svelte/visual/news/search-box';
   import RoleGatePanel from '../components/RoleGatePanel.svelte';
   import { useConsumerSecrets } from '../lib/consumer-secrets.svelte';
-  import { MOCK_NEWS } from '../lib/atlas-utils';
+  import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
   import { fetchLiveNewsArticles, type LiveNewsArticle } from '../lib/news-api';
   import type { AtlasUserRole } from '../lib/roles';
 
@@ -112,7 +112,13 @@
   >
     <div class="da-stack da-stack--2">
       <NewsSearchBox value={newsQuery} onSearch={(value) => onNewsQueryChange?.(value)} />
-      <NewsRegionSelect value={newsRegion} onChange={(value) => onNewsRegionChange?.(value)} />
+      <NewsRegionSelect
+        label="Region"
+        placeholder="All regions"
+        options={REGION_OPTIONS}
+        value={newsRegion}
+        onChange={(value) => onNewsRegionChange?.(value)}
+      />
     </div>
   </RoleGatePanel>
 

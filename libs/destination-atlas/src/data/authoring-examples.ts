@@ -18,7 +18,7 @@ export const DESTINATION_ATLAS_AUTHORING_EXAMPLES: AuthoringExample[] = [
     destinationId: 'cusco',
     label: 'Cusco plaza (360° equirect)',
     summary:
-      'Reference equirectangular framing preset — upload a 2:1 source, explore in the sphere viewport, record a trim range, and extract with ffmpeg.wasm.',
+      'Reference equirectangular framing preset — upload your own 2:1 source (nothing ships with the library), explore in the sphere viewport, record a trim range, and extract with ffmpeg.wasm.',
     projection: 'equirect',
     defaultYaw: 25,
     defaultPitch: -8,

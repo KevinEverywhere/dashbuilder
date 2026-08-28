@@ -18,6 +18,7 @@
   import BarChart from '@rosettadash/svelte/visual/chart/bar';
   import LineChart from '@rosettadash/svelte/visual/chart/line';
   import GridLayout from '@rosettadash/svelte/layout/grid';
+  import ScrollRegion from '@rosettadash/svelte/layout/scroll-region';
   import KpiCard from '@rosettadash/svelte/visual/kpi';
   import MetricChip from '@rosettadash/svelte/visual/plugin/metric-chip';
   import StatusBadge from '@rosettadash/svelte/visual/plugin/status-badge';
@@ -39,18 +40,20 @@
 
 <section class="da-panel">
   <h2>Overview</h2>
-  <p>Current visitor KPIs and historic trends across sample destinations.</p>
+  <p>Current visitor KPIs and historic trends across 30 sample destinations (10-year guesstimates).</p>
   <div class="da-stack">
-    <GridLayout columns={3} gap={12} title="Destination KPIs">
-      {#each MOCK_DESTINATIONS as dest (dest.id)}
-        <KpiCard
-          title={localizedDestinationName(dest, locale)}
-          value={formatVisitorCount(dest.visitorsCurrent)}
-          delta={computeVisitorDelta(dest)}
-          format="number"
-        />
-      {/each}
-    </GridLayout>
+    <ScrollRegion title="Destination KPIs" maxHeight="22rem">
+      <GridLayout columns={3} gap={12}>
+        {#each MOCK_DESTINATIONS as dest (dest.id)}
+          <KpiCard
+            title={localizedDestinationName(dest, locale)}
+            value={formatVisitorCount(dest.visitorsCurrent)}
+            delta={computeVisitorDelta(dest)}
+            format="number"
+          />
+        {/each}
+      </GridLayout>
+    </ScrollRegion>
     <div class="da-stack da-stack--2">
       <LineChart
         title="Visitors over time (aggregate trend)"

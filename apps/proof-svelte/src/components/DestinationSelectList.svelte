@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { findDestinationListRow, scrollSelectedDestinationIntoList } from '@destination-atlas';
+
   export interface DestinationSelectItem {
     id: string;
     label: string;
@@ -18,7 +20,21 @@
   } = $props();
 </script>
 
-<section class="rd-destination-list" aria-label={listTitle}>
+<section
+  class="rd-destination-list"
+  aria-label={listTitle}
+  {@attach (node) => {
+    $effect(() => {
+      const id = selectedId;
+      const list = items;
+      if (!id) {
+        return;
+      }
+      const index = list.findIndex((item) => item.id === id);
+      scrollSelectedDestinationIntoList(findDestinationListRow(node, id), index, list.length);
+    });
+  }}
+>
   <header class="rd-destination-list__header">
     <h3>{listTitle}</h3>
     <span class="rd-destination-list__count">{items.length}</span>
@@ -32,6 +48,7 @@
         <button
           type="button"
           class="rd-destination-list__button"
+          data-dest-id={item.id}
           aria-current={item.id === selectedId ? 'true' : undefined}
           onclick={() => onSelect?.(item.id)}
         >

@@ -23,7 +23,8 @@ export const TimePreset = defineComponent({
     activePresetId: { type: String as PropType<string | undefined>, default: undefined },
   },
   slots: Object as SlotsType<{ default?: () => VNode[] }>,
-  setup(props, { slots, attrs }) {
+  emits: ['presetChange'],
+  setup(props, { slots, attrs, emit }) {
     function presetButtonClass(id: string): string {
       return ['rd-time-preset__button', props.activePresetId === id ? 'rd-time-preset__button--active' : ''].filter(Boolean).join(' ');
     }
@@ -32,7 +33,15 @@ export const TimePreset = defineComponent({
       return h('section', { class: rootClass, 'data-testid': 'rd-time-preset' }, [
       props.label ? h('span', { class: 'rd-field__label' }, props.label) : null,
       h('div', { class: 'rd-time-preset__buttons', role: 'group' }, (props.presets ?? []).map((p) =>
-        h('button', { type: 'button', key: p.id, class: presetButtonClass(p.id) }, p.label),
+        h('button', {
+          type: 'button',
+          key: p.id,
+          class: presetButtonClass(p.id),
+          onClick: () => {
+            emit('presetChange', p.id);
+            props.onPresetChange?.(p.id);
+          },
+        }, p.label),
       )),
       slots.default?.(),
     ]);

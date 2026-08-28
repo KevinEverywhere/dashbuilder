@@ -103,7 +103,7 @@ export const DESTINATION_ATLAS_ABOUT_INTRO = {
   lead:
     'Destination Atlas is a functional demo — not a component kitchen sink. Each screen exercises real RosettaDash components the way you would wire them in production: filters bound to tables, maps with provider choice, role gates, media embeds, and advanced views.',
   proofPurpose:
-    'The five proof apps (Web Components + four frameworks) share mock data from libs/destination-atlas and identical screen names. Compare runtime imports side-by-side, then open Storybook on the matching port to inspect components in isolation.',
+    'The five proof apps (Web Components + four frameworks) share a 30-city mock library from libs/destination-atlas and identical screen names. Compare runtime imports side-by-side, then open Storybook on the matching port to inspect components in isolation.',
   consumerInstall:
     'Install @rosettadash/core and the runtime package you need (@rosettadash/react, /angular, /vue, /svelte, or /web-components). See docs/39-npm-consumer-install.md for tarball and registry workflows.',
   runtimeCardsNote:

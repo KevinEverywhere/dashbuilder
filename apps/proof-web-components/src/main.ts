@@ -15,7 +15,7 @@ import {
   type DestinationAtlasScreenId,
 } from '@destination-atlas';
 import { AuthoringScreen as AuthoringScreenReact } from './authoring/AuthoringScreen';
-import { destinationListMarkup } from './geo-explorer.js';
+import { destinationListMarkup, scrollDestinationListToSelection } from './geo-explorer.js';
 import { createDestinationAtlasState } from './lib/atlas-state.js';
 import { getConsumerSecrets, subscribeSecrets } from './lib/consumer-secrets.js';
 import { formatRegionLabel, localizedDestinationName } from './atlas-utils.js';
@@ -165,6 +165,9 @@ function wireDestinationList(root: HTMLElement): void {
       }
     });
   });
+  requestAnimationFrame(() => {
+    scrollDestinationListToSelection(root, destinationItems(), atlas.selectedId);
+  });
 }
 
 function wireGeoMap(root: HTMLElement): void {
@@ -189,14 +192,9 @@ function wireGlobe(root: HTMLElement): void {
   applyGlobe(globe);
   wireOnce(globe, 'marker-select', (event) => {
     const id = (event as CustomEvent<{ id?: string }>).detail?.id;
-    if (!id) {
-      return;
+    if (id) {
+      atlas.setSelectedId(id);
     }
-    if (id === atlas.selectedId) {
-      atlas.focusDestinationOnMap(id);
-      return;
-    }
-    atlas.setSelectedId(id);
   });
 }
 

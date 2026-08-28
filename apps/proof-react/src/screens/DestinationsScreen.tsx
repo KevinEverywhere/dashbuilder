@@ -17,14 +17,8 @@ import {
   historicWindowLabel,
   localizedDestinationName,
   periodColumnLabel,
+  REGION_OPTIONS,
 } from '../lib/atlas-utils';
-
-const REGION_OPTIONS = [
-  { value: 'asia-pacific', label: 'Asia Pacific' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'americas', label: 'Americas' },
-  { value: 'africa', label: 'Africa' },
-];
 
 type Props = Pick<
   AtlasContext,
@@ -46,16 +40,10 @@ type Props = Pick<
 
 export const DESTINATIONS_SOURCE = `<DestinationsScreen …>
   <FilterGrid>
-    <FilterGrid.Stack>
-      <TextInput label="Search" value={destSearch} />
-      <SelectInput label="Region" value={destRegion} />
-    </FilterGrid.Stack>
-    <FilterGrid.Period>
-      <DateRangeFilter granularity="month" startDate={visitPeriodStart} endDate={visitPeriodEnd} />
-    </FilterGrid.Period>
-    <FilterGrid.Full>
-      <TimePreset activePresetId={timePreset} onPresetChange={setTimePreset} />
-    </FilterGrid.Full>
+    <TextInput label="Search" value={destSearch} />
+    <SelectInput label="Region" value={destRegion} />
+    <DateRangeFilter granularity="month" startDate={visitPeriodStart} endDate={visitPeriodEnd} />
+    <TimePreset activePresetId={timePreset} onPresetChange={setTimePreset} />
   </FilterGrid>
   <FilterSummary count={filtered.length} chips={…} hint={…} />
   <FlexLayout itemFlex={[1.4, 1]} stretchItems>
@@ -95,7 +83,7 @@ export function DestinationsScreen({
     id: dest.id,
     name: localizedDestinationName(dest, locale),
     status: dest.region,
-    amount: dest.visitorsCurrent,
+    amount: formatVisitorCount(dest.visitorsCurrent),
     date: periodLabel,
   }));
 
@@ -105,7 +93,7 @@ export function DestinationsScreen({
     Boolean(destSearch) ||
     Boolean(destRegion) ||
     timePreset !== '5y' ||
-    visitPeriodStart !== '2019-01' ||
+    visitPeriodStart !== '2015-01' ||
     visitPeriodEnd !== '2024-12';
 
   const filterChips = [
@@ -132,42 +120,36 @@ export function DestinationsScreen({
           hiddenStatusText="Filters are available to Editor and Admin roles. Viewer sees the full list."
         >
           <FilterGrid>
-            <FilterGrid.Stack>
-              <TextInput
-                label="Search"
-                placeholder="Destination name…"
-                value={destSearch}
-                onChange={setDestSearch}
-              />
-              <SelectInput
-                label="Region"
-                placeholder="All regions"
-                options={REGION_OPTIONS}
-                value={destRegion}
-                onChange={setDestRegion}
-              />
-            </FilterGrid.Stack>
-            <FilterGrid.Period>
-              <DateRangeFilter
-                label="Visit period"
-                granularity="month"
-                startDate={visitPeriodStart}
-                endDate={visitPeriodEnd}
-                onChange={setVisitPeriod}
-              />
-            </FilterGrid.Period>
-            <FilterGrid.Full>
-              <TimePreset
-                label="Historic window"
-                presets={[
-                  { id: '1y', label: '1Y' },
-                  { id: '5y', label: '5Y' },
-                  { id: 'all', label: 'All' },
-                ]}
-                activePresetId={timePreset}
-                onPresetChange={setTimePreset}
-              />
-            </FilterGrid.Full>
+            <TextInput
+              label="Search"
+              placeholder="Destination name…"
+              value={destSearch}
+              onChange={setDestSearch}
+            />
+            <SelectInput
+              label="Region"
+              placeholder="All regions"
+              options={REGION_OPTIONS}
+              value={destRegion}
+              onChange={setDestRegion}
+            />
+            <DateRangeFilter
+              label="Visit period"
+              granularity="month"
+              startDate={visitPeriodStart}
+              endDate={visitPeriodEnd}
+              onChange={setVisitPeriod}
+            />
+            <TimePreset
+              label="Historic window"
+              presets={[
+                { id: '1y', label: '1 year' },
+                { id: '5y', label: '5 years' },
+                { id: 'all', label: 'All' },
+              ]}
+              activePresetId={timePreset}
+              onPresetChange={setTimePreset}
+            />
           </FilterGrid>
         </RoleGate>
 

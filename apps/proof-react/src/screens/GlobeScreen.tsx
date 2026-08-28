@@ -27,7 +27,6 @@ export function GlobeScreen({
   locale,
   selectedId,
   setSelectedId,
-  focusDestinationOnMap,
   embedded = false,
   part,
   listPlacement = 'right',
@@ -50,8 +49,7 @@ export function GlobeScreen({
   };
 
   const selectFromGlobe = (id: string) => {
-    if (id === selectedId) {
-      focusDestinationOnMap(id);
+    if (!id) {
       return;
     }
     setSelectedId(id);
@@ -114,8 +112,8 @@ export function GlobeScreen({
     <section className="da-panel">
       <h2>Globe</h2>
       <p>
-        Three.js globe with dataset destination markers — pick a destination in the list to fly the globe to it;
-        click the same marker again to open the Map panel.
+        Three.js globe with dataset destination markers — click any point on the globe (or a list item) to
+        select that destination.
       </p>
       {renderExplorer()}
       {renderFooter()}

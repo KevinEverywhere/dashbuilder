@@ -1,3 +1,5 @@
+import { findDestinationListRow, scrollSelectedDestinationIntoList } from '@destination-atlas';
+
 export type GeoExplorerListPlacement = 'left' | 'right';
 
 export interface DestinationSelectItem {
@@ -85,4 +87,13 @@ export function syncDestinationListSelection(root: ParentNode, selectedId: strin
       button.removeAttribute('aria-current');
     }
   });
+}
+
+export function scrollDestinationListToSelection(
+  root: ParentNode,
+  items: ReadonlyArray<{ id: string }>,
+  selectedId: string,
+): void {
+  const index = items.findIndex((item) => item.id === selectedId);
+  scrollSelectedDestinationIntoList(findDestinationListRow(root, selectedId), index, items.length);
 }

@@ -45,11 +45,30 @@ export interface DestinationHistoricStat {
   visitors: number;
 }
 
+/** Inhabited continents used by Destination Atlas (no Antarctica). */
+export type DestinationContinentId =
+  | 'africa'
+  | 'asia'
+  | 'europe'
+  | 'north-america'
+  | 'south-america'
+  | 'oceania';
+
+export const DESTINATION_CONTINENT_OPTIONS: { value: DestinationContinentId; label: string }[] = [
+  { value: 'africa', label: 'Africa' },
+  { value: 'asia', label: 'Asia' },
+  { value: 'europe', label: 'Europe' },
+  { value: 'north-america', label: 'North America' },
+  { value: 'south-america', label: 'South America' },
+  { value: 'oceania', label: 'Oceania' },
+];
+
 /** Mock destination row for Destination Atlas proof apps. */
 export interface Destination {
   id: string;
   name: string;
-  region: string;
+  /** Continent id — same values as DESTINATION_CONTINENT_OPTIONS. */
+  region: DestinationContinentId;
   lat: number;
   lng: number;
   youtubeId?: string;

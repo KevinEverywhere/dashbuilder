@@ -109,8 +109,7 @@ export class GlobeScreenComponent {
   }
 
   selectFromGlobe(id: string): void {
-    if (id === this.atlas.selectedId()) {
-      this.atlas.focusDestinationOnMap(id);
+    if (!id) {
       return;
     }
     this.atlas.setSelectedId(id);

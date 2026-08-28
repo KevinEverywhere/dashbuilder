@@ -8,10 +8,12 @@ export interface LiveNewsArticle {
 }
 
 const REGION_COUNTRY: Record<string, string> = {
-  'asia-pacific': 'jp',
-  europe: 'fr',
-  americas: 'us',
   africa: 'za',
+  asia: 'jp',
+  europe: 'fr',
+  'north-america': 'us',
+  'south-america': 'br',
+  oceania: 'au',
 };
 
 interface NewsApiArticle {
@@ -30,16 +32,33 @@ interface NewsApiResponse {
 
 function inferRegion(headline: string, description: string): string {
   const text = `${headline} ${description}`.toLowerCase();
-  if (text.includes('tokyo') || text.includes('asia')) {
-    return 'asia-pacific';
+  if (
+    text.includes('sydney') ||
+    text.includes('melbourne') ||
+    text.includes('auckland') ||
+    text.includes('oceania')
+  ) {
+    return 'oceania';
   }
-  if (text.includes('paris') || text.includes('europe')) {
+  if (
+    text.includes('tokyo') ||
+    text.includes('bangkok') ||
+    text.includes('singapore') ||
+    text.includes('seoul') ||
+    text.includes('asia')
+  ) {
+    return 'asia';
+  }
+  if (text.includes('paris') || text.includes('london') || text.includes('rome') || text.includes('europe')) {
     return 'europe';
   }
-  if (text.includes('africa') || text.includes('marrakech')) {
+  if (text.includes('africa') || text.includes('marrakech') || text.includes('cairo') || text.includes('nairobi')) {
     return 'africa';
   }
-  return 'americas';
+  if (text.includes('cusco') || text.includes('rio') || text.includes('andes') || text.includes('south america')) {
+    return 'south-america';
+  }
+  return 'north-america';
 }
 
 function mapArticle(article: NewsApiArticle, index: number): LiveNewsArticle {

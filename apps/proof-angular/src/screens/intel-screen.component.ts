@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { NewsArticleDetail } from '@rosettadash/angular/visual/news/article-detail';
-import { MOCK_NEWS } from '../lib/atlas-utils';
+import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
 import { fetchLiveNewsArticles, type LiveNewsArticle } from '../lib/news-api';
 import { AtlasStateService } from '../services/atlas-state.service';
 import { ConsumerSecretsService } from '../services/consumer-secrets.service';
@@ -16,13 +16,6 @@ import {
   DaBoundSelectInputComponent,
   DaBoundTextInputComponent,
 } from '../components/proof-form-fields.component';
-
-const REGION_OPTIONS = [
-  { value: 'asia-pacific', label: 'Asia Pacific' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'americas', label: 'Americas' },
-  { value: 'africa', label: 'Africa' },
-];
 
 @Component({
   selector: 'da-intel-screen',

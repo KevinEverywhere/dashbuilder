@@ -38,7 +38,7 @@ export function createDestinationAtlasState(initialSelectedId: string) {
   let destSearch = '';
   let destRegion = '';
   let timePreset = '5y';
-  let visitPeriodStart = '2019-01';
+  let visitPeriodStart = '2015-01';
   let visitPeriodEnd = '2024-12';
   let highlightTarget: SettingsHighlightTarget = null;
   let listPlacement: GeoExplorerListPlacement = 'right';

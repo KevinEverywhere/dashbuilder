@@ -19,6 +19,7 @@ import { computed } from 'vue';
 import { BarChart } from '@rosettadash/vue/visual/chart/bar';
 import { LineChart } from '@rosettadash/vue/visual/chart/line';
 import { GridLayout } from '@rosettadash/vue/layout/grid';
+import { ScrollRegion } from '@rosettadash/vue/layout/scroll-region';
 import { RoleGate } from '@rosettadash/vue/domain/role-gate';
 import { KpiCard } from '@rosettadash/vue/visual/kpi';
 import { MetricChip } from '@rosettadash/vue/visual/plugin/metric-chip';
@@ -41,18 +42,20 @@ const bars = computed(() => destinationBarSeries(props.locale, localizedDestinat
 <template>
   <section class="da-panel">
     <h2>Overview</h2>
-    <p>Current visitor KPIs and historic trends across sample destinations.</p>
+    <p>Current visitor KPIs and historic trends across 30 sample destinations (10-year guesstimates).</p>
     <div class="da-stack">
-      <GridLayout :columns="3" :gap="12" title="Destination KPIs">
-        <KpiCard
-          v-for="dest in MOCK_DESTINATIONS"
-          :key="dest.id"
-          :title="localizedDestinationName(dest, locale)"
-          :value="formatVisitorCount(dest.visitorsCurrent)"
-          :delta="computeVisitorDelta(dest)"
-          format="number"
-        />
-      </GridLayout>
+      <ScrollRegion title="Destination KPIs" max-height="22rem">
+        <GridLayout :columns="3" :gap="12">
+          <KpiCard
+            v-for="dest in MOCK_DESTINATIONS"
+            :key="dest.id"
+            :title="localizedDestinationName(dest, locale)"
+            :value="formatVisitorCount(dest.visitorsCurrent)"
+            :delta="computeVisitorDelta(dest)"
+            format="number"
+          />
+        </GridLayout>
+      </ScrollRegion>
       <div class="da-stack da-stack--2">
         <LineChart
           title="Visitors over time (aggregate trend)"

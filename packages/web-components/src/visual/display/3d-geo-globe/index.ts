@@ -8,8 +8,13 @@ export {
   GLOBE_HEIGHT_SEGMENTS,
   GLOBE_RADIUS,
   GLOBE_WIDTH_SEGMENTS,
+  GLOBE_PICK_MAX_MOVE_PX,
+  globePositionToLatLng,
+  isGlobePointerClick,
   latLngToGlobePosition,
   measureEquirectEdgeInset,
+  nearestGlobeMarkerId,
+  resolveGlobePickId,
   patchEquirectGlobeMaterial,
   prepareEquirectGlobeTexture,
 } from './globe-view.js';

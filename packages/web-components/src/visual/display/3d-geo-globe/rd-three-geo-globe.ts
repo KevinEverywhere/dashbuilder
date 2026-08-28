@@ -11,6 +11,8 @@ import {
   parseGlobeMarkersJson,
   patchEquirectGlobeMaterial,
   prepareEquirectGlobeTexture,
+  isGlobePointerClick,
+  resolveGlobePickId,
 } from './globe-view.js';
 
 export const RD_THREE_GEO_GLOBE_TAG = 'rd-three-geo-globe';
@@ -312,24 +314,64 @@ export class RdThreeGeoGlobeElement extends RosettaAtomElement {
 
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
+      let pointerDown: { x: number; y: number } | null = null;
 
-      const onPointerDown = (event: PointerEvent): void => {
+      const pickFromPointer = (event: PointerEvent): void => {
         const rect = renderer.domElement.getBoundingClientRect();
         pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(pointer, camera);
-        const hits = raycaster.intersectObjects([...markerMeshes.values()]);
-        const hit = hits[0]?.object as import('three').Mesh | undefined;
-        const id = hit?.userData?.['id'] as string | undefined;
+        const hits = raycaster.intersectObjects([globe, ...markerMeshes.values()]);
+        const first = hits[0];
+        const firstMesh = first?.object as import('three').Mesh | undefined;
+        const markerHitId =
+          firstMesh && firstMesh !== globe
+            ? (firstMesh.userData?.['id'] as string | undefined)
+            : undefined;
+        const globeHit = firstMesh === globe ? first : undefined;
+        const id = resolveGlobePickId(
+          this.currentMarkers(),
+          markerHitId,
+          globeHit
+            ? { x: globeHit.point.x, y: globeHit.point.y, z: globeHit.point.z }
+            : undefined,
+        );
         if (id) {
           this.dispatchDetail('marker-select', { id });
         }
       };
 
+      const onPointerDown = (event: PointerEvent): void => {
+        if (event.button !== 0) {
+          return;
+        }
+        pointerDown = { x: event.clientX, y: event.clientY };
+      };
+
+      const onPointerUp = (event: PointerEvent): void => {
+        if (event.button !== 0) {
+          return;
+        }
+        const start = pointerDown;
+        pointerDown = null;
+        if (!isGlobePointerClick(start, event.clientX, event.clientY)) {
+          return;
+        }
+        pickFromPointer(event);
+      };
+
+      const onPointerCancel = (): void => {
+        pointerDown = null;
+      };
+
       renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      renderer.domElement.addEventListener('pointerup', onPointerUp);
+      renderer.domElement.addEventListener('pointercancel', onPointerCancel);
 
       const dispose = (): void => {
         renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+        renderer.domElement.removeEventListener('pointerup', onPointerUp);
+        renderer.domElement.removeEventListener('pointercancel', onPointerCancel);
         cancelAnimationFrame(flyFrameId);
         cancelAnimationFrame(animationId);
         resizeObserver.disconnect();

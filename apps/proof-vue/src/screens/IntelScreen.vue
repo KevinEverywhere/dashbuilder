@@ -13,7 +13,7 @@ import { NewsResultsTable } from '@rosettadash/vue/visual/news/results-table';
 import { NewsSearchBox } from '@rosettadash/vue/visual/news/search-box';
 import RoleGatePanel from '../components/RoleGatePanel.vue';
 import { useConsumerSecrets } from '../composables/use-consumer-secrets';
-import { MOCK_NEWS } from '../lib/atlas-utils';
+import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
 import { fetchLiveNewsArticles, type LiveNewsArticle } from '../lib/news-api';
 import type { AtlasUserRole } from '../lib/roles';
 
@@ -98,7 +98,13 @@ const selectedArticle = computed(() => filtered.value.find((a) => a.id === props
     >
       <div class="da-stack da-stack--2">
         <NewsSearchBox :value="newsQuery" @search="emit('update:newsQuery', $event)" />
-        <NewsRegionSelect :value="newsRegion" @change="emit('update:newsRegion', $event)" />
+        <NewsRegionSelect
+          label="Region"
+          placeholder="All regions"
+          :options="REGION_OPTIONS"
+          :value="newsRegion"
+          @change="emit('update:newsRegion', $event)"
+        />
       </div>
     </RoleGatePanel>
 

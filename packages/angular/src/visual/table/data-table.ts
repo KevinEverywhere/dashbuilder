@@ -5,7 +5,7 @@ export interface DataTableRow {
   id: string;
   name?: string;
   status?: string;
-  amount?: number;
+  amount?: string | number;
   date?: string;
   [key: string]: string | number | undefined;
 }
@@ -25,14 +25,16 @@ export interface DataTableProps {
   template: `
     <section [attr.data-testid]="'rd-table'" [ngClass]="rootClass()">
       <header class="rd-table__header"><span>{{ title() ?? 'Data table' }}</span></header>
-      <table class="rd-table__table">
-        <thead><tr><th>Name</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead>
-        <tbody>
-          @for (row of rows() ?? []; track row.id) {
-            <tr><td>{{ row.name }}</td><td>{{ row.status }}</td><td>{{ row.amount }}</td><td>{{ row.date }}</td></tr>
-          }
-        </tbody>
-      </table>
+      <div class="rd-table__scroll">
+        <table class="rd-table__table">
+          <thead><tr><th>Name</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead>
+          <tbody>
+            @for (row of rows() ?? []; track row.id) {
+              <tr><td>{{ row.name }}</td><td>{{ row.status }}</td><td>{{ row.amount }}</td><td>{{ row.date }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
       <ng-content />
     </section>
   `,

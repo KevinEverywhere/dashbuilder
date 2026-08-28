@@ -61,13 +61,13 @@ export function MediaScreen({
     <section className="da-panel">
       <h2>Media</h2>
       <p>
-        Watch flat destination videos here. 360° equirectangular locations open in{' '}
-        <strong>Authoring</strong> — upload your source and frame the export there.
+        Watch destination videos here (YouTube). Authoring is upload-your-own for flat or 360°
+        sources — this library does not ship VR files.
       </p>
       <div className="rd-media-layout">
         <div className="rd-media-primary">
           <SelectInput
-            label="Flat video (YouTube)"
+            label="Destination video (YouTube)"
             options={FLAT_VIDEO_DESTINATIONS.map((dest) => ({
               value: dest.id,
               label: localizedDestinationName(dest, locale),
@@ -83,22 +83,29 @@ export function MediaScreen({
               controls
             />
           ) : (
-            <p className="da-note">Select a flat destination video to play the YouTube embed.</p>
+            <p className="da-note">Select a destination video to play the YouTube embed.</p>
           )}
-
-          <SelectInput
-            label="360° video (Authoring)"
-            options={EQUIRECT_VIDEO_DESTINATIONS.map((dest) => ({
-              value: dest.id,
-              label: `${localizedDestinationName(dest, locale)} · 360°`,
-            }))}
-            value={equirectSelected?.id ?? ''}
-            onChange={handleEquirectChange}
-          />
-          <p className="da-note">
-            Choosing a 360° destination switches to the Authoring tab and loads its equirect source
-            for sphere preview and ffmpeg.wasm extract.
-          </p>
+          {EQUIRECT_VIDEO_DESTINATIONS.length > 0 ? (
+            <>
+              <SelectInput
+                label="360° video (Authoring)"
+                options={EQUIRECT_VIDEO_DESTINATIONS.map((dest) => ({
+                  value: dest.id,
+                  label: `${localizedDestinationName(dest, locale)} · 360°`,
+                }))}
+                value={equirectSelected?.id ?? ''}
+                onChange={handleEquirectChange}
+              />
+              <p className="da-note">
+                Choosing a 360° destination switches to the Authoring tab.
+              </p>
+            </>
+          ) : (
+            <p className="da-note">
+              Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships
+              in the destination library.
+            </p>
+          )}
         </div>
         <div className="rd-media-tools">
           <VideoMetadataPanel items={metadataItems} />

@@ -3,8 +3,11 @@ import {
   applyEquirectGlobeTextureWrap,
   cameraPositionFacingLatLng,
   GLOBE_CAMERA_DISTANCE,
+  globePositionToLatLng,
+  isGlobePointerClick,
   latLngToGlobePosition,
   measureEquirectEdgeInset,
+  nearestGlobeMarkerId,
   parseGlobeMarkersJson,
 } from './globe-view.js';
 
@@ -21,6 +24,28 @@ describe('globe-view', () => {
     expect(camera.x / cameraLen).toBeCloseTo(marker.x / markerLen);
     expect(camera.y / cameraLen).toBeCloseTo(marker.y / markerLen);
     expect(camera.z / cameraLen).toBeCloseTo(marker.z / markerLen);
+  });
+
+  it('round-trips lat/lng through globe position', () => {
+    const lat = 48.8566;
+    const lng = 2.3522;
+    const marker = latLngToGlobePosition(lat, lng);
+    const back = globePositionToLatLng(marker.x, marker.y, marker.z);
+    expect(back.lat).toBeCloseTo(lat, 5);
+    expect(back.lng).toBeCloseTo(lng, 5);
+  });
+
+  it('picks the nearest destination to a globe hit, not the first library city', () => {
+    const paris = { id: 'paris', lat: 48.8566, lng: 2.3522 };
+    const tokyo = { id: 'tokyo', lat: 35.6762, lng: 139.6503 };
+    const hit = latLngToGlobePosition(48.8, 2.3);
+    expect(nearestGlobeMarkerId([tokyo, paris], hit)).toBe('paris');
+  });
+
+  it('treats a small pointer move as a click and a drag as not a click', () => {
+    expect(isGlobePointerClick({ x: 10, y: 10 }, 12, 11)).toBe(true);
+    expect(isGlobePointerClick({ x: 10, y: 10 }, 40, 10)).toBe(false);
+    expect(isGlobePointerClick(null, 10, 10)).toBe(false);
   });
 
   it('does not use the default equatorial camera for Sydney', () => {

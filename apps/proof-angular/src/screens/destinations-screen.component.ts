@@ -10,6 +10,7 @@ import {
   historicWindowLabel,
   localizedDestinationName,
   periodColumnLabel,
+  REGION_OPTIONS,
 } from '../lib/atlas-utils';
 import { AtlasStateService } from '../services/atlas-state.service';
 import { RoleGatePanelComponent } from '../components/role-gate-panel.component';
@@ -22,16 +23,9 @@ import {
   TimePresetButtonsComponent,
 } from '../components/filter-summary.component';
 
-const REGION_OPTIONS = [
-  { value: 'asia-pacific', label: 'Asia Pacific' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'americas', label: 'Americas' },
-  { value: 'africa', label: 'Africa' },
-];
-
 const TIME_PRESETS = [
-  { id: '1y', label: '1Y' },
-  { id: '5y', label: '5Y' },
+  { id: '1y', label: '1 year' },
+  { id: '5y', label: '5 years' },
   { id: 'all', label: 'All' },
 ];
 
@@ -61,55 +55,45 @@ const TIME_PRESETS = [
           hiddenStatusText="Filters are available to Editor and Admin roles. Viewer sees the full list."
         >
           <section class="rd-filter-grid">
-            <div class="rd-filter-grid__stack">
-              <da-bound-text-input
-                [fieldLabel]="'Search'"
-                placeholder="Destination name…"
-                [value]="atlas.destSearch()"
-                (valueChange)="atlas.destSearch.set($event)"
-              />
-              <da-bound-select-input
-                [fieldLabel]="'Region'"
-                placeholder="All regions"
-                [options]="regionOptions"
-                [value]="atlas.destRegion()"
-                (valueChange)="atlas.destRegion.set($event)"
-              />
-            </div>
-            <div class="rd-filter-grid__period">
-              <section class="rd-input-date-range">
-                <span class="rd-field__label">Visit period</span>
-                <div class="rd-date-range__controls">
-                  <label class="rd-date-range__field">
-                    <span class="rd-date-range__field-label">Start</span>
-                    <input
-                      type="month"
-                      class="rd-date-range__input"
-                      [value]="atlas.visitPeriodStart()"
-                      (change)="onVisitStartChange($event)"
-                    />
-                  </label>
-                  <span class="rd-date-range__sep">to</span>
-                  <label class="rd-date-range__field">
-                    <span class="rd-date-range__field-label">End</span>
-                    <input
-                      type="month"
-                      class="rd-date-range__input"
-                      [value]="atlas.visitPeriodEnd()"
-                      (change)="onVisitEndChange($event)"
-                    />
-                  </label>
-                </div>
-              </section>
-            </div>
-            <div class="rd-filter-grid__full">
-              <da-time-preset-buttons
-                [fieldLabel]="'Historic window'"
-                [presets]="timePresets"
-                [activePresetId]="atlas.timePreset()"
-                (presetChange)="atlas.timePreset.set($event)"
-              />
-            </div>
+            <da-bound-text-input
+              [fieldLabel]="'Search'"
+              placeholder="Destination name…"
+              [value]="atlas.destSearch()"
+              (valueChange)="atlas.destSearch.set($event)"
+            />
+            <da-bound-select-input
+              [fieldLabel]="'Region'"
+              placeholder="All regions"
+              [options]="regionOptions"
+              [value]="atlas.destRegion()"
+              (valueChange)="atlas.destRegion.set($event)"
+            />
+            <section class="rd-input-date-range">
+              <span class="rd-field__label">Visit period</span>
+              <div class="rd-date-range__controls">
+                <input
+                  type="month"
+                  class="rd-input rd-date-range__input"
+                  aria-label="Visit period start"
+                  [value]="atlas.visitPeriodStart()"
+                  (change)="onVisitStartChange($event)"
+                />
+                <span class="rd-date-range__sep">to</span>
+                <input
+                  type="month"
+                  class="rd-input rd-date-range__input"
+                  aria-label="Visit period end"
+                  [value]="atlas.visitPeriodEnd()"
+                  (change)="onVisitEndChange($event)"
+                />
+              </div>
+            </section>
+            <da-time-preset-buttons
+              [fieldLabel]="'Historic window'"
+              [presets]="timePresets"
+              [activePresetId]="atlas.timePreset()"
+              (presetChange)="atlas.timePreset.set($event)"
+            />
           </section>
         </da-role-gate-panel>
 
@@ -124,6 +108,7 @@ const TIME_PRESETS = [
           <div style="flex: 1.4; min-width: 0">
           <section class="rd-table da-destinations-table">
             <header class="rd-table__header"><span>Destinations</span></header>
+            <div class="rd-table__scroll">
             <table class="rd-table__table">
               <thead>
                 <tr>
@@ -148,6 +133,7 @@ const TIME_PRESETS = [
                 }
               </tbody>
             </table>
+            </div>
           </section>
           </div>
 
@@ -241,7 +227,7 @@ export class DestinationsScreenComponent {
       Boolean(this.atlas.destSearch()) ||
       Boolean(this.atlas.destRegion()) ||
       this.atlas.timePreset() !== '5y' ||
-      this.atlas.visitPeriodStart() !== '2019-01' ||
+      this.atlas.visitPeriodStart() !== '2015-01' ||
       this.atlas.visitPeriodEnd() !== '2024-12',
   );
 

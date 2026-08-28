@@ -64,7 +64,7 @@ export function createDestinationAtlasState(initialSelectedId: string) {
   let destSearch = $state('');
   let destRegion = $state('');
   let timePreset = $state('5y');
-  let visitPeriodStart = $state('2019-01');
+  let visitPeriodStart = $state('2015-01');
   let visitPeriodEnd = $state('2024-12');
   let highlightTarget = $state<SettingsHighlightTarget>(null);
 

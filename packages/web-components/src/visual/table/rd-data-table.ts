@@ -7,7 +7,7 @@ export interface DataTableRow {
   id: string;
   name?: string;
   status?: string;
-  amount?: number;
+  amount?: string | number;
   date?: string;
   [key: string]: string | number | undefined;
 }
@@ -15,6 +15,7 @@ export interface DataTableRow {
 export interface DataTableProps {
   title?: string;
   rows?: DataTableRow[];
+  selectedRowId?: string;
   className?: string;
   style?: Record<string, string>;
   children?: unknown;
@@ -25,13 +26,21 @@ export class RdDataTableElement extends RosettaAtomElement {
   static readonly tagName = RD_DATA_TABLE_TAG;
 
   static get observedAttributes(): string[] {
-    return ["title","rows"];
+    return ["title","rows","selected-row-id"];
   }
 
   protected buildMarkup(): string {
     const title = this.readAttr('title', 'Data table');
+    const selectedId = this.readAttr('selected-row-id');
     const rows = this.parseJsonAttr<Array<Record<string, string | number | undefined>>>('rows', []);
-    const body = rows.map((row) => `<tr data-row-id="${this.esc(String(row['id'] ?? ''))}"><td>${this.esc(String(row['name'] ?? ''))}</td><td>${this.esc(String(row['status'] ?? ''))}</td><td>${this.esc(String(row['amount'] ?? ''))}</td><td>${this.esc(String(row['date'] ?? ''))}</td></tr>`).join('');
+    const body = rows.map((row) => {
+      const id = String(row['id'] ?? '');
+      const selected = id === selectedId;
+      const classes = ['rd-table__row', 'rd-table__row--interactive', selected ? 'rd-table__row--selected' : '']
+        .filter(Boolean)
+        .join(' ');
+      return `<tr class="${classes}" data-row-id="${this.esc(id)}"${selected ? ' aria-selected="true"' : ''}><td>${this.esc(String(row['name'] ?? ''))}</td><td>${this.esc(String(row['status'] ?? ''))}</td><td>${this.esc(String(row['amount'] ?? ''))}</td><td>${this.esc(String(row['date'] ?? ''))}</td></tr>`;
+    }).join('');
     return `
       <section class="rd-table rd-table" data-testid="rd-table">
         <header class="rd-table__header"><span>${this.esc(title)}</span></header>

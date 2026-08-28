@@ -43,16 +43,23 @@ import { VideoMetadataPanelComponent } from '../components/video-metadata-panel.
             <p class="da-note">Select a flat destination video to play the YouTube embed.</p>
           }
 
-          <da-bound-select-input
-            [fieldLabel]="'360° video (Authoring)'"
-            [options]="equirectOptions()"
-            [value]="equirectSelected()?.id ?? ''"
-            (valueChange)="onEquirectChange($event)"
-          />
-          <p class="da-note">
-            Choosing a 360° destination switches to the Authoring tab and loads its equirect source
-            for sphere preview and ffmpeg.wasm extract.
-          </p>
+          @if (EQUIRECT_VIDEO_DESTINATIONS.length > 0) {
+            <da-bound-select-input
+              [fieldLabel]="'360° video (Authoring)'"
+              [options]="equirectOptions()"
+              [value]="equirectSelected()?.id ?? ''"
+              (valueChange)="onEquirectChange($event)"
+            />
+            <p class="da-note">
+              Choosing a 360° destination switches to the Authoring tab and loads its equirect source
+              for sphere preview and ffmpeg.wasm extract.
+            </p>
+          } @else {
+            <p class="da-note">
+              Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships in
+              the destination library.
+            </p>
+          }
         </div>
         <div class="rd-media-tools">
           <da-video-metadata-panel [items]="metadataItems()" />

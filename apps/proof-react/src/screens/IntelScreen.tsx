@@ -6,7 +6,7 @@ import { NewsResultsTable } from '@rosettadash/react/visual/news/results-table';
 import { NewsSearchBox } from '@rosettadash/react/visual/news/search-box';
 import type { AtlasContext } from '../state/useDestinationAtlasState';
 import { useConsumerSecrets } from '../state/consumer-secrets-context';
-import { MOCK_NEWS } from '../lib/atlas-utils';
+import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
 import { fetchLiveNewsArticles, type LiveNewsArticle } from '../lib/news-api';
 
 export const INTEL_SOURCE = `<IntelScreen userRole={userRole} newsQuery={newsQuery}>
@@ -16,13 +16,6 @@ export const INTEL_SOURCE = `<IntelScreen userRole={userRole} newsQuery={newsQue
   </RoleGate>
   <NewsResultsTable rows={filteredArticles} selectedRowId={selectedArticleId} />
 </IntelScreen>`;
-
-const REGION_OPTIONS = [
-  { value: 'asia-pacific', label: 'Asia Pacific' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'americas', label: 'Americas' },
-  { value: 'africa', label: 'Africa' },
-];
 
 type Props = Pick<
   AtlasContext,

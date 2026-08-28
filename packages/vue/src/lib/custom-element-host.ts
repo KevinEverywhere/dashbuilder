@@ -83,7 +83,7 @@ export function defineCustomElementHost(
       },
       ...propDefs,
     },
-    emits: Object.values(eventMap),
+    emits: [...new Set([...Object.keys(eventMap), ...Object.values(eventMap)])],
     setup(props, { emit, attrs }) {
       options.register();
       const host = ref<HTMLElement | null>(null);
@@ -109,7 +109,11 @@ export function defineCustomElementHost(
         applyAttrs();
         for (const [domEvent, vueEvent] of Object.entries(eventMap)) {
           const handler: EventListener = (event) => {
-            emit(vueEvent, (event as CustomEvent).detail);
+            const detail = (event as CustomEvent).detail;
+            emit(vueEvent, detail);
+            if (domEvent !== vueEvent) {
+              emit(domEvent, detail);
+            }
           };
           el.addEventListener(domEvent, handler);
           listeners.push([domEvent, handler]);

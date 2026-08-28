@@ -4,7 +4,7 @@
 **Research:** [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126)  
 **Gap WC components:** [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127) app-language-select · [DAS-128](https://planetkevin.atlassian.net/browse/DAS-128) geo-map · [DAS-129](https://planetkevin.atlassian.net/browse/DAS-129) youtube-embed
 
-Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations.
+Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only; Authoring is upload-your-own (no shipped VR).
 
 ## Product intent
 
@@ -134,11 +134,11 @@ Component props: `provider`, `tile-url`, `api-key`, `center`, `zoom`, `markers`,
 
 ## Mock data
 
-`libs/destination-atlas/src/data/destinations.ts` — sample destinations with:
+`libs/destination-atlas/src/data/destinations.ts` — **30 cities** (five per inhabited continent) with:
 
-- `id`, `name`, `region`, `lat`, `lng`
-- `youtubeId`, `equirectUrl` (optional)
-- `visitorsCurrent`, `visitorsHistoric[]` (year + count)
+- `id`, `name`, `region` (continent id), `lat`, `lng`
+- `youtubeId` (flat video only — no shipped 360° / VR sources)
+- `visitorsCurrent`, `visitorsHistoric[]` (year + guesstimated count, 2015–2024)
 - `labels` — optional per-locale display names for developer i18n demos
 
 ## Install (consumer)

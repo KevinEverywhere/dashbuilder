@@ -104,7 +104,7 @@ export function useDestinationAtlasState(initialSelectedId: string): Destination
   const [destSearch, setDestSearch] = useState('');
   const [destRegion, setDestRegion] = useState('');
   const [timePreset, setTimePreset] = useState('5y');
-  const [visitPeriodStart, setVisitPeriodStart] = useState('2019-01');
+  const [visitPeriodStart, setVisitPeriodStart] = useState('2015-01');
   const [visitPeriodEnd, setVisitPeriodEnd] = useState('2024-12');
   const [highlightTarget, setHighlightTarget] = useState<SettingsHighlightTarget>(null);
 

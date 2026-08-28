@@ -153,9 +153,11 @@ export function renderOverview(atlas: AtlasState): string {
   return `
     <section class="da-panel">
       <h2>Overview</h2>
-      <p>Current visitor KPIs and historic trends across sample destinations.</p>
+      <p>Current visitor KPIs and historic trends across 30 sample destinations (10-year guesstimates).</p>
       <div class="da-stack">
-        <rd-grid-layout title="Destination KPIs" columns="3" gap="12">${kpiCards}</rd-grid-layout>
+        <rd-scroll-region title="Destination KPIs" max-height="22rem">
+          <rd-grid-layout columns="3" gap="12">${kpiCards}</rd-grid-layout>
+        </rd-scroll-region>
         <div class="da-stack da-stack--2">
           <rd-line-chart title="Visitors over time (aggregate trend)" points='${jsonAttr(aggregateVisitorTrend())}' x-axis-label="Year" y-axis-label="Total visitors"></rd-line-chart>
           <rd-bar-chart title="2024 visitors by destination" bars='${jsonAttr(destinationBarSeries(atlas.locale, localizedDestinationName))}' y-axis-label="Visitors"></rd-bar-chart>
@@ -182,7 +184,7 @@ export function renderDestinations(atlas: AtlasState): string {
     id: dest.id,
     name: localizedDestinationName(dest, atlas.locale),
     status: dest.region,
-    amount: dest.visitorsCurrent,
+    amount: formatVisitorCount(dest.visitorsCurrent),
     date: periodLabel,
   }));
   const selected = getDestinationById(atlas.selectedId);
@@ -223,7 +225,7 @@ export function renderDestinations(atlas: AtlasState): string {
           <div class="rd-filter-grid">
             <rd-text-input label="Search" placeholder="Destination name…" value="${attr(atlas.destSearch)}" data-ref="dest-search"></rd-text-input>
             <rd-select-input label="Region" placeholder="All regions" options='${jsonAttr(regionOptions)}' value="${attr(atlas.destRegion)}" data-ref="dest-region"></rd-select-input>
-            <rd-date-range label="Visit period" start-date="${attr(atlas.visitPeriodStart)}" end-date="${attr(atlas.visitPeriodEnd)}" data-ref="visit-period"></rd-date-range>
+            <rd-date-range label="Visit period" granularity="month" start-date="${attr(atlas.visitPeriodStart)}" end-date="${attr(atlas.visitPeriodEnd)}" data-ref="visit-period"></rd-date-range>
             <rd-time-preset label="Historic window" presets='${jsonAttr(TIME_PRESETS)}' active-preset-id="${attr(atlas.timePreset)}" data-ref="time-preset"></rd-time-preset>
           </div>
         </rd-role-gate>
@@ -236,7 +238,7 @@ export function renderDestinations(atlas: AtlasState): string {
           <p class="rd-filter-summary__hint">Historic window: ${escapeHtml(historicWindowLabel(atlas.timePreset))} (${escapeHtml(periodLabel)}).</p>
         </section>
         <rd-flex-layout direction="row" gap="16" title="Browse destinations">
-          <rd-data-table title="Destinations" rows='${jsonAttr(rows)}' data-ref="dest-table"></rd-data-table>
+          <rd-data-table title="Destinations" rows='${jsonAttr(rows)}' selected-row-id="${attr(atlas.selectedId)}" data-ref="dest-table"></rd-data-table>
           <rd-detail-panel title="Destination detail">${detail}</rd-detail-panel>
         </rd-flex-layout>
       </div>
@@ -343,18 +345,22 @@ export function renderMedia(atlas: AtlasState): string {
   return `
     <section class="da-panel">
       <h2>Media</h2>
-      <p>Watch flat destination videos here. 360° equirectangular locations open in <strong>Authoring</strong> — upload your source and frame the export there.</p>
+      <p>Watch destination videos here (YouTube). Authoring is upload-your-own — this library does not ship VR files.</p>
       <div class="rd-media-layout">
         <div class="rd-media-primary">
-          <rd-select-input label="Flat video (YouTube)" options='${jsonAttr(FLAT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: localizedDestinationName(d, atlas.locale) })))}' value="${attr(flatSelected?.id ?? '')}" data-ref="media-flat"></rd-select-input>
+          <rd-select-input label="Destination video (YouTube)" options='${jsonAttr(FLAT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: localizedDestinationName(d, atlas.locale) })))}' value="${attr(flatSelected?.id ?? '')}" data-ref="media-flat"></rd-select-input>
           ${
             flatSelected?.youtubeId
               ? `<div class="da-interop-callout" role="note"><strong>Native custom element.</strong> This embed is <code>rd-youtube-embed</code> hosted directly — the same element Svelte mounts via Angular and React wraps natively.</div>
                  <rd-youtube-embed class="da-youtube rd-youtube-embed-host" video-id="${attr(flatSelected.youtubeId)}" embed-title="${attr(`${localizedDestinationName(flatSelected, atlas.locale)} — destination video`)}"></rd-youtube-embed>`
-              : `<p class="da-note">Select a flat destination video to play the YouTube embed.</p>`
+              : `<p class="da-note">Select a destination video to play the YouTube embed.</p>`
           }
-          <rd-select-input label="360° video (Authoring)" options='${jsonAttr(EQUIRECT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: `${localizedDestinationName(d, atlas.locale)} · 360°` })))}' value="${attr(equirectSelected?.id ?? '')}" data-ref="media-360"></rd-select-input>
-          <p class="da-note">Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.</p>
+          ${
+            EQUIRECT_VIDEO_DESTINATIONS.length > 0
+              ? `<rd-select-input label="360° video (Authoring)" options='${jsonAttr(EQUIRECT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: `${localizedDestinationName(d, atlas.locale)} · 360°` })))}' value="${attr(equirectSelected?.id ?? '')}" data-ref="media-360"></rd-select-input>
+                 <p class="da-note">Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.</p>`
+              : `<p class="da-note">Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships in the destination library.</p>`
+          }
         </div>
         <div class="rd-media-tools">
           <section class="rd-video-metadata" aria-label="Video metadata">

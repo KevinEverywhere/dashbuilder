@@ -10,7 +10,7 @@ export function destinationHasFlatVideo(dest: Destination | undefined): boolean 
   return Boolean(dest?.youtubeId) && !isEquirectDestination(dest);
 }
 
-/** Destinations that route to Authoring (360° workflow) — upload required; no shipped autoload. */
+/** Destinations that route to Authoring (360° workflow) — upload required; no shipped autoload or VR files. */
 export function destinationHasEquirectVideo(dest: Destination | undefined): boolean {
   return isEquirectDestination(dest);
 }

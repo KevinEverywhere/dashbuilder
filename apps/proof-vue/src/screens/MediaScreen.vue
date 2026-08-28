@@ -85,19 +85,25 @@ const metadataItems = computed(() =>
         />
         <p v-else class="da-note">Select a flat destination video to play the YouTube embed.</p>
 
-        <BoundSelectInput
-          field-label="360° video (Authoring)"
-          :options="
-            EQUIRECT_VIDEO_DESTINATIONS.map((dest) => ({
-              value: dest.id,
-              label: `${localizedDestinationName(dest, locale)} · 360°`,
-            }))
-          "
-          :value="equirectSelected?.id ?? ''"
-          @update:value="emit('openAuthoring', $event)"
-        />
-        <p class="da-note">
-          Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.
+        <template v-if="EQUIRECT_VIDEO_DESTINATIONS.length > 0">
+          <BoundSelectInput
+            field-label="360° video (Authoring)"
+            :options="
+              EQUIRECT_VIDEO_DESTINATIONS.map((dest) => ({
+                value: dest.id,
+                label: `${localizedDestinationName(dest, locale)} · 360°`,
+              }))
+            "
+            :value="equirectSelected?.id ?? ''"
+            @update:value="emit('openAuthoring', $event)"
+          />
+          <p class="da-note">
+            Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.
+          </p>
+        </template>
+        <p v-else class="da-note">
+          Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships in
+          the destination library.
         </p>
       </div>
       <div class="rd-media-tools">

@@ -93,7 +93,28 @@ function submitLocation() {
   emit('goToMapView', resolved);
 }
 
-function selectDestination(id: string) {
+function markerEventId(event: unknown): string | undefined {
+  if (typeof event === 'string' && event) {
+    return event;
+  }
+  if (!event || typeof event !== 'object') {
+    return undefined;
+  }
+  const rec = event as { id?: unknown; detail?: { id?: unknown } };
+  if (typeof rec.id === 'string' && rec.id) {
+    return rec.id;
+  }
+  if (typeof rec.detail?.id === 'string' && rec.detail.id) {
+    return rec.detail.id;
+  }
+  return undefined;
+}
+
+function selectDestination(event: unknown) {
+  const id = typeof event === 'string' ? event : markerEventId(event);
+  if (!id) {
+    return;
+  }
   emit('update:selectedId', id);
 }
 </script>
@@ -154,7 +175,7 @@ function selectDestination(id: string) {
         :selected-id="selectedId"
         :api-key="mapProvider === 'google-maps' ? secrets.googleMapsApiKey : undefined"
         :tile-url="mapProvider === 'maplibre' ? secrets.maplibreTileUrl : undefined"
-        @marker-select="selectDestination($event.id)"
+        @marker-select="selectDestination"
       />
     </div>
   </GeoExplorerLayout>

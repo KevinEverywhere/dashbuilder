@@ -45,7 +45,7 @@ export class AtlasStateService {
   readonly destSearch = signal('');
   readonly destRegion = signal('');
   readonly timePreset = signal('5y');
-  readonly visitPeriodStart = signal('2019-01');
+  readonly visitPeriodStart = signal('2015-01');
   readonly visitPeriodEnd = signal('2024-12');
   readonly highlightTarget = signal<SettingsHighlightTarget>(null);
 

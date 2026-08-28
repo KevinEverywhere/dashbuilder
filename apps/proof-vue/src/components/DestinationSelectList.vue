@@ -1,21 +1,43 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue';
+import { findDestinationListRow, scrollSelectedDestinationIntoList } from '@destination-atlas';
+
 export interface DestinationSelectItem {
   id: string;
   label: string;
   meta?: string;
 }
 
-defineProps<{
+const props = defineProps<{
   listTitle?: string;
   items: DestinationSelectItem[];
   selectedId?: string;
 }>();
 
 const emit = defineEmits<{ select: [string] }>();
+const root = ref<HTMLElement | null>(null);
+
+watch(
+  () => [props.selectedId, props.items] as const,
+  ([selectedId, items]) => {
+    if (!selectedId) {
+      return;
+    }
+    const index = items.findIndex((item) => item.id === selectedId);
+    void nextTick(() => {
+      scrollSelectedDestinationIntoList(
+        findDestinationListRow(root.value, selectedId),
+        index,
+        items.length,
+      );
+    });
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <section class="rd-destination-list" :aria-label="listTitle ?? 'Destinations'">
+  <section ref="root" class="rd-destination-list" :aria-label="listTitle ?? 'Destinations'">
     <header class="rd-destination-list__header">
       <h3>{{ listTitle ?? 'Destinations' }}</h3>
       <span class="rd-destination-list__count">{{ items.length }}</span>
@@ -30,6 +52,7 @@ const emit = defineEmits<{ select: [string] }>();
         <button
           type="button"
           class="rd-destination-list__button"
+          :data-dest-id="item.id"
           :aria-current="item.id === selectedId ? 'true' : undefined"
           @click="emit('select', item.id)"
         >

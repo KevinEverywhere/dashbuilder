@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { findDestinationListRow, scrollSelectedDestinationIntoList } from '@destination-atlas';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  effect,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 
 export type GeoExplorerListPlacement = 'left' | 'right';
 
@@ -27,6 +36,7 @@ export interface DestinationSelectItem {
             <button
               type="button"
               class="rd-destination-list__button"
+              [attr.data-dest-id]="item.id"
               [attr.aria-current]="item.id === selectedId() ? 'true' : null"
               (click)="select.emit(item.id)"
             >
@@ -46,6 +56,26 @@ export class DestinationSelectListComponent {
   readonly items = input<DestinationSelectItem[]>([]);
   readonly selectedId = input<string>();
   readonly select = output<string>();
+
+  private readonly host = inject(ElementRef<HTMLElement>);
+
+  constructor() {
+    effect(() => {
+      const selectedId = this.selectedId();
+      const items = this.items();
+      if (!selectedId) {
+        return;
+      }
+      const index = items.findIndex((item) => item.id === selectedId);
+      queueMicrotask(() => {
+        scrollSelectedDestinationIntoList(
+          findDestinationListRow(this.host.nativeElement, selectedId),
+          index,
+          items.length,
+        );
+      });
+    });
+  }
 }
 
 @Component({

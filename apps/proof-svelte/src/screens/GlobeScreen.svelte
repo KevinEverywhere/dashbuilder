@@ -24,7 +24,7 @@
     part,
     listPlacement = 'right',
     onSelectedIdChange,
-    onFocusDestinationOnMap,
+    onFocusDestinationOnMap: _onFocusDestinationOnMap,
   }: {
     locale: string;
     selectedId: string;
@@ -57,8 +57,7 @@
   }
 
   function selectFromGlobe(id: string) {
-    if (id === selectedId) {
-      onFocusDestinationOnMap?.(id);
+    if (!id) {
       return;
     }
     onSelectedIdChange?.(id);

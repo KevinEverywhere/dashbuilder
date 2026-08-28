@@ -50,13 +50,30 @@ const listItems = computed(() =>
   })),
 );
 
+function markerEventId(event: unknown): string | undefined {
+  if (typeof event === 'string' && event) {
+    return event;
+  }
+  if (!event || typeof event !== 'object') {
+    return undefined;
+  }
+  const rec = event as { id?: unknown; detail?: { id?: unknown } };
+  if (typeof rec.id === 'string' && rec.id) {
+    return rec.id;
+  }
+  if (typeof rec.detail?.id === 'string' && rec.detail.id) {
+    return rec.detail.id;
+  }
+  return undefined;
+}
+
 function selectFromList(id: string) {
   emit('update:selectedId', id);
 }
 
-function selectFromGlobe(id: string) {
-  if (id === props.selectedId) {
-    emit('focusDestinationOnMap', id);
+function selectFromGlobe(event: unknown) {
+  const id = markerEventId(event);
+  if (!id) {
     return;
   }
   emit('update:selectedId', id);
@@ -78,7 +95,7 @@ function selectFromGlobe(id: string) {
         :texture-url="DEFAULT_WORLD_EQUIRECT_URL"
         :markers="markers"
         :selected-id="selectedId"
-        @marker-select="selectFromGlobe($event.id)"
+        @marker-select="selectFromGlobe"
       />
     </div>
   </GeoExplorerLayout>

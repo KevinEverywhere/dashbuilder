@@ -49,6 +49,68 @@ export function latLngToGlobePosition(
   };
 }
 
+/** Inverse of `latLngToGlobePosition` for a direction from the globe origin. */
+export function globePositionToLatLng(x: number, y: number, z: number): { lat: number; lng: number } {
+  const r = Math.hypot(x, y, z) || 1;
+  const lat = (Math.asin(Math.min(1, Math.max(-1, y / r))) * 180) / Math.PI;
+  let lng = (Math.atan2(z, -x) * 180) / Math.PI - 180;
+  if (lng <= -180) {
+    lng += 360;
+  } else if (lng > 180) {
+    lng -= 360;
+  }
+  return { lat, lng };
+}
+
+export const GLOBE_PICK_MAX_MOVE_PX = 8;
+
+export function isGlobePointerClick(
+  start: { x: number; y: number } | null,
+  endX: number,
+  endY: number,
+  maxMovePx: number = GLOBE_PICK_MAX_MOVE_PX,
+): boolean {
+  if (!start) {
+    return false;
+  }
+  return Math.hypot(endX - start.x, endY - start.y) <= maxMovePx;
+}
+
+export function nearestGlobeMarkerId(
+  markers: ReadonlyArray<{ id: string; lat: number; lng: number }>,
+  point: GlobeVec3,
+): string | undefined {
+  if (markers.length === 0) {
+    return undefined;
+  }
+  let bestId: string | undefined;
+  let bestDist = Infinity;
+  for (const marker of markers) {
+    const pos = latLngToGlobePosition(marker.lat, marker.lng);
+    const dist =
+      (pos.x - point.x) ** 2 + (pos.y - point.y) ** 2 + (pos.z - point.z) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestId = marker.id;
+    }
+  }
+  return bestId;
+}
+
+export function resolveGlobePickId(
+  markers: ReadonlyArray<{ id: string; lat: number; lng: number }>,
+  markerHitId: string | undefined,
+  globeHitPoint: GlobeVec3 | undefined,
+): string | undefined {
+  if (markerHitId) {
+    return markerHitId;
+  }
+  if (!globeHitPoint) {
+    return undefined;
+  }
+  return nearestGlobeMarkerId(markers, globeHitPoint);
+}
+
 /** Camera on the ray from the origin through `lat`/`lng`, so that point faces the user. */
 export function cameraPositionFacingLatLng(
   lat: number,

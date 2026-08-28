@@ -21,6 +21,8 @@ import {
   latLngToGlobePosition,
   patchEquirectGlobeMaterial,
   prepareEquirectGlobeTexture,
+  isGlobePointerClick,
+  resolveGlobePickId,
 } from '@rosettadash/web-components/visual/display/3d-geo-globe';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -220,6 +222,7 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     const markerGeometry = new THREE.SphereGeometry(0.06, 12, 12);
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
+    let pointerDown: { x: number; y: number } | null = null;
 
     const syncMarkers = () => {
       const nextMarkers = this.markers();
@@ -306,19 +309,54 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
     tick();
 
     const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+      pointerDown = { x: event.clientX, y: event.clientY };
+    };
+
+    const pickFromPointer = (event: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects([...this.markerMeshes.values()]);
-      const hit = hits[0]?.object as THREE.Mesh | undefined;
-      const id = hit?.userData?.['id'] as string | undefined;
+      const hits = raycaster.intersectObjects([globe, ...this.markerMeshes.values()]);
+      const first = hits[0];
+      const firstMesh = first?.object as THREE.Mesh | undefined;
+      const markerHitId =
+        firstMesh && firstMesh !== globe
+          ? (firstMesh.userData?.['id'] as string | undefined)
+          : undefined;
+      const globeHit = firstMesh === globe ? first : undefined;
+      const id = resolveGlobePickId(
+        this.markers(),
+        markerHitId,
+        globeHit ? { x: globeHit.point.x, y: globeHit.point.y, z: globeHit.point.z } : undefined,
+      );
       if (id) {
         this.markerSelect.emit(id);
       }
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+      const start = pointerDown;
+      pointerDown = null;
+      if (!isGlobePointerClick(start, event.clientX, event.clientY)) {
+        return;
+      }
+      pickFromPointer(event);
+    };
+
+    const onPointerCancel = () => {
+      pointerDown = null;
+    };
+
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointercancel', onPointerCancel);
 
     this.disposeRuntime = () => {
       this.syncMarkers = null;
@@ -326,6 +364,8 @@ export class ThreeGeoGlobe implements AfterViewInit, OnDestroy {
       this.hasFacedSelection = false;
       cancelAnimationFrame(flyFrameId);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
+      renderer.domElement.removeEventListener('pointercancel', onPointerCancel);
       cancelAnimationFrame(animationId);
       resizeObserver.disconnect();
       controls.dispose();

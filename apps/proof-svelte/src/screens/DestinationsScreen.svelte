@@ -26,6 +26,7 @@
     historicWindowLabel,
     localizedDestinationName,
     periodColumnLabel,
+    REGION_OPTIONS,
   } from '../lib/atlas-utils';
 
   let {
@@ -60,13 +61,6 @@
     onFocusDestinationOnMap?: (id: string) => void;
   } = $props();
 
-  const REGION_OPTIONS = [
-    { value: 'asia-pacific', label: 'Asia Pacific' },
-    { value: 'europe', label: 'Europe' },
-    { value: 'americas', label: 'Americas' },
-    { value: 'africa', label: 'Africa' },
-  ];
-
   const filtered = $derived(
     MOCK_DESTINATIONS.filter((dest) => {
       const name = localizedDestinationName(dest, locale).toLowerCase();
@@ -83,7 +77,7 @@
       id: dest.id,
       name: localizedDestinationName(dest, locale),
       status: dest.region,
-      amount: dest.visitorsCurrent,
+      amount: formatVisitorCount(dest.visitorsCurrent),
       date: periodLabel,
     })),
   );
@@ -129,6 +123,7 @@
           />
           <DateRangeFilter
             label="Visit period"
+            granularity="month"
             startDate={visitPeriodStart}
             endDate={visitPeriodEnd}
             onChange={(range) => onVisitPeriodChange?.(range)}
@@ -136,8 +131,8 @@
           <TimePresetButtons
             fieldLabel="Historic window"
             presets={[
-              { id: '1y', label: '1Y' },
-              { id: '5y', label: '5Y' },
+              { id: '1y', label: '1 year' },
+              { id: '5y', label: '5 years' },
               { id: 'all', label: 'All' },
             ]}
             activePresetId={timePreset}
@@ -155,7 +150,12 @@
     />
 
     <FlexLayout direction="row" gap={16} title="Browse destinations">
-      <DataTable title="Destinations" {rows} />
+      <DataTable
+        title="Destinations"
+        {rows}
+        selectedRowId={selectedId}
+        onRowSelect={userRole === 'viewer' ? undefined : (id) => onSelectedIdChange?.(id)}
+      />
       <DetailPanel title="Destination detail">
         {#if userRole === 'viewer'}
           <p class="da-detail-body">

@@ -27,6 +27,7 @@ import {
   historicWindowLabel,
   localizedDestinationName,
   periodColumnLabel,
+  REGION_OPTIONS,
 } from '../lib/atlas-utils';
 
 const props = defineProps<{
@@ -49,13 +50,6 @@ const emit = defineEmits<{
   focusDestinationOnMap: [string];
 }>();
 
-const REGION_OPTIONS = [
-  { value: 'asia-pacific', label: 'Asia Pacific' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'americas', label: 'Americas' },
-  { value: 'africa', label: 'Africa' },
-];
-
 const filtered = computed(() =>
   MOCK_DESTINATIONS.filter((dest) => {
     const name = localizedDestinationName(dest, props.locale).toLowerCase();
@@ -72,7 +66,7 @@ const rows = computed<DataTableRow[]>(() =>
     id: dest.id,
     name: localizedDestinationName(dest, props.locale),
     status: dest.region,
-    amount: dest.visitorsCurrent,
+    amount: formatVisitorCount(dest.visitorsCurrent),
     date: periodLabel.value,
   })),
 );
@@ -88,6 +82,13 @@ const filterChips = computed(() => [
   { label: 'Visit period', value: formatVisitPeriod(props.visitPeriodStart, props.visitPeriodEnd) },
   { label: 'Historic window', value: historicWindowLabel(props.timePreset) },
 ]);
+
+function selectDestination(id: string) {
+  if (props.userRole === 'viewer') {
+    return;
+  }
+  emit('update:selectedId', id);
+}
 </script>
 
 <template>
@@ -127,8 +128,8 @@ const filterChips = computed(() => [
             <TimePreset
               label="Historic window"
               :presets="[
-                { id: '1y', label: '1Y' },
-                { id: '5y', label: '5Y' },
+                { id: '1y', label: '1 year' },
+                { id: '5y', label: '5 years' },
                 { id: 'all', label: 'All' },
               ]"
               :active-preset-id="timePreset"
@@ -146,7 +147,12 @@ const filterChips = computed(() => [
       />
 
       <FlexLayout direction="row" :gap="16" title="Browse destinations">
-        <DataTable title="Destinations" :rows="rows" />
+        <DataTable
+          title="Destinations"
+          :rows="rows"
+          :selected-row-id="selectedId"
+          @row-select="selectDestination"
+        />
         <DetailPanel title="Destination detail">
           <p v-if="userRole === 'viewer'" class="da-detail-body">
             Switch to Editor or Admin to select rows and view destination details.

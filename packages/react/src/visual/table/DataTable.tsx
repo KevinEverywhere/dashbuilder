@@ -4,7 +4,7 @@ export interface DataTableRow {
   id: string;
   name?: string;
   status?: string;
-  amount?: number;
+  amount?: string | number;
   date?: string;
   [key: string]: string | number | undefined;
 }

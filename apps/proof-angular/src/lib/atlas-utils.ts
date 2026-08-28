@@ -1,4 +1,9 @@
-import { MOCK_DESTINATIONS, type Destination } from '@destination-atlas';
+import {
+  DESTINATION_CONTINENT_OPTIONS,
+  MOCK_DESTINATIONS,
+  historicYearsForPreset,
+  type Destination,
+} from '@destination-atlas';
 
 export interface BarChartBar {
   label: string;
@@ -25,7 +30,7 @@ export const MOCK_NEWS: MockNewsArticle[] = [
     id: 'n1',
     headline: 'Tokyo tourism rebounds past pre-pandemic levels',
     source: 'Pacific Travel Daily',
-    region: 'asia-pacific',
+    region: 'asia',
     published: '2024-11-02',
     summary: 'Visitor arrivals to Tokyo exceeded 2019 totals for the third consecutive quarter.',
   },
@@ -41,7 +46,7 @@ export const MOCK_NEWS: MockNewsArticle[] = [
     id: 'n3',
     headline: 'Cusco rail upgrades aim to spread Inca Trail demand',
     source: 'Andes Dispatch',
-    region: 'americas',
+    region: 'south-america',
     published: '2024-09-30',
     summary: 'Peru invests in alternate arrival windows to reduce peak-season crowding.',
   },
@@ -57,7 +62,7 @@ export const MOCK_NEWS: MockNewsArticle[] = [
     id: 'n5',
     headline: 'Sydney harbor events drive strong domestic travel',
     source: 'Oceania Brief',
-    region: 'asia-pacific',
+    region: 'oceania',
     published: '2024-11-10',
     summary: 'Waterfront festivals contributed to a 14% lift in regional visitor spend.',
   },
@@ -122,16 +127,9 @@ export function historicWindowLabel(preset: string): string {
   return TIME_PRESET_LABELS[preset] ?? preset;
 }
 
-/** Years included for each historic-window preset (mock data spans 2019–2024). */
-export function historicYearsForPreset(preset: string): number[] {
-  if (preset === '1y') {
-    return [2024];
-  }
-  if (preset === '5y') {
-    return [2019, 2022, 2024];
-  }
-  return [2019, 2022, 2024];
-}
+export { historicYearsForPreset };
+
+export const REGION_OPTIONS = DESTINATION_CONTINENT_OPTIONS;
 
 export function filterHistoricByPreset(
   dest: Destination,
