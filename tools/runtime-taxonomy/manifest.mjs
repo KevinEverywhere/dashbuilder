@@ -80,6 +80,7 @@ export const PALETTE_RUNTIME_ENTRIES = [
   { type: 'layout.tabs', subpath: 'layout/tabs', exportName: 'TabsLayout', pattern: 'native', kind: 'layout-tabs', testId: 'rd-tabs-layout' },
   { type: 'layout.modal', subpath: 'layout/modal', exportName: 'ModalLayout', pattern: 'native', kind: 'layout-modal', testId: 'rd-modal-layout' },
   { type: 'layout.collapsible', subpath: 'layout/collapsible', exportName: 'Collapsible', pattern: 'native', kind: 'layout-collapsible', testId: 'rd-collapsible' },
+  { type: 'layout.scroll-region', subpath: 'layout/scroll-region', exportName: 'ScrollRegion', pattern: 'native', kind: 'layout-scroll-region', testId: 'rd-scroll-region' },
   // Domain
   { type: 'domain.role-gate', subpath: 'domain/role-gate', exportName: 'RoleGate', pattern: 'native', kind: 'role-gate', testId: 'rd-role-gate' },
   { type: 'domain.person-invite', subpath: 'domain/person-invite', exportName: 'PersonInvite', pattern: 'native', kind: 'person-invite', testId: 'rd-person-invite' },

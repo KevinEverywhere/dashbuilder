@@ -3,10 +3,14 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import type { Composite, ExportScope, ValidationIssue } from '@rosettadash/core';
 import {
   formatStylingProfileSummary,
+  getCompatibleDatabaseStackOptions,
+  getCompatibleServerStackOptions,
   resolveEffectiveExportTargets,
   resolveEffectiveStylingProfile,
   resolveExportComposite,
   stylingFrameworkLabel,
+  type StackDatabaseChoice,
+  type StackServerChoice,
 } from '@rosettadash/core';
 import { firstValueFrom } from 'rxjs';
 import { BuilderStateService } from '../builder-state.service';
@@ -19,23 +23,11 @@ import {
 import { ExportZipService } from './export-zip.service';
 
 type UiTarget = 'react' | 'angular' | 'vue' | 'svelte' | 'web-components';
-type ServerTarget = 'nest' | 'express' | 'next' | 'nuxt';
-type DatabaseTarget = 'postgresql' | 'mongodb' | 'supabase' | 'mysql';
+type ServerTarget = StackServerChoice;
+type DatabaseTarget = StackDatabaseChoice;
 
 interface UiTargetOption {
   id: UiTarget;
-  label: string;
-  description: string;
-}
-
-interface ServerTargetOption {
-  id: ServerTarget;
-  label: string;
-  description: string;
-}
-
-interface DatabaseTargetOption {
-  id: DatabaseTarget;
   label: string;
   description: string;
 }
@@ -61,14 +53,17 @@ export class ExportWizardComponent {
 
   protected readonly uiTargetOptions = computed(() => {
     const stackUi = this.state.project()?.stackProfile?.ui;
-    if (stackUi === 'web-components') {
-      return this.allUiTargetOptions.filter((option) => option.id === 'web-components');
-    }
     if (stackUi) {
-      return this.allUiTargetOptions.filter((option) => option.id !== 'web-components');
+      return this.allUiTargetOptions.filter((option) => option.id === stackUi);
     }
     return this.allUiTargetOptions;
   });
+
+  protected readonly serverTargetOptions = computed(() => getCompatibleServerStackOptions(this.uiTarget()));
+
+  protected readonly databaseTargetOptions = computed(() =>
+    getCompatibleDatabaseStackOptions(this.uiTarget()),
+  );
 
   private readonly allUiTargetOptions: UiTargetOption[] = [
     { id: 'react', label: 'React', description: 'TSX + hooks' },
@@ -80,20 +75,6 @@ export class ExportWizardComponent {
       label: 'Web Components',
       description: 'W3C Custom Elements + Shadow DOM',
     },
-  ];
-
-  protected readonly serverTargetOptions: ServerTargetOption[] = [
-    { id: 'nest', label: 'NestJS', description: 'Modules + controllers' },
-    { id: 'express', label: 'Express', description: 'Routers + middleware' },
-    { id: 'next', label: 'Next.js', description: 'App Router API routes' },
-    { id: 'nuxt', label: 'Nuxt', description: 'Nitro server routes' },
-  ];
-
-  protected readonly databaseTargetOptions: DatabaseTargetOption[] = [
-    { id: 'postgresql', label: 'PostgreSQL', description: 'SQL via server exporter' },
-    { id: 'mongodb', label: 'MongoDB', description: 'Document collections layer' },
-    { id: 'supabase', label: 'Supabase', description: 'PostgREST table layer' },
-    { id: 'mysql', label: 'MySQL', description: 'Relational tables layer' },
   ];
 
   protected readonly exportScopeOptions: ExportScopeOption[] = [
@@ -118,8 +99,8 @@ export class ExportWizardComponent {
   protected readonly downloading = signal(false);
   protected readonly exportScope = signal<ExportScope>('full');
   protected readonly uiTarget = signal<UiTarget>('react');
-  protected readonly serverTarget = signal<ServerTarget>('nest');
-  protected readonly databaseTarget = signal<DatabaseTarget>('postgresql');
+  protected readonly serverTarget = signal<ServerTarget>('none');
+  protected readonly databaseTarget = signal<DatabaseTarget>('none');
   protected readonly bundle = signal<ExportBundleResponse | null>(null);
   protected readonly validationIssues = signal<ValidationIssue[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
@@ -151,6 +132,7 @@ export class ExportWizardComponent {
       return;
     }
     this.uiTarget.set(target);
+    this.clampInfraTargetsToUi(target);
     void this.refreshPreview();
   }
 
@@ -249,6 +231,8 @@ export class ExportWizardComponent {
     const ui = current?.ir.targets.ui ?? this.uiTarget();
     const server = current?.ir.targets.server ?? this.serverTarget();
     const database = current?.ir.targets.database ?? this.databaseTarget();
+    const serverLabel = server && server !== 'none' ? server : 'no server';
+    const databaseLabel = database && database !== 'none' ? database : 'no database';
     const stylingProfile =
       current?.ir.styles.profile ??
       resolveEffectiveStylingProfile(this.state.project()?.stackProfile, ui);
@@ -256,7 +240,7 @@ export class ExportWizardComponent {
       current?.ir.styles.framework != null
         ? stylingFrameworkLabel(current.ir.styles.framework)
         : formatStylingProfileSummary(stylingProfile);
-    return `${ui} UI + ${server} + ${database} · ${stylingLabel}`;
+    return `${ui} UI + ${serverLabel} + ${databaseLabel} · ${stylingLabel}`;
   }
 
   private seedTargetsFromState(): void {
@@ -269,8 +253,20 @@ export class ExportWizardComponent {
       : (allowedUi[0]?.id ?? 'react');
 
     this.uiTarget.set(ui);
-    this.serverTarget.set(targets.server);
-    this.databaseTarget.set(targets.database);
+    this.serverTarget.set(targets.server ?? 'none');
+    this.databaseTarget.set(targets.database ?? 'none');
+    this.clampInfraTargetsToUi(ui);
+  }
+
+  private clampInfraTargetsToUi(ui: UiTarget): void {
+    const servers = getCompatibleServerStackOptions(ui).map((option) => option.id);
+    const databases = getCompatibleDatabaseStackOptions(ui).map((option) => option.id);
+    if (!servers.includes(this.serverTarget())) {
+      this.serverTarget.set(servers.includes('none') ? 'none' : (servers[0] ?? 'none'));
+    }
+    if (!databases.includes(this.databaseTarget())) {
+      this.databaseTarget.set(databases.includes('none') ? 'none' : (databases[0] ?? 'none'));
+    }
   }
 
   private buildExportComposite(): Composite {
@@ -278,14 +274,15 @@ export class ExportWizardComponent {
     const scope = this.exportScope();
     const seedNodeIds = this.state.selectedNodeIds();
 
+    const server = this.serverTarget();
+    const database = this.databaseTarget();
     const scoped = resolveExportComposite(
       {
         ...payload,
         exportTargets: {
-          ...payload.exportTargets,
           ui: this.uiTarget(),
-          server: this.serverTarget(),
-          database: this.databaseTarget(),
+          ...(server !== 'none' ? { server } : {}),
+          ...(database !== 'none' ? { database } : {}),
         },
       },
       { scope, seedNodeIds },

@@ -1,6 +1,5 @@
 import {
   createEmptyStylingProfile,
-  DEFAULT_EXPORT_TARGETS,
   getCompatibleDatabaseStackOptions,
   getCompatibleServerStackOptions,
   getCompatibleStackDefaults,
@@ -287,10 +286,12 @@ describe('stack profile', () => {
     expect(resolveEffectiveExportTargets(undefined, { ui: 'web-components', styling: 'tailwind' })).toEqual(
       {
         ui: 'web-components',
-        server: DEFAULT_EXPORT_TARGETS.server,
-        database: DEFAULT_EXPORT_TARGETS.database,
       },
     );
+
+    expect(
+      resolveEffectiveExportTargets(undefined, { ui: 'react', server: 'none', database: 'none' }),
+    ).toEqual({ ui: 'react' });
   });
 
   it('resolves styling from project profile for export UI target', () => {

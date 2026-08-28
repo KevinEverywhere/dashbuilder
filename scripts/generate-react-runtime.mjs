@@ -92,7 +92,6 @@ function patchProjectJson(entryPoints) {
 function patchPackageJson(subpaths) {
   const rel = 'packages/react/package.json';
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-  pkg.version = '0.1.1';
   const exports = {
     '.': pkg.exports['.'],
   };

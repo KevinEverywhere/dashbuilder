@@ -83,7 +83,7 @@ export interface IREventBinding {
 
 export interface ExportIRTargets {
   ui: NonNullable<ExportTargetConfig['ui']>;
-  server: NonNullable<ExportTargetConfig['server']>;
+  server?: NonNullable<ExportTargetConfig['server']>;
   database?: ExportTargetConfig['database'];
 }
 

@@ -321,6 +321,14 @@ function patchPackageJson(subpaths) {
       exports[`./${subpath}`] = `./styles/${subpath}`;
       continue;
     }
+    if (subpath === 'media') {
+      exports['./media'] = {
+        types: './src/visual/media/index.d.ts',
+        import: './src/visual/media/index.js',
+        default: './src/visual/media/index.js',
+      };
+      continue;
+    }
     exports[`./${subpath}`] = {
       types: `./src/${subpath}/index.d.ts`,
       import: `./src/${subpath}/index.js`,

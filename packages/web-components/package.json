@@ -91,6 +91,11 @@
       "import": "./src/layout/modal/index.js",
       "default": "./src/layout/modal/index.js"
     },
+    "./layout/scroll-region": {
+      "types": "./src/layout/scroll-region/index.d.ts",
+      "import": "./src/layout/scroll-region/index.js",
+      "default": "./src/layout/scroll-region/index.js"
+    },
     "./layout/tabs": {
       "types": "./src/layout/tabs/index.d.ts",
       "import": "./src/layout/tabs/index.js",

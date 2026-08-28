@@ -19,6 +19,7 @@ export type { CollapsibleProps } from './layout/collapsible/types';
 export type { FlexLayoutProps } from './layout/flex/types';
 export type { GridLayoutProps } from './layout/grid/types';
 export type { ModalLayoutProps } from './layout/modal/types';
+export type { ScrollRegionProps } from './layout/scroll-region/types';
 export type { TabsLayoutProps } from './layout/tabs/types';
 export type { TimerProps } from './logic/timer/types';
 export type { BarChartProps } from './visual/chart/bar/types';

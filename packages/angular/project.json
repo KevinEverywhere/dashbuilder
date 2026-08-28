@@ -49,6 +49,7 @@
           "packages/angular/src/layout/flex/index.ts",
           "packages/angular/src/layout/grid/index.ts",
           "packages/angular/src/layout/modal/index.ts",
+          "packages/angular/src/layout/scroll-region/index.ts",
           "packages/angular/src/layout/tabs/index.ts",
           "packages/angular/src/logic/timer/index.ts",
           "packages/angular/src/visual/chart/bar/index.ts",

@@ -118,6 +118,10 @@ export class ExportService {
   }
 
   private shouldGenerateServerFiles(ir: ExportIR): boolean {
+    if (!ir.targets.server) {
+      return false;
+    }
+
     if (ir.dataSources.some((source) => source.type.startsWith('infra.server.'))) {
       return true;
     }

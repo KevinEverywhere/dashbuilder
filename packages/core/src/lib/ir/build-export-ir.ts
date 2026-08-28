@@ -23,8 +23,6 @@ export class ExportBuildError extends Error {
 
 const DEFAULT_TARGETS: ExportIRTargets = {
   ui: 'react',
-  server: 'nest',
-  database: 'postgresql',
 };
 
 export function buildExportIR(
@@ -131,10 +129,12 @@ function resolveTargets(
   configured: Composite['exportTargets'],
   overrides?: Partial<Composite['exportTargets']>,
 ): ExportIRTargets {
+  const server = overrides?.server ?? configured?.server;
+  const database = overrides?.database ?? configured?.database;
   return {
     ui: overrides?.ui ?? configured?.ui ?? DEFAULT_TARGETS.ui,
-    server: overrides?.server ?? configured?.server ?? DEFAULT_TARGETS.server,
-    database: overrides?.database ?? configured?.database ?? DEFAULT_TARGETS.database,
+    ...(server ? { server } : {}),
+    ...(database ? { database } : {}),
   };
 }
 

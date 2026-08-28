@@ -262,7 +262,17 @@ function kindRender(kind, bemBlock) {
 \t<button type="button" class="${b}__header" aria-expanded={(open ?? defaultOpen ?? false) ? 'true' : 'false'}>
 \t\t<span>{title ?? 'Section'}</span>
 \t</button>
-\t<div class="${b}__panel">${slot}</div>
+\t	<div class="${b}__panel">${slot}</div>
+</section>`,
+
+    'layout-scroll-region': `<section
+	class={[rootClass, overlayScrollbar === false ? '' : 'rd-scroll-region--overlay-scrollbar'].filter(Boolean).join(' ')}
+	data-testid="${b}"
+	aria-label={title ?? 'Scrollable content'}
+	style={maxHeight ? \`max-height: \${maxHeight}\` : undefined}
+>
+	{#if title}<header class="rd-scroll-region__header">{title}</header>{/if}
+	<div class="rd-scroll-region__body">${slot}</div>
 </section>`,
 
     'role-gate': `<section class={rootClass} data-testid="${b}">

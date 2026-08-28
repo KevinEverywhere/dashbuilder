@@ -53,6 +53,7 @@
           "packages/web-components/src/layout/flex/index.ts",
           "packages/web-components/src/layout/grid/index.ts",
           "packages/web-components/src/layout/modal/index.ts",
+          "packages/web-components/src/layout/scroll-region/index.ts",
           "packages/web-components/src/layout/tabs/index.ts",
           "packages/web-components/src/logic/timer/index.ts",
           "packages/web-components/src/visual/chart/bar/index.ts",

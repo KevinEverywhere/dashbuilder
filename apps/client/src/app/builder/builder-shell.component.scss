@@ -243,6 +243,16 @@
   color: var(--db-text-muted);
 }
 
+.builder__stack {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--db-text-muted);
+  border: 1px solid var(--db-border, #d4d4d8);
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  text-transform: lowercase;
+}
+
 .builder__workspace {
   display: grid;
   flex: 1;

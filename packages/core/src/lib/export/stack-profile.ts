@@ -721,42 +721,40 @@ export function normalizeStackProfile(profile: StackProfile | undefined): StackP
   };
 }
 
+export type ResolvedExportTargets = {
+  ui: NonNullable<ExportTargetConfig['ui']>;
+  server?: ExportTargetConfig['server'];
+  database?: ExportTargetConfig['database'];
+};
+
+function withOptionalInfra(
+  ui: NonNullable<ExportTargetConfig['ui']>,
+  server?: ExportTargetConfig['server'],
+  database?: ExportTargetConfig['database'],
+): ResolvedExportTargets {
+  return {
+    ui,
+    ...(server ? { server } : {}),
+    ...(database ? { database } : {}),
+  };
+}
+
 export function resolveEffectiveExportTargets(
   compositeTargets: ExportTargetConfig | undefined,
   projectProfile: StackProfile | undefined,
-): Required<ExportTargetConfig> {
+): ResolvedExportTargets {
   if (compositeTargets?.ui) {
-    return {
-      ui: compositeTargets.ui,
-      server: compositeTargets.server ?? DEFAULT_EXPORT_TARGETS.server,
-      database: compositeTargets.database ?? DEFAULT_EXPORT_TARGETS.database,
-    };
+    return withOptionalInfra(compositeTargets.ui, compositeTargets.server, compositeTargets.database);
   }
 
   const fromProfile = stackProfileToExportTargets(
     normalizeStackProfile(projectProfile) ?? { ui: 'web-components' },
   );
   if (fromProfile?.ui) {
-    return {
-      ui: fromProfile.ui,
-      server: fromProfile.server ?? DEFAULT_EXPORT_TARGETS.server,
-      database: fromProfile.database ?? DEFAULT_EXPORT_TARGETS.database,
-    };
+    return withOptionalInfra(fromProfile.ui, fromProfile.server, fromProfile.database);
   }
 
-  const normalized = normalizeStackProfile(projectProfile);
-  if (normalized && isWebComponentsUi(normalized.ui)) {
-    const fromWebComponents = stackProfileToExportTargets(normalized);
-    if (fromWebComponents) {
-      return {
-        ui: 'web-components',
-        server: fromWebComponents.server ?? DEFAULT_EXPORT_TARGETS.server,
-        database: fromWebComponents.database ?? DEFAULT_EXPORT_TARGETS.database,
-      };
-    }
-  }
-
-  return { ...DEFAULT_EXPORT_TARGETS };
+  return { ui: DEFAULT_EXPORT_TARGETS.ui };
 }
 
 export function resolveEffectiveStyling(

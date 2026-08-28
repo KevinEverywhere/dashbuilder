@@ -277,6 +277,16 @@ function kindRender(kind, bemBlock) {
       h('div', { class: '${b}__panel' }, slots.default?.()),
     ]);`,
 
+    'layout-scroll-region': `return h('section', {
+      class: [rootClass, props.overlayScrollbar === false ? '' : 'rd-scroll-region--overlay-scrollbar'].filter(Boolean).join(' '),
+      'data-testid': '${b}',
+      'aria-label': props.title ?? 'Scrollable content',
+      style: props.maxHeight ? { maxHeight: props.maxHeight } : undefined,
+    }, [
+      props.title ? h('header', { class: 'rd-scroll-region__header' }, props.title) : null,
+      h('div', { class: 'rd-scroll-region__body' }, slots.default?.()),
+    ]);`,
+
     'role-gate': `return h('section', { class: rootClass, 'data-testid': '${b}' }, [
       props.label ? h('span', { class: 'rd-field__label' }, props.label) : null,
       h('p', { class: '${b}__status' }, props.statusText ?? 'Visible'),

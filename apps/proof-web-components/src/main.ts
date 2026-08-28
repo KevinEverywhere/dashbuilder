@@ -96,12 +96,14 @@ function renderAbout(): string {
 
   return `
     <section class="da-panel da-panel--about">
+      <rd-scroll-region title="About Destination Atlas" max-height="100%" overlay-scrollbar>
       <h2>About Destination Atlas</h2>
       <p class="da-about__lead">${DESTINATION_ATLAS_ABOUT_INTRO.lead}</p>
       <div class="da-about__runtime-matrix-wrap">
         <div class="da-about__runtime-matrix-head" aria-hidden="true">${matrixHead}</div>
         <ul class="da-about__runtime-list">${runtimeRows}</ul>
       </div>
+      </rd-scroll-region>
     </section>`;
 }
 
@@ -111,6 +113,14 @@ function renderOverview(): string {
       `<rd-kpi-card title="${localizedDestinationName(dest, state.locale)}" value="${formatVisitorCount(dest.visitorsCurrent)}" delta="${computeVisitorDelta(dest)}"></rd-kpi-card>`,
   ).join('');
 
+  const visitorTrend = JSON.stringify(aggregateVisitorTrend());
+  const visitorBars = JSON.stringify(
+    MOCK_DESTINATIONS.map((dest) => ({
+      label: localizedDestinationName(dest, state.locale),
+      value: dest.visitorsCurrent,
+    })),
+  );
+
   return `
     <section class="da-panel">
       <h2>Overview</h2>
@@ -118,10 +128,10 @@ function renderOverview(): string {
       <div class="da-stack">
         <rd-grid-layout title="Destination KPIs" columns="3" gap="12">${kpiCards}</rd-grid-layout>
         <div class="da-stack da-stack--2">
-          <rd-line-chart title="Visitors over time (aggregate trend)"></rd-line-chart>
-          <rd-bar-chart title="2024 visitors by destination"></rd-bar-chart>
+          <rd-line-chart title="Visitors over time (aggregate trend)" points='${visitorTrend}'></rd-line-chart>
+          <rd-bar-chart title="2024 visitors by destination" bars='${visitorBars}'></rd-bar-chart>
         </div>
-        <rd-role-gate label="Operations metrics" status-text="Admin operations panel" allowed-roles='["admin"]'>
+        <rd-role-gate label="Operations metrics" status-text="Admin operations panel" allowed-roles='["admin"]' current-role="${state.userRole}">
           <rd-metric-chip chip-label="Avg. stay" chip-value="4.2 nights"></rd-metric-chip>
           <rd-status-badge status-text="Data freshness: current" tone="success"></rd-status-badge>
         </rd-role-gate>
@@ -146,9 +156,9 @@ function renderDestinations(): string {
       <p>Browse destinations with filters, table selection, and detail panel.</p>
       <div class="da-stack">
         <div class="da-filter-row">
-          <rd-input-text label="Search" placeholder="Destination name…" data-ref="dest-search"></rd-input-text>
-          <rd-input-select label="Region" placeholder="All regions" data-ref="dest-region"></rd-input-select>
-          <rd-input-date-range label="Visit period" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}" data-ref="visit-period"></rd-input-date-range>
+          <rd-text-input label="Search" placeholder="Destination name…" data-ref="dest-search"></rd-text-input>
+          <rd-select-input label="Region" placeholder="All regions" data-ref="dest-region"></rd-select-input>
+          <rd-date-range label="Visit period" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}" data-ref="visit-period"></rd-date-range>
         </div>
         <rd-time-preset label="Historic window" presets='${JSON.stringify(TIME_PRESETS)}' active-preset-id="${state.timePreset}" data-ref="time-preset"></rd-time-preset>
         <rd-flex-layout direction="row" gap="16">
@@ -206,7 +216,7 @@ function renderMedia(): string {
     <section class="da-panel">
       <h2>Media</h2>
       <p>YouTube embed and local video source for destination highlights.</p>
-      <rd-input-select label="Destination video" data-ref="media-dest"></rd-input-select>
+      <rd-select-input label="Destination video" data-ref="media-dest"></rd-select-input>
       <rd-youtube-embed class="da-youtube" data-ref="youtube-embed"></rd-youtube-embed>
       <rd-video-source label="Local / file video source" data-ref="video-source"></rd-video-source>
     </section>`;
@@ -242,7 +252,7 @@ function renderIntel(): string {
       <h2>Intel</h2>
       <p>Regional news discovery with mock headlines.</p>
       <div class="da-stack">
-        <rd-role-gate label="News editor tools" status-text="Editor access" allowed-roles='["editor","admin"]'>
+        <rd-role-gate label="News editor tools" status-text="Editor access" allowed-roles='["editor","admin"]' current-role="${state.userRole}">
           <rd-news-search-box label="Search" placeholder="Search news…" value="${state.newsQuery}" data-ref="news-search"></rd-news-search-box>
           <rd-news-region-select label="Region" placeholder="All regions" data-ref="news-region"></rd-news-region-select>
         </rd-role-gate>
@@ -267,15 +277,15 @@ function renderPlan(): string {
       <h2>Plan trip</h2>
       <p>Trip planning, collaboration, and role-gated editor access.</p>
       <div class="da-stack">
-        <rd-role-gate label="Trip editor" status-text="Editor workspace unlocked" allowed-roles='["editor","admin"]'>
+        <rd-role-gate label="Trip editor" status-text="Editor workspace unlocked" allowed-roles='["editor","admin"]' current-role="${state.userRole}">
           <rd-person-invite email-placeholder="planner@company.com"></rd-person-invite>
           <rd-role-assign summary="Confirm collaborator access for this itinerary." role-options='[{"value":"viewer","label":"Viewer"},{"value":"editor","label":"Editor"},{"value":"admin","label":"Admin"}]'></rd-role-assign>
-          <rd-input-text label="Trip name" placeholder="Spring heritage tour" data-ref="trip-name"></rd-input-text>
-          <rd-input-select label="Primary destination" placeholder="Select destination…" options='${JSON.stringify(destOptions)}' data-ref="trip-dest"></rd-input-select>
-          <rd-input-date-range label="Trip dates" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}"></rd-input-date-range>
-          <rd-input-number label="Travelers" value="2" min="1"></rd-input-number>
-          <rd-input-checkbox label="Share itinerary with team" default-checked></rd-input-checkbox>
-          <rd-input-textarea label="Notes" placeholder="Visa requirements, rail passes…"></rd-input-textarea>
+          <rd-text-input label="Trip name" placeholder="Spring heritage tour" data-ref="trip-name"></rd-text-input>
+          <rd-select-input label="Primary destination" placeholder="Select destination…" options='${JSON.stringify(destOptions)}' data-ref="trip-dest"></rd-select-input>
+          <rd-date-range label="Trip dates" start-date="${state.visitPeriodStart}" end-date="${state.visitPeriodEnd}"></rd-date-range>
+          <rd-number-input label="Travelers" value="2" min="1"></rd-number-input>
+          <rd-checkbox-input label="Share itinerary with team" default-checked></rd-checkbox-input>
+          <rd-textarea-input label="Notes" placeholder="Visa requirements, rail passes…"></rd-textarea-input>
         </rd-role-gate>
         <rd-timer label="Itinerary refresh" tick-count="3"></rd-timer>
       </div>

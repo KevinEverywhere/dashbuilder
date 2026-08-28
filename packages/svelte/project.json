@@ -54,6 +54,7 @@
           "packages/svelte/src/layout/flex/types.ts",
           "packages/svelte/src/layout/grid/types.ts",
           "packages/svelte/src/layout/modal/types.ts",
+          "packages/svelte/src/layout/scroll-region/types.ts",
           "packages/svelte/src/layout/tabs/types.ts",
           "packages/svelte/src/logic/timer/types.ts",
           "packages/svelte/src/visual/chart/bar/types.ts",

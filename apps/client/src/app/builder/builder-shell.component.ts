@@ -66,6 +66,15 @@ export class BuilderShellComponent implements OnInit {
   }));
   protected selectedTemplateId = '';
 
+  protected stackSummary(): string {
+    const profile = this.state.project()?.stackProfile;
+    if (!profile?.ui) {
+      return '';
+    }
+    const server = profile.server && profile.server !== 'none' ? profile.server : 'UI only';
+    return `${profile.ui} · ${server}`;
+  }
+
   async ngOnInit(): Promise<void> {
     if (!canEnterBuilder()) {
       void this.router.navigate(['/']);

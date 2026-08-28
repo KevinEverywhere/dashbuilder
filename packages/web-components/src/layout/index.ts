@@ -5,6 +5,7 @@ export * from './flex/index.js';
 export * from './tabs/index.js';
 export * from './modal/index.js';
 export * from './collapsible/index.js';
+export * from './scroll-region/index.js';
 
 import { registerLayoutAccordion } from './accordion/index.js';
 import { registerLayoutAccordionLinkList } from './accordion-link-list/index.js';
@@ -13,6 +14,7 @@ import { registerRdFlexLayout } from './flex/index.js';
 import { registerRdTabsLayout } from './tabs/index.js';
 import { registerRdModalLayout } from './modal/index.js';
 import { registerRdCollapsible } from './collapsible/index.js';
+import { registerRdScrollRegion } from './scroll-region/index.js';
 
 export function registerRosettaDashLayoutElements(): void {
   registerLayoutAccordion();
@@ -22,4 +24,5 @@ export function registerRosettaDashLayoutElements(): void {
   registerRdTabsLayout();
   registerRdModalLayout();
   registerRdCollapsible();
+  registerRdScrollRegion();
 }

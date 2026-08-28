@@ -141,6 +141,12 @@
       "import": "./src/layout/modal/ModalLayout.svelte",
       "default": "./src/layout/modal/ModalLayout.svelte"
     },
+    "./layout/scroll-region": {
+      "types": "./src/layout/scroll-region/types.d.ts",
+      "svelte": "./src/layout/scroll-region/ScrollRegion.svelte",
+      "import": "./src/layout/scroll-region/ScrollRegion.svelte",
+      "default": "./src/layout/scroll-region/ScrollRegion.svelte"
+    },
     "./layout/tabs": {
       "types": "./src/layout/tabs/types.d.ts",
       "svelte": "./src/layout/tabs/TabsLayout.svelte",

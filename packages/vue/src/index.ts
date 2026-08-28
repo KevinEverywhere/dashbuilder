@@ -19,6 +19,7 @@ export * from './layout/collapsible/index.js';
 export * from './layout/flex/index.js';
 export * from './layout/grid/index.js';
 export * from './layout/modal/index.js';
+export * from './layout/scroll-region/index.js';
 export * from './layout/tabs/index.js';
 export * from './logic/timer/index.js';
 export * from './visual/chart/bar/index.js';

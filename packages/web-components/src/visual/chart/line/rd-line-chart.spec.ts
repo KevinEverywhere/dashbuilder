@@ -16,4 +16,14 @@ describe('rd-line-chart', () => {
     expect(root).toBeTruthy();
     el.remove();
   });
+
+  it('draws a polyline from the points attribute', () => {
+    const el = document.createElement(RD_LINE_CHART_TAG);
+    el.setAttribute('points', JSON.stringify([{ x: 'a', y: 10 }, { x: 'b', y: 90 }]));
+    document.body.appendChild(el);
+    const polyline = el.querySelector('polyline');
+    expect(polyline?.getAttribute('points')).toContain('0,');
+    expect(polyline?.getAttribute('points')).toContain('240,');
+    el.remove();
+  });
 });

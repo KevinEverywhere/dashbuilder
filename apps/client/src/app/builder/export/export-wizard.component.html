@@ -96,7 +96,7 @@
             role="radiogroup"
             aria-label="Server framework"
           >
-            @for (option of serverTargetOptions; track option.id) {
+            @for (option of serverTargetOptions(); track option.id) {
               <button
                 type="button"
                 class="export-wizard__ui-target"
@@ -118,7 +118,7 @@
             role="radiogroup"
             aria-label="Database"
           >
-            @for (option of databaseTargetOptions; track option.id) {
+            @for (option of databaseTargetOptions(); track option.id) {
               <button
                 type="button"
                 class="export-wizard__ui-target"

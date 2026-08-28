@@ -405,6 +405,9 @@
       "@rosettadash/angular/layout/modal": [
         "./packages/angular/src/layout/modal/index.ts"
       ],
+      "@rosettadash/angular/layout/scroll-region": [
+        "./packages/angular/src/layout/scroll-region/index.ts"
+      ],
       "@rosettadash/angular/layout/tabs": [
         "./packages/angular/src/layout/tabs/index.ts"
       ],
@@ -594,6 +597,9 @@
       "@rosettadash/vue/layout/modal": [
         "./packages/vue/src/layout/modal/index.ts"
       ],
+      "@rosettadash/vue/layout/scroll-region": [
+        "./packages/vue/src/layout/scroll-region/index.ts"
+      ],
       "@rosettadash/vue/layout/tabs": [
         "./packages/vue/src/layout/tabs/index.ts"
       ],
@@ -776,6 +782,9 @@
       ],
       "@rosettadash/svelte/layout/modal": [
         "./packages/svelte/src/layout/modal/types.ts"
+      ],
+      "@rosettadash/svelte/layout/scroll-region": [
+        "./packages/svelte/src/layout/scroll-region/types.ts"
       ],
       "@rosettadash/svelte/layout/tabs": [
         "./packages/svelte/src/layout/tabs/types.ts"

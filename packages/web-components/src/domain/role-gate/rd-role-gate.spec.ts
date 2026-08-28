@@ -16,4 +16,25 @@ describe('rd-role-gate', () => {
     expect(root).toBeTruthy();
     el.remove();
   });
+
+  it('hides slotted content when current-role is not allowed', () => {
+    const el = document.createElement(RD_ROLE_GATE_TAG);
+    el.setAttribute('allowed-roles', '["admin"]');
+    el.setAttribute('current-role', 'viewer');
+    el.appendChild(document.createTextNode('secret'));
+    document.body.appendChild(el);
+    expect(el.querySelector('[data-testid="rd-role-gate-hidden"]')).toBeTruthy();
+    expect(el.querySelector('[data-ref="slot"]')?.hasAttribute('hidden')).toBe(true);
+    el.remove();
+  });
+
+  it('shows slotted content when current-role is allowed', () => {
+    const el = document.createElement(RD_ROLE_GATE_TAG);
+    el.setAttribute('allowed-roles', '["admin"]');
+    el.setAttribute('current-role', 'admin');
+    document.body.appendChild(el);
+    expect(el.querySelector('[data-testid="rd-role-gate-visible"]')).toBeTruthy();
+    expect(el.querySelector('[data-ref="slot"]')?.hasAttribute('hidden')).toBe(false);
+    el.remove();
+  });
 });

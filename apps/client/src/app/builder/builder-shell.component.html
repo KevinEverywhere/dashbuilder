@@ -17,6 +17,9 @@
     <div class="builder__brand">
       <app-nav variant="toolbar" />
       <span class="builder__subtitle">{{ state.project()?.name ?? 'Builder' }}</span>
+      @if (stackSummary(); as stack) {
+        <span class="builder__stack" data-testid="builder-stack">{{ stack }}</span>
+      }
     </div>
 
     <div class="builder__actions">

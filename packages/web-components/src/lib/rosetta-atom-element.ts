@@ -46,6 +46,10 @@ export abstract class RosettaAtomElement extends HTMLElement {
   }
 
   protected preserveLightDomChildren(): Node[] {
+    const slot = this.querySelector('[data-ref="slot"]');
+    if (slot) {
+      return [...slot.childNodes];
+    }
     return [...this.childNodes];
   }
 

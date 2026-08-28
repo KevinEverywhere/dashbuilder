@@ -49,6 +49,7 @@
           "packages/vue/src/layout/flex/index.ts",
           "packages/vue/src/layout/grid/index.ts",
           "packages/vue/src/layout/modal/index.ts",
+          "packages/vue/src/layout/scroll-region/index.ts",
           "packages/vue/src/layout/tabs/index.ts",
           "packages/vue/src/logic/timer/index.ts",
           "packages/vue/src/visual/chart/bar/index.ts",

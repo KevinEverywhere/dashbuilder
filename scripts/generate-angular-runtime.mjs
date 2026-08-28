@@ -70,7 +70,18 @@ function collectEntryPoints() {
   for (const alias of LEGACY_ALIASES) {
     subpaths.add(alias.subpath);
   }
+  for (const subpath of grandfatheredManualSubpaths()) {
+    subpaths.add(subpath);
+  }
   return [...subpaths].sort().map((subpath) => `packages/angular/src/${subpath}/index.ts`);
+}
+
+/** Manual Angular-only hosts not yet in the taxonomy manifest. Keep them in public exports. */
+function grandfatheredManualSubpaths() {
+  return [
+    'visual/media/equirect-sphere-viewport',
+    'visual/media/flat-video-viewport',
+  ].filter((subpath) => fs.existsSync(path.join(ANGULAR_SRC, ...subpath.split('/'), 'index.ts')));
 }
 
 function patchProjectJson(entryPoints) {
@@ -86,7 +97,6 @@ function patchProjectJson(entryPoints) {
 function patchPackageJson(subpaths) {
   const rel = 'packages/angular/package.json';
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-  pkg.version = '0.1.1';
   const exports = { '.': pkg.exports['.'] };
   for (const subpath of subpaths.sort()) {
     exports[`./${subpath}`] = {
@@ -142,6 +152,7 @@ function main() {
     ...new Set([
       ...allRuntimeEntries().map((e) => e.subpath),
       ...LEGACY_ALIASES.map((a) => a.subpath),
+      ...grandfatheredManualSubpaths(),
     ]),
   ];
 

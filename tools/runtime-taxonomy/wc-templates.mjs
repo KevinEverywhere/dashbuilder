@@ -142,15 +142,16 @@ const KIND_OBSERVED = {
   'kpi-card': ['title', 'value', 'delta', 'format'],
   'loading-skeleton': ['lines'],
   timer: ['label', 'mode', 'interval-ms', 'tick-count'],
-  'line-chart': ['title'],
-  'bar-chart': ['title'],
+  'line-chart': ['title', 'points'],
+  'bar-chart': ['title', 'bars'],
   'pie-chart': ['title'],
   'layout-grid': ['title', 'columns', 'gap'],
   'layout-flex': ['title', 'direction', 'gap'],
   'layout-tabs': ['title', 'tabs', 'active-tab-id'],
   'layout-modal': ['title', 'body', 'confirm-label', 'open'],
   'layout-collapsible': ['title', 'open', 'default-open'],
-  'role-gate': ['label', 'allowed-roles', 'status-text', 'current-role'],
+  'layout-scroll-region': ['title', 'max-height', 'overlay-scrollbar'],
+  'role-gate': ['label', 'allowed-roles', 'status-text', 'current-role', 'hidden-status-text'],
   'person-invite': ['email-placeholder'],
   'role-assign': ['summary', 'role-options'],
   'news-select': ['label', 'placeholder', 'options', 'value'],
@@ -305,21 +306,40 @@ const KIND_MARKUP = {
       </section>\`;`,
 
   'line-chart': (bem) => `    const title = this.readAttr('title', 'Line chart');
+    const points = this.parseJsonAttr<Array<{ x?: string | number; y: number }>>('points', []);
+    const series = points.length
+      ? points
+      : [{ y: 80 }, { y: 60 }, { y: 65 }, { y: 40 }, { y: 45 }, { y: 20 }, { y: 30 }];
+    const ys = series.map((p) => p.y);
+    const minY = Math.min(0, ...ys);
+    const maxY = Math.max(...ys);
+    const rangeY = maxY - minY || 1;
+    const last = Math.max(series.length - 1, 1);
+    const polyline = series
+      .map((p, i) => \`\${(i / last) * 240},\${88 - ((p.y - minY) / rangeY) * 72}\`)
+      .join(' ');
     return \`
-      <section class="${bem}" data-testid="${bem}">
+      <section class="${bem}" data-testid="${bem}" role="img" aria-label="\${this.esc(title)}">
         <header class="${bem}__header"><span>\${this.esc(title)}</span></header>
         <div class="${bem}__body">
           <svg viewBox="0 0 240 96" class="${bem}__svg" aria-hidden="true">
-            <polyline class="${bem}__line" points="0,80 40,60 80,65 120,40 160,45 200,20 240,30" />
+            <polyline class="${bem}__line" points="\${polyline}" />
           </svg>
         </div>
         <div data-ref="slot"></div>
       </section>\`;`,
 
   'bar-chart': (bem) => `    const title = this.readAttr('title', 'Bar chart');
-    const bars = [40, 65, 55, 80, 48].map((h) => \`<div class="${bem}__bar-wrap"><div class="${bem}__bar" style="height:\${h}%"></div></div>\`).join('');
+    const barsData = this.parseJsonAttr<Array<{ label?: string; value: number }>>('bars', []);
+    const series = barsData.length
+      ? barsData
+      : [{ value: 40 }, { value: 65 }, { value: 55 }, { value: 80 }, { value: 48 }];
+    const max = Math.max(...series.map((b) => b.value), 1);
+    const bars = series
+      .map((b) => \`<div class="${bem}__bar-wrap"><div class="${bem}__bar" style="height:\${Math.round((b.value / max) * 100)}%"></div></div>\`)
+      .join('');
     return \`
-      <section class="${bem}" data-testid="${bem}">
+      <section class="${bem}" data-testid="${bem}" role="img" aria-label="\${this.esc(title)}">
         <header class="${bem}__header"><span>\${this.esc(title)}</span></header>
         <div class="${bem}__bars" aria-hidden="true">\${bars}</div>
         <div data-ref="slot"></div>
@@ -387,15 +407,31 @@ const KIND_MARKUP = {
         <div class="rd-collapsible__panel" data-ref="slot"\${open ? '' : ' hidden'}></div>
       </section>\`;`,
 
+  'layout-scroll-region': (bem) => `    const title = this.readAttr('title');
+    const maxHeight = this.readAttr('max-height');
+    const overlay = this.readBoolAttr('overlay-scrollbar', true);
+    const overlayClass = overlay ? ' rd-scroll-region--overlay-scrollbar' : '';
+    const heightStyle = maxHeight ? \` style="max-height:\${this.esc(maxHeight)}"\` : '';
+    return \`
+      <section class="${bem} rd-scroll-region\${overlayClass}" data-testid="${bem}" aria-label="\${this.esc(title || 'Scrollable content')}"\${heightStyle}>
+        \${title ? \`<header class="rd-scroll-region__header">\${this.esc(title)}</header>\` : ''}
+        <div class="rd-scroll-region__body" data-ref="slot"></div>
+      </section>\`;`,
+
   'role-gate': (bem) => `    const label = this.readAttr('label');
     const status = this.readAttr('status-text', 'Visible');
+    const hiddenStatus = this.readAttr('hidden-status-text', 'Hidden for current role');
     const roles = this.parseJsonAttr<string[]>('allowed-roles', []);
+    const currentRole = this.readAttr('current-role');
+    const hasRoleContext = currentRole.length > 0;
+    const visible = !hasRoleContext || roles.length === 0 || roles.includes(currentRole);
+    const modifier = visible ? 'rd-role-gate--visible' : 'rd-role-gate--hidden';
+    const statusText = visible ? status : hiddenStatus;
     return \`
-      <section class="${bem} rd-role-gate rd-role-gate--visible" data-testid="${bem}">
+      <section class="${bem} rd-role-gate \${modifier}" data-testid="${bem}">
         \${label ? \`<span class="rd-field__label">\${this.esc(label)}</span>\` : ''}
-        <p class="rd-role-gate__status">\${this.esc(status)}</p>
-        \${roles.length ? \`<code>\${this.esc(JSON.stringify(roles))}</code>\` : ''}
-        <div data-ref="slot"></div>
+        <p class="rd-role-gate__status\${visible ? '' : ' rd-role-gate__status--hidden'}" data-testid="\${visible ? 'rd-role-gate-visible' : 'rd-role-gate-hidden'}">\${this.esc(statusText)}</p>
+        <div data-ref="slot"\${visible ? '' : ' hidden'}></div>
       </section>\`;`,
 
   'person-invite': (bem) => `    const placeholder = this.readAttr('email-placeholder', 'name@company.com');

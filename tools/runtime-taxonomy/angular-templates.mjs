@@ -179,6 +179,17 @@ const ANGULAR_KIND_HTML = {
       <div class="{{bemBlock}}__panel"><ng-content /></div>
     </section>`,
 
+  'layout-scroll-region': `<section
+      [attr.data-testid]="'{{bemBlock}}'"
+      [ngClass]="rootClass()"
+      [class.rd-scroll-region--overlay-scrollbar]="overlayScrollbar() !== false"
+      [style.max-height]="maxHeight() ?? null"
+      [attr.aria-label]="title() ?? 'Scrollable content'"
+    >
+      @if (title()) { <header class="rd-scroll-region__header">{{ title() }}</header> }
+      <div class="rd-scroll-region__body"><ng-content /></div>
+    </section>`,
+
   'role-gate': `<section [attr.data-testid]="'{{bemBlock}}'" [ngClass]="rootClass()">
       @if (label()) { <span class="rd-field__label">{{ label() }}</span> }
       <p class="{{bemBlock}}__status">{{ statusText() ?? 'Visible' }}</p>

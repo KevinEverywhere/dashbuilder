@@ -400,6 +400,7 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     properties: [
       { key: 'title', label: 'Title', type: 'string', default: '' },
       { key: 'maxHeight', label: 'Max height', type: 'string', default: '28rem' },
+      { key: 'overlayScrollbar', label: 'Overlay scrollbar', type: 'boolean', default: true },
     ],
   },
   {

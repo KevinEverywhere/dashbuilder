@@ -287,6 +287,15 @@ export interface ${name}Props {
   children?: ReactNode;
 }`,
 
+  'layout-scroll-region': (name) => `export interface ${name}Props {
+  title?: string;
+  maxHeight?: string;
+  overlayScrollbar?: boolean;
+  className?: string;
+  style?: CSSProperties;
+  children?: ReactNode;
+}`,
+
   'role-gate': (name) => `export interface ${name}Props {
   label?: string;
   allowedRoles?: string[];
@@ -649,6 +658,17 @@ const KIND_BODIES = {
         <span>{rest.title ?? 'Section'}</span>
       </button>
       <div className="{{bemBlock}}__panel">{children}</div>
+    </section>`,
+
+  'layout-scroll-region': `<section
+      ref={ref as React.RefObject<HTMLElement>}
+      className={[rootClass, rest.overlayScrollbar === false ? '' : 'rd-scroll-region--overlay-scrollbar'].filter(Boolean).join(' ')}
+      style={{ ...style, ...(rest.maxHeight ? { maxHeight: rest.maxHeight } : {}) }}
+      data-testid="{{testId}}"
+      aria-label={rest.title ?? 'Scrollable content'}
+    >
+      {rest.title ? <header className="rd-scroll-region__header">{rest.title}</header> : null}
+      <div className="rd-scroll-region__body">{children}</div>
     </section>`,
 
   'role-gate': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">

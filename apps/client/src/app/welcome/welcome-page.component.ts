@@ -433,10 +433,10 @@ export class WelcomePageComponent implements OnInit {
       await firstValueFrom(
         this.projectsApi.updateProject(session.projectId, { stackProfile: profile }),
       );
-      writeActiveStackProfile(profile);
     } catch {
-      // Keep local edits; builder resume still works with prior project stack.
+      // API may be down; keep the chosen stack locally so export and resume stay in sync.
     }
+    writeActiveStackProfile(profile);
   }
 
   private isStackDirty(): boolean {

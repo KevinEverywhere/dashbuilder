@@ -71,7 +71,7 @@ Known gaps vs target parity. **Do not add new entries.** Close with a dedicated 
 
 ### React-only exports (no manifest entry; missing on Angular/Vue/Svelte/WC)
 
-- `layout/scroll-region`, `layout/filter-grid`, `layout/geo-explorer`, `layout/form-section`
+- `layout/filter-grid`, `layout/geo-explorer`, `layout/form-section`
 - `visual/chart/sankey`, `visual/chart/venn`
 - `visual/destination/destination-select-list`, `visual/filter/filter-summary`
 - `visual/display/equirect-globe`

@@ -179,7 +179,7 @@ describe('buildExportIR', () => {
     ).toThrow(ExportBuildError);
   });
 
-  it('uses default export targets when none are configured', () => {
+  it('defaults to react UI and omits server/database when none are configured', () => {
     const text = registry.createNode('visual.input.text', { id: 'n1' });
 
     const ir = buildExportIR(
@@ -195,8 +195,10 @@ describe('buildExportIR', () => {
 
     expect(ir.targets).toEqual({
       ui: 'react',
-      server: 'nest',
-      database: 'postgresql',
+    });
+
+    expect(ir.targets).toEqual({
+      ui: 'react',
     });
     expect(ir.styles.framework).toBe('tailwind');
   });
