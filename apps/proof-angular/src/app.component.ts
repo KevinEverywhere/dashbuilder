@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DESTINATION_ATLAS_SCREENS } from '@destination-atlas';
+import { DESTINATION_ATLAS_NAV_SCREENS, DESTINATION_ATLAS_SCREENS } from '@destination-atlas';
 import { screenAllowedForRole } from './lib/roles';
 import { SCREEN_SOURCES } from './lib/screen-sources';
 import type { SettingFieldTarget } from './lib/settings-highlight';
@@ -69,32 +69,12 @@ import { GapScreenComponent } from './screens/gap-screen.component';
           </div>
 
           <nav class="da-nav da-tabbar" aria-label="Screens">
-            @for (screen of navScreensBeforeScout(); track screen.id) {
+            @for (screen of visibleScreens(); track screen.id) {
               <a
                 class="da-tabbar__tab"
                 [routerLink]="atlas.screenRouterLink(screen.id).path"
                 [queryParams]="atlas.screenRouterLink(screen.id).queryParams"
                 [attr.aria-current]="atlas.screen() === screen.id ? 'page' : null"
-              >
-                {{ screen.label }}
-              </a>
-            }
-            <button
-              type="button"
-              class="da-tabbar__tab"
-              [attr.aria-current]="atlas.settingsScoutFocus() ? 'page' : null"
-              (click)="atlas.openScoutSettings()"
-            >
-              Scout
-            </button>
-            @for (screen of navScreensFromSettings(); track screen.id) {
-              <a
-                class="da-tabbar__tab"
-                [routerLink]="atlas.screenRouterLink(screen.id).path"
-                [queryParams]="atlas.screenRouterLink(screen.id).queryParams"
-                [attr.aria-current]="
-                  atlas.screen() === screen.id && !atlas.settingsScoutFocus() ? 'page' : null
-                "
               >
                 {{ screen.label }}
               </a>
@@ -164,20 +144,10 @@ export class AppComponent {
   readonly mobileView = signal<'preview' | 'source'>('preview');
 
   readonly visibleScreens = computed(() =>
-    DESTINATION_ATLAS_SCREENS.filter((screen) => screenAllowedForRole(screen.id, this.atlas.userRole())),
+    DESTINATION_ATLAS_NAV_SCREENS.filter((screen) =>
+      screenAllowedForRole(screen.id, this.atlas.userRole()),
+    ),
   );
-
-  readonly navScreensBeforeScout = computed(() => {
-    const screens = this.visibleScreens();
-    const settingsIndex = screens.findIndex((screen) => screen.id === 'settings');
-    return settingsIndex >= 0 ? screens.slice(0, settingsIndex) : screens;
-  });
-
-  readonly navScreensFromSettings = computed(() => {
-    const screens = this.visibleScreens();
-    const settingsIndex = screens.findIndex((screen) => screen.id === 'settings');
-    return settingsIndex >= 0 ? screens.slice(settingsIndex) : [];
-  });
 
   readonly activeScreenLabel = computed(() => {
     const active = DESTINATION_ATLAS_SCREENS.find((screen) => screen.id === this.atlas.screen());

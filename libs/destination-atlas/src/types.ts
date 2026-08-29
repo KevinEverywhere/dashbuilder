@@ -90,7 +90,10 @@ export interface Destination {
 }
 
 export type { DestinationAtlasScreenId } from '@rosettadash/core';
-import type { DestinationAtlasScreenId } from '@rosettadash/core';
+import {
+  atlasScreenVisibleInNav,
+  type DestinationAtlasScreenId,
+} from '@rosettadash/core';
 
 export interface DestinationAtlasScreen {
   id: DestinationAtlasScreenId;
@@ -156,6 +159,11 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
     description: 'App base language and client-side integration keys (BYOK).',
   },
 ];
+
+/** Screens shown in the proof-app tab bar. Views and Intel stay in the catalog but are hidden (DAS-164). */
+export const DESTINATION_ATLAS_NAV_SCREENS = DESTINATION_ATLAS_SCREENS.filter((screen) =>
+  atlasScreenVisibleInNav(screen.id),
+);
 
 export const DEFAULT_APP_LOCALES: AppLocaleOption[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },

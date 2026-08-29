@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { buildAtlasLocation } from '@rosettadash/core';
-import { DESTINATION_ATLAS_SCREENS, MOCK_DESTINATIONS } from '@destination-atlas';
+import { DESTINATION_ATLAS_NAV_SCREENS, DESTINATION_ATLAS_SCREENS, MOCK_DESTINATIONS } from '@destination-atlas';
 import { screenAllowedForRole } from './lib/roles';
 import { useClientRouterMode } from './lib/client-router';
 import { useDestinationAtlasState } from './state/useDestinationAtlasState';
@@ -48,7 +48,7 @@ export function App() {
   const { routerMode, setRouterMode } = useClientRouterMode();
   const [mobileView, setMobileView] = useState<'preview' | 'source'>('preview');
   const activeScreen = DESTINATION_ATLAS_SCREENS.find((screen) => screen.id === atlas.screen);
-  const visibleScreens = DESTINATION_ATLAS_SCREENS.filter((screen) =>
+  const visibleScreens = DESTINATION_ATLAS_NAV_SCREENS.filter((screen) =>
     screenAllowedForRole(screen.id, atlas.userRole),
   );
 
@@ -77,15 +77,11 @@ export function App() {
     atlas.setScreen('settings');
   };
 
-  const settingsIndex = visibleScreens.findIndex((screen) => screen.id === 'settings');
-  const navScreensBeforeScout = settingsIndex >= 0 ? visibleScreens.slice(0, settingsIndex) : visibleScreens;
-  const navScreensFromSettings = settingsIndex >= 0 ? visibleScreens.slice(settingsIndex) : [];
-
   return (
     <div className="da-shell">
       <header className="da-header">
         <h1>Destination Atlas</h1>
-        <p>Current and historic information about world locations — React proof (DAS-137 Scout + Maps)</p>
+        <p>Current and historic information about world locations — React proof</p>
       </header>
 
       <div className="da-body-row">
@@ -103,32 +99,12 @@ export function App() {
           </div>
 
           <nav className="da-nav da-tabbar" aria-label="Screens">
-            {navScreensBeforeScout.map((screen) => (
+            {visibleScreens.map((screen) => (
               <NavLink
                 key={screen.id}
                 className="da-tabbar__tab"
                 to={screenTo(screen.id)}
                 aria-current={atlas.screen === screen.id ? 'page' : undefined}
-              >
-                {screen.label}
-              </NavLink>
-            ))}
-            <button
-              type="button"
-              className="da-tabbar__tab"
-              aria-current={atlas.settingsScoutFocus ? 'page' : undefined}
-              onClick={atlas.openScoutSettings}
-            >
-              Scout
-            </button>
-            {navScreensFromSettings.map((screen) => (
-              <NavLink
-                key={screen.id}
-                className="da-tabbar__tab"
-                to={screenTo(screen.id)}
-                aria-current={
-                  atlas.screen === screen.id && !atlas.settingsScoutFocus ? 'page' : undefined
-                }
               >
                 {screen.label}
               </NavLink>

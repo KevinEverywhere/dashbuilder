@@ -5,28 +5,36 @@ alwaysApply: true
 
 # Jira ticket + branch gate (mandatory)
 
-**No code, docs, or config changes until both exist and match.**
+**Kevin owns tickets and branches. Agents do not invent them.**
 
 Applies to the **RosettaDash** monorepo (npm scope `@rosettadash/*`). Jira project remains **DAS**.
+
+## Who creates tickets
+
+**Do not `POST /rest/api/3/issue`. Do not `git checkout -b feature/DAS-…`. Not unless Kevin’s current message explicitly says to create a ticket and/or a branch.**
+
+Paid for — DAS-164 (2026-08-29). The agent opened a new ticket and branch in the middle of DAS-163 because proof-app nav “felt like new work.” Forbidden. Follow-on work stays on the ticket already in play.
+
+If there is no ticket and he did not ask for one: **stop**. One sentence: you need a ticket/branch from him. Wait.
+
+If he already named a ticket, or this conversation already has `feature/DAS-<n>-…`: **stay on it.** “Also update the five apps” is not a new DAS.
 
 ## Required order (never skip or reorder)
 
 0. **Verify the current branch** — before editing any file, run `git branch --show-current`.
-   - If the user gave instructions for **new work** and the branch is `development`, `main`, or a **different** `feature/DAS-*` than the task's ticket → **stop**. Do not implement. Tell Kevin which branch you're on and which ticket/branch the task needs.
-   - If work was started on the wrong branch, **stash or stage** changes onto the correct ticket branch before continuing — never land ticket A's diff on ticket B's branch.
-   - When Kevin says work belongs to an **open ticket** (e.g. DAS-152), confirm you're on `feature/DAS-152-…` before touching files.
+   - Stay on the `feature/DAS-*` that belongs to this conversation’s ticket.
+   - If the branch is `development`, `main`, or a **different** `feature/DAS-*` than the ticket Kevin named → **stop**. Tell him which branch you are on. Do **not** create a replacement ticket or branch.
+   - If work was started on the wrong branch, **stash or stage** changes onto the correct ticket branch before continuing — never land ticket A's diff on ticket B's branch. Only when he named the correct ticket.
+   - When Kevin says work belongs to an **open ticket** (e.g. DAS-163), confirm you're on `feature/DAS-163-…` before touching files.
 
-1. **Create the Jira ticket** in project **DAS**.
-   - Credentials are already in repo-root `.env`: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_KEY`, `JIRA_PROJECT_KEY` (`DAS`). Optional: `JIRA_DISPLAY_NAME`.
-   - Use the REST API with those values (see **Jira access** below). Do not stall waiting for Jira MCP authentication.
+1. **Ticket** — use the existing DAS key. Create a new issue **only** if Kevin explicitly asked in this turn.
+   - Credentials: repo-root `.env`: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_KEY`, `JIRA_PROJECT_KEY` (`DAS`). Optional: `JIRA_DISPLAY_NAME`.
+   - REST API. Do not stall on Jira MCP.
    - Include summary, acceptance criteria, and planned branch name.
-   - Confirm the ticket key (e.g. `DAS-37`) before continuing.
+   - Confirm the ticket key before continuing.
 
-2. **Create the feature branch** from `development`:
-   ```
-   feature/DAS-<ticket-number>-<kebab-case-summary>
-   ```
-   - Branch number **must match** the Jira key exactly.
+2. **Branch** — create `feature/DAS-<n>-<kebab-case-summary>` from `development` **only** if Kevin explicitly asked, and `<n>` matches that ticket.
+   - If the branch already exists, check it out. Do not make a second one.
 
 3. **Then implement** — one ticket, one branch at a time.
 
@@ -41,7 +49,8 @@ Applies to the **RosettaDash** monorepo (npm scope `@rosettadash/*`). Jira proje
 - Use branch names that do not match the Jira key (e.g. `feature/docker-local-containers`).
 - Assume a ticket exists because git commits or docs mention `DAS-n` — **verify in Jira**.
 - Create docs/links to Jira tickets that have not been created yet.
-- Skip Jira because the task seems small (docs-only, Docker, fixes — all need tickets).
+- Skip Jira because the task seems small (docs-only, Docker, fixes — all need **an existing** ticket, not a new one you invent).
+- **Open a new DAS ticket or feature branch because the work “feels like a new story.”** Same conversation = same ticket unless Kevin says otherwise.
 
 ## Jira access (credentials in `.env`)
 

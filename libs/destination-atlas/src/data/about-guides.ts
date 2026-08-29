@@ -101,7 +101,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
 export const DESTINATION_ATLAS_ABOUT_INTRO = {
   title: 'Why Destination Atlas?',
   lead:
-    'Destination Atlas is a functional demo — not a component kitchen sink. Each screen exercises real RosettaDash components the way you would wire them in production: filters bound to tables, maps with provider choice, role gates, media embeds, and advanced views.',
+    'Destination Atlas is a functional demo — not a component kitchen sink. Each screen exercises real RosettaDash components the way you would wire them in production: filters bound to tables, maps with provider choice, role gates, and media embeds.',
   proofPurpose:
     'The five proof apps (Web Components + four frameworks) share a 30-city mock library from libs/destination-atlas and identical screen names. Compare runtime imports side-by-side, then open Storybook on the matching port to inspect components in isolation.',
   consumerInstall:

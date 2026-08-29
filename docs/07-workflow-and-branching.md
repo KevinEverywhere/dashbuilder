@@ -5,17 +5,17 @@
 - **Project:** [DAS — Dashbuilder](https://planetkevin.atlassian.net/jira/software/projects/DAS/boards/68/backlog)
 - **Board:** [Backlog / Board 68](https://planetkevin.atlassian.net/jira/software/projects/DAS/boards/68/backlog)
 
-All work is tracked in Jira **before** any implementation. A Jira issue and matching feature branch are **mandatory gates** — not optional, not "when asked."
+All work is tracked in Jira. A matching `feature/DAS-<n>-…` branch is required. **Kevin opens the ticket and names the branch — or he explicitly tells the agent to.** Agents do not invent DAS-n+1 mid-stream (DAS-164).
 
 ## Mandatory gate (agents)
 
-**Do not write code, edit docs, or change config until:**
+**Do not write code, edit docs, or change config until you are on the ticket Kevin named:**
 
-1. A **DAS Jira ticket exists** (created via REST API with `.env` credentials — `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_KEY`, `JIRA_PROJECT_KEY=DAS` — key confirmed).
-2. A **feature branch** exists: `feature/DAS-<n>-<kebab-summary>` where `<n>` matches the Jira key.
-3. You are **on that branch**, branched from `development`.
+1. A **DAS Jira ticket already exists** (or Kevin just told you to create one via REST with `.env` — `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_KEY`, `JIRA_PROJECT_KEY=DAS` — key confirmed).
+2. A **feature branch** exists: `feature/DAS-<n>-<kebab-summary>` where `<n>` matches that key.
+3. You are **on that branch**.
 
-Using ticket numbers in commits or docs without a real Jira issue is forbidden. If git history references tickets that Jira lacks, **create the Jira tickets first**, then continue.
+Using ticket numbers in commits or docs without a real Jira issue is forbidden. If git history references tickets that Jira lacks, **stop and tell Kevin** — do not open replacements on your own.
 
 See also: `.cursor/rules/01-jira-ticket-and-branch.mdc` (always-applied agent rule).
 
@@ -45,9 +45,9 @@ Examples:
 
 ### Workflow steps
 
-1. **Create Jira ticket** in DAS (REST API using `.env` `JIRA_*` vars) — scope, acceptance criteria, branch name in description.
+1. **Ticket** — Kevin’s existing DAS key, or a new issue **only if he asked**.
 2. **Confirm ticket key** (e.g. `DAS-37`) — do not proceed on assumption.
-3. **Create feature branch** from `development`: `feature/DAS-<n>-<kebab-case-summary>`.
+3. **Branch** — use the matching `feature/DAS-<n>-<kebab-case-summary>`. Create it from `development` only if he asked.
 4. **Implement** on that branch only — one ticket at a time.
 5. **Run `npm run verify`** (and `npm run verify:all` for UI/e2e-affecting changes).
 6. **Kevin commits and merges** — agents draft messages; Kevin is sole committer/merger.

@@ -6,7 +6,6 @@ import { TextareaInput } from '@rosettadash/react/visual/input/textarea';
 import type { AtlasContext } from '../state/useDestinationAtlasState';
 import { useConsumerSecrets } from '../state/consumer-secrets-context';
 import { AtlasContextControls } from '../components/AtlasContextControls';
-import { ScoutSettingsSection } from '../components/ScoutSettingsSection';
 import { ThemeToggle, type ThemePreference } from '../lib/theme';
 import { roleLabel } from '../lib/roles';
 import { isSettingFieldTarget } from '../lib/settings-highlight';
@@ -17,7 +16,7 @@ export const SETTINGS_SOURCE = `<SettingsScreen>
     <AppLanguageSelect locales={DEFAULT_APP_LOCALES} value={locale} onLocaleChange={…} />
   </AtlasContextControls>
   <Collapsible title="Integration keys (BYOK)">…</Collapsible>
-  <Collapsible title="Scout / AI providers (BYOK)">…</Collapsible>
+  <Collapsible title="AI providers (BYOK)">…</Collapsible>
   <TextareaInput label="Feedback" />
 </SettingsScreen>`;
 
@@ -144,7 +143,7 @@ export function SettingsScreen({
             label="Integration keys (BYOK)"
             currentRole={userRole}
             allowedRoles={['admin']}
-            statusText="Admin can manage API keys for Map, Intel, and Stack"
+            statusText="Admin can manage API keys for maps, news, and Stack"
             hiddenStatusText={`Integration keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`}
           >
             {!secrets.loaded ? <p className="da-note">Loading encrypted key vault…</p> : null}
@@ -193,18 +192,17 @@ export function SettingsScreen({
 
       <div ref={aiRef} className={highlightTarget === 'ai' ? 'rd-highlight-target' : undefined}>
         <Collapsible
-          title="Scout / AI providers (BYOK)"
-          summary="Deal scout — OpenAI, Anthropic, Gemini, Azure, Ollama"
+          title="AI providers (BYOK)"
+          summary="OpenAI, Anthropic, Gemini, Azure, Ollama"
           open={aiOpen}
           onOpenChange={setAiOpen}
           className="da-byok-collapsible"
         >
-          <ScoutSettingsSection locale={locale} selectedId={selectedId} />
           <RoleGate
             label="AI providers (BYOK)"
             currentRole={userRole}
             allowedRoles={['admin']}
-            statusText="Admin can manage AI keys for Scout and future premium features"
+            statusText="Admin can manage AI provider keys"
             hiddenStatusText={`AI keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`}
           >
             {!secrets.loaded ? <p className="da-note">Loading encrypted key vault…</p> : null}

@@ -15,7 +15,6 @@ import { ConsumerSecretsService } from '../services/consumer-secrets.service';
 import { AtlasContextControlsComponent } from '../components/atlas-context-controls.component';
 import { ThemeToggleComponent } from '../components/theme-toggle.component';
 import { CollapsibleComponent } from '../components/collapsible.component';
-import { ScoutSettingsSectionComponent } from '../components/scout-settings-section.component';
 import { ByokFieldsSectionComponent } from '../components/byok-fields-section.component';
 import { DaBoundTextareaInputComponent } from '../components/proof-form-fields.component';
 
@@ -28,7 +27,6 @@ const FEEDBACK_MESSAGE = 'Hope you like the app, please leave comments on github
     AtlasContextControlsComponent,
     ThemeToggleComponent,
     CollapsibleComponent,
-    ScoutSettingsSectionComponent,
     ByokFieldsSectionComponent,
     DaBoundTextareaInputComponent,
   ],
@@ -74,7 +72,7 @@ const FEEDBACK_MESSAGE = 'Hope you like the app, please leave comments on github
             [userRole]="atlas.userRole()"
             [fields]="secrets.integrationFields"
             gateLabel="Integration keys (BYOK)"
-            gateStatusText="Admin can manage API keys for Map, Intel, and Stack"
+            gateStatusText="Admin can manage API keys for maps, news, and Stack"
             [gateHiddenStatusText]="
               'Integration keys are read-only for ' +
               roleLabel(atlas.userRole()) +
@@ -86,18 +84,17 @@ const FEEDBACK_MESSAGE = 'Hope you like the app, please leave comments on github
 
       <div #aiRef [class.rd-highlight-target]="atlas.highlightTarget() === 'ai'">
         <da-collapsible
-          [panelTitle]="'Scout / AI providers (BYOK)'"
-          [panelSummary]="'Deal scout — OpenAI, Anthropic, Gemini, Azure, Ollama'"
+          [panelTitle]="'AI providers (BYOK)'"
+          [panelSummary]="'OpenAI, Anthropic, Gemini, Azure, Ollama'"
           class="da-byok-collapsible"
           [open]="aiOpen()"
           (openChange)="aiOpen.set($event)"
         >
-          <da-scout-settings-section [locale]="atlas.locale()" [selectedId]="atlas.selectedId()" />
           <da-byok-fields-section
             [userRole]="atlas.userRole()"
             [fields]="secrets.aiFields"
             gateLabel="AI providers (BYOK)"
-            gateStatusText="Admin can manage AI keys for Scout and future premium features"
+            gateStatusText="Admin can manage AI provider keys"
             [gateHiddenStatusText]="
               'AI keys are read-only for ' +
               roleLabel(atlas.userRole()) +

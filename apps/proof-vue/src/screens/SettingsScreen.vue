@@ -3,7 +3,7 @@ export const SETTINGS_SOURCE = `<SettingsScreen>
   <header><h2>Settings</h2><ThemeToggle /></header>
   <AtlasContextControls highlightField={…} />
   <Collapsible title="Integration keys (BYOK)">…</Collapsible>
-  <Collapsible title="Scout / AI providers (BYOK)">…</Collapsible>
+  <Collapsible title="AI providers (BYOK)">…</Collapsible>
   <TextareaInput label="Feedback" />
 </SettingsScreen>`;
 </script>
@@ -16,7 +16,6 @@ import BoundTextareaInput from '../components/BoundTextareaInput.vue';
 import AtlasContextControls from '../components/AtlasContextControls.vue';
 import Collapsible from '../components/Collapsible.vue';
 import RoleGatePanel from '../components/RoleGatePanel.vue';
-import ScoutSettingsSection from '../components/ScoutSettingsSection.vue';
 import ThemeToggle from '../components/ThemeToggle.vue';
 import { useConsumerSecrets } from '../composables/use-consumer-secrets';
 import type { ThemePreference } from '../composables/use-theme-preference';
@@ -134,7 +133,7 @@ function submitFeedback() {
           gate-label="Integration keys (BYOK)"
           :current-role="userRole"
           :allowed-roles="['admin']"
-          status-text="Admin can manage API keys for Map, Intel, and Stack"
+          status-text="Admin can manage API keys for maps, news, and Stack"
           :hidden-status-text="`Integration keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`"
         >
           <p v-if="!secrets.loaded" class="da-note">Loading encrypted key vault…</p>
@@ -183,18 +182,17 @@ function submitFeedback() {
 
     <div ref="aiRef" :class="highlightTarget === 'ai' ? 'rd-highlight-target' : undefined">
       <Collapsible
-        panel-title="Scout / AI providers (BYOK)"
-        panel-summary="Deal scout — OpenAI, Anthropic, Gemini, Azure, Ollama"
+        panel-title="AI providers (BYOK)"
+        panel-summary="OpenAI, Anthropic, Gemini, Azure, Ollama"
         :open="aiOpen"
         class="da-byok-collapsible"
         @open-change="aiOpen = $event"
       >
-        <ScoutSettingsSection :locale="locale" :selected-id="selectedId" />
         <RoleGatePanel
           gate-label="AI providers (BYOK)"
           :current-role="userRole"
           :allowed-roles="['admin']"
-          status-text="Admin can manage AI keys for Scout and future premium features"
+          status-text="Admin can manage AI provider keys"
           :hidden-status-text="`AI keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`"
         >
           <p v-if="!secrets.loaded" class="da-note">Loading encrypted key vault…</p>

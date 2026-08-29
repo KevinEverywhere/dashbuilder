@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { buildAtlasLocation } from '@rosettadash/core';
-import { DESTINATION_ATLAS_SCREENS, MOCK_DESTINATIONS } from '@destination-atlas';
+import { DESTINATION_ATLAS_NAV_SCREENS, DESTINATION_ATLAS_SCREENS, MOCK_DESTINATIONS } from '@destination-atlas';
 import { screenAllowedForRole } from './lib/roles';
 import { useClientRouterMode } from './composables/use-client-router-mode';
 import { useDestinationAtlasState } from './composables/use-destination-atlas-state';
@@ -48,7 +48,7 @@ const SCREEN_SOURCES: Record<string, string> = {
 
 const activeScreen = computed(() => DESTINATION_ATLAS_SCREENS.find((screen) => screen.id === atlas.screen.value));
 const visibleScreens = computed(() =>
-  DESTINATION_ATLAS_SCREENS.filter((screen) => screenAllowedForRole(screen.id, atlas.userRole.value)),
+  DESTINATION_ATLAS_NAV_SCREENS.filter((screen) => screenAllowedForRole(screen.id, atlas.userRole.value)),
 );
 
 const atlasQuery = computed(() => ({
@@ -77,13 +77,6 @@ function openSetting(field: SettingFieldTarget | 'theme' | 'ai') {
   atlas.setScreen('settings');
 }
 
-const settingsIndex = computed(() => visibleScreens.value.findIndex((screen) => screen.id === 'settings'));
-const navScreensBeforeScout = computed(() =>
-  settingsIndex.value >= 0 ? visibleScreens.value.slice(0, settingsIndex.value) : visibleScreens.value,
-);
-const navScreensFromSettings = computed(() =>
-  settingsIndex.value >= 0 ? visibleScreens.value.slice(settingsIndex.value) : [],
-);
 </script>
 
 <template>
@@ -109,30 +102,11 @@ const navScreensFromSettings = computed(() =>
 
         <nav class="da-nav da-tabbar" aria-label="Screens">
           <RouterLink
-            v-for="screen in navScreensBeforeScout"
+            v-for="screen in visibleScreens"
             :key="screen.id"
             class="da-tabbar__tab"
             :to="screenTo(screen.id)"
             :aria-current="atlas.screen.value === screen.id ? 'page' : undefined"
-          >
-            {{ screen.label }}
-          </RouterLink>
-          <button
-            type="button"
-            class="da-tabbar__tab"
-            :aria-current="atlas.settingsScoutFocus.value ? 'page' : undefined"
-            @click="atlas.openScoutSettings()"
-          >
-            Scout
-          </button>
-          <RouterLink
-            v-for="screen in navScreensFromSettings"
-            :key="screen.id"
-            class="da-tabbar__tab"
-            :to="screenTo(screen.id)"
-            :aria-current="
-              atlas.screen.value === screen.id && !atlas.settingsScoutFocus.value ? 'page' : undefined
-            "
           >
             {{ screen.label }}
           </RouterLink>

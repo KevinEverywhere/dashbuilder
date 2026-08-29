@@ -75,7 +75,7 @@ Five Nx apps share mock data from `libs/destination-atlas/` and the same screens
 | Vue | `apps/proof-vue` | `npm run proof:vue` | 4313 |
 | Svelte | `apps/proof-svelte` | `npm run proof:svelte` | 4314 |
 
-**Screens:** About (`/` — only page-level scroller) · Overview · Destinations · Map · Globe · Media · Authoring · Intel · Plan · Views · Stack · Settings.
+**Screens:** About (`/` — only page-level scroller) · Overview · Destinations · Maps · Media · Authoring · Plan · Stack · Settings.
 
 Most screens are native to that runtime. Intentional mixes: **Svelte** hosts React Authoring, Vue Globe, Angular Media, and `<rd-geo-map>` on Map ([DAS-158](https://planetkevin.atlassian.net/browse/DAS-158)); **web-components** keeps Map/Globe on `rd-*` and mounts React Authoring ([DAS-159](https://planetkevin.atlassian.net/browse/DAS-159)). Vue proof is Vue-only ([DAS-157](https://planetkevin.atlassian.net/browse/DAS-157)).
 

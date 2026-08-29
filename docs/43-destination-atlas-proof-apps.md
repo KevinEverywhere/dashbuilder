@@ -56,10 +56,11 @@ The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-
 | **Globe** | 3D markers | ThreeGeoGlobe |
 | **Media** | Flat YouTube + 360° routing | YoutubeEmbed, VideoMetadataPanel — 360° destinations open Authoring |
 | **Authoring** | Upload + WASM extract | FlatVideoViewport or EquirectSphereViewport, AuthoringPlaybackBar, WasmMedia ([DAS-131](https://planetkevin.atlassian.net/browse/DAS-131), [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141)) |
-| **Intel** | Regional news | NewsSearchBox, NewsRegionSelect, NewsResultsTable, NewsArticleDetail |
 | **Plan** | Trip + access | RoleGate, PersonInvite, RoleAssign, Timer, form inputs |
 | **Stack** | Infra demo | infra/* read-only panel; live BYOK key status — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
 | **Settings** | App locale + integrations | AppLanguageSelect; consumer BYOK vault — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
+
+**Nav (DAS-164):** two screens stay in code and are not in the tab bar (those paths redirect to About). They can return later — one when there is current news content, the other when it is redesigned. AI provider keys live under Settings only.
 
 ### About page & scroll policy
 
@@ -102,13 +103,13 @@ Proof apps are native to their runtime by default. These screens **deliberately 
 
 Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`). Vue proof is Vue-only (DAS-157). **proof-svelte (DAS-158)** shows one React, one Vue, one Angular, and one WC custom element. **proof-web-components (DAS-159)** is the custom-element host: Map/Globe stay native `rd-*`; Authoring mounts React.
 
-**proof-svelte (DAS-125 / DAS-158):** Native Svelte 5 for most screens. Authoring keeps React; Globe hosts Vue; Media hosts Angular; Map hosts `<rd-geo-map>`. Views Sankey/Venn are native Svelte.
+**proof-svelte (DAS-125 / DAS-158):** Native Svelte 5 for most screens. Authoring keeps React; Globe hosts Vue; Media hosts Angular; Map hosts `<rd-geo-map>`.
 
-**proof-web-components (DAS-121 / DAS-159):** Native custom elements for most screens, including geo-explorer Map/Globe with destination-list lockstep. Authoring hosts the React subtree. Views Sankey/Venn are native SVG using `.rd-chart-sankey` / `.rd-chart-venn`.
+**proof-web-components (DAS-121 / DAS-159):** Native custom elements for most screens, including geo-explorer Map/Globe with destination-list lockstep. Authoring hosts the React subtree.
 
 ### Consumer BYOK (integrations)
 
-Builder BYOK shipped in [DAS-70](https://planetkevin.atlassian.net/browse/DAS-70) (`/environment`, `@rosettadash/core/lib/byok`). Destination Atlas proof apps initially used build-time env vars only (`VITE_GOOGLE_MAPS_API_KEY`, mock Intel). [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) wires a **consumer-facing** key vault into Settings, connects Map/Intel/Stack, and feeds API/docs improvements back into shared components.
+Builder BYOK shipped in [DAS-70](https://planetkevin.atlassian.net/browse/DAS-70) (`/environment`, `@rosettadash/core/lib/byok`). Destination Atlas proof apps initially used build-time env vars only (`VITE_GOOGLE_MAPS_API_KEY`). [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) wires a **consumer-facing** key vault into Settings, connects Map/Stack, and feeds API/docs improvements back into shared components.
 
 Branch: `feature/DAS-135-byok-destination-atlas`.
 
@@ -117,7 +118,7 @@ Branch: `feature/DAS-135-byok-destination-atlas`.
 - `@rosettadash/core/lib/byok` — `CONSUMER_INTEGRATION_FIELDS`, `ConsumerSecretsStore`, `resolveConsumerSecret()`
 - Settings → **Integration keys (BYOK)** (Admin): Google Maps, MapTiler, News API; encrypted browser vault
 - Map reads BYOK keys (+ `VITE_*` fallback); MapLibre uses MapTiler style URL when configured
-- Intel attempts live NewsAPI when key set; mock fallback + CORS guidance
+- News API key is stored in Settings (live fetch is not on a nav screen today)
 - Stack `EnvConfig` shows per-key configured / missing status (`keyStatus` prop on `@rosettadash/react/infra/env`)
 
 **Env templates ([DAS-136](https://planetkevin.atlassian.net/browse/DAS-136)):** repo root `.env.example` (builder, AI BYOK, database, server); `apps/proof-react/.env.example` for `VITE_*` map/news fallbacks. Copy to `.env.local` — or use Settings BYOK vault at runtime.

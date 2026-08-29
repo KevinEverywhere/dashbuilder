@@ -1,6 +1,6 @@
 <script lang="ts">
   import { buildAtlasLocation } from '@rosettadash/core';
-  import { DESTINATION_ATLAS_SCREENS, MOCK_DESTINATIONS } from '@destination-atlas';
+  import { DESTINATION_ATLAS_NAV_SCREENS, DESTINATION_ATLAS_SCREENS, MOCK_DESTINATIONS } from '@destination-atlas';
   import { screenAllowedForRole } from './lib/roles';
   import { provideConsumerSecrets } from './lib/consumer-secrets.svelte';
   import { createThemePreference } from './lib/theme-preference.svelte';
@@ -50,7 +50,7 @@
 
   const activeScreen = $derived(DESTINATION_ATLAS_SCREENS.find((screen) => screen.id === atlas.screen));
   const visibleScreens = $derived(
-    DESTINATION_ATLAS_SCREENS.filter((screen) => screenAllowedForRole(screen.id, atlas.userRole)),
+    DESTINATION_ATLAS_NAV_SCREENS.filter((screen) => screenAllowedForRole(screen.id, atlas.userRole)),
   );
 
   const atlasQuery = $derived({
@@ -90,11 +90,6 @@
     atlas.setScreen('settings');
   }
 
-  const settingsIndex = $derived(visibleScreens.findIndex((screen) => screen.id === 'settings'));
-  const navScreensBeforeScout = $derived(
-    settingsIndex >= 0 ? visibleScreens.slice(0, settingsIndex) : visibleScreens,
-  );
-  const navScreensFromSettings = $derived(settingsIndex >= 0 ? visibleScreens.slice(settingsIndex) : []);
 </script>
 
 <div class="da-shell">
@@ -121,29 +116,11 @@
       </div>
 
       <nav class="da-nav da-tabbar" aria-label="Screens">
-        {#each navScreensBeforeScout as screen (screen.id)}
+        {#each visibleScreens as screen (screen.id)}
           <a
             href={screenHref(screen.id)}
             class="da-tabbar__tab"
             aria-current={atlas.screen === screen.id ? 'page' : undefined}
-            onclick={(event) => navigateScreen(screen.id, event)}
-          >
-            {screen.label}
-          </a>
-        {/each}
-        <button
-          type="button"
-          class="da-tabbar__tab"
-          aria-current={atlas.settingsScoutFocus ? 'page' : undefined}
-          onclick={() => atlas.openScoutSettings()}
-        >
-          Scout
-        </button>
-        {#each navScreensFromSettings as screen (screen.id)}
-          <a
-            href={screenHref(screen.id)}
-            class="da-tabbar__tab"
-            aria-current={atlas.screen === screen.id && !atlas.settingsScoutFocus ? 'page' : undefined}
             onclick={(event) => navigateScreen(screen.id, event)}
           >
             {screen.label}

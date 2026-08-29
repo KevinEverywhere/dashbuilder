@@ -9,6 +9,7 @@ import {
 import {
   DEFAULT_APP_LOCALES,
   DEFAULT_WORLD_EQUIRECT_URL,
+  DESTINATION_ATLAS_NAV_SCREENS,
   DESTINATION_ATLAS_SCREENS,
   MOCK_DESTINATIONS,
   getDestinationById,
@@ -605,32 +606,23 @@ function updateChrome(root: HTMLElement): void {
   if (routerSelect) {
     routerSelect.value = routerMode;
   }
-  const visibleScreens = DESTINATION_ATLAS_SCREENS.filter((screen) =>
+  const visibleScreens = DESTINATION_ATLAS_NAV_SCREENS.filter((screen) =>
     screenAllowedForRole(screen.id, atlas.userRole),
   );
-  const settingsIndex = visibleScreens.findIndex((screen) => screen.id === 'settings');
-  const before = settingsIndex >= 0 ? visibleScreens.slice(0, settingsIndex) : visibleScreens;
-  const after = settingsIndex >= 0 ? visibleScreens.slice(settingsIndex) : [];
   const nav = root.querySelector('[data-ref="screen-nav"]');
   if (nav) {
-    nav.innerHTML = [
-      ...before.map(
+    nav.innerHTML = visibleScreens
+      .map(
         (screen) =>
           `<a href="${screenHref(screen.id)}" class="da-tabbar__tab" data-screen="${screen.id}"${atlas.screen === screen.id ? ' aria-current="page"' : ''}>${screen.label}</a>`,
-      ),
-      `<button type="button" class="da-tabbar__tab" data-ref="scout-tab"${atlas.settingsScoutFocus ? ' aria-current="page"' : ''}>Scout</button>`,
-      ...after.map(
-        (screen) =>
-          `<a href="${screenHref(screen.id)}" class="da-tabbar__tab" data-screen="${screen.id}"${atlas.screen === screen.id && !atlas.settingsScoutFocus ? ' aria-current="page"' : ''}>${screen.label}</a>`,
-      ),
-    ].join('');
+      )
+      .join('');
     nav.querySelectorAll<HTMLAnchorElement>('[data-screen]').forEach((link) => {
       link.addEventListener('click', (event) => {
         event.preventDefault();
         atlas.setScreen(link.dataset.screen as DestinationAtlasScreenId);
       });
     });
-    nav.querySelector('[data-ref="scout-tab"]')?.addEventListener('click', () => atlas.openScoutSettings());
   }
   const source = root.querySelector('[data-ref="source-code"]');
   if (source) {

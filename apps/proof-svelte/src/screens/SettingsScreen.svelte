@@ -5,7 +5,7 @@
     <AppLanguageSelect locales={DEFAULT_APP_LOCALES} value={locale} onLocaleChange={…} />
   </AtlasContextControls>
   <Collapsible title="Integration keys (BYOK)">…</Collapsible>
-  <Collapsible title="Scout / AI providers (BYOK)">…</Collapsible>
+  <Collapsible title="AI providers (BYOK)">…</Collapsible>
   <TextareaInput label="Feedback" />
 </SettingsScreen>`;
 </script>
@@ -17,7 +17,6 @@
   import AtlasContextControls from '../components/AtlasContextControls.svelte';
   import Collapsible from '../components/Collapsible.svelte';
   import RoleGatePanel from '../components/RoleGatePanel.svelte';
-  import ScoutSettingsSection from '../components/ScoutSettingsSection.svelte';
   import ThemeToggle from '../components/ThemeToggle.svelte';
   import { useConsumerSecrets } from '../lib/consumer-secrets.svelte';
   import type { ThemePreference } from '../lib/theme-preference.svelte';
@@ -140,7 +139,7 @@
         gateLabel="Integration keys (BYOK)"
         currentRole={userRole}
         allowedRoles={['admin']}
-        statusText="Admin can manage API keys for Map, Intel, and Stack"
+        statusText="Admin can manage API keys for maps, news, and Stack"
         hiddenStatusText={`Integration keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`}
       >
         {#if !secrets.loaded}<p class="da-note">Loading encrypted key vault…</p>{/if}
@@ -189,18 +188,17 @@
 
   <div bind:this={aiRef} class:rd-highlight-target={highlightTarget === 'ai'}>
     <Collapsible
-      panelTitle="Scout / AI providers (BYOK)"
-      panelSummary="Deal scout — OpenAI, Anthropic, Gemini, Azure, Ollama"
+      panelTitle="AI providers (BYOK)"
+      panelSummary="OpenAI, Anthropic, Gemini, Azure, Ollama"
       open={aiOpen}
       class="da-byok-collapsible"
       onOpenChange={(open) => (aiOpen = open)}
     >
-      <ScoutSettingsSection {locale} {selectedId} />
       <RoleGatePanel
         gateLabel="AI providers (BYOK)"
         currentRole={userRole}
         allowedRoles={['admin']}
-        statusText="Admin can manage AI keys for Scout and future premium features"
+        statusText="Admin can manage AI provider keys"
         hiddenStatusText={`AI keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`}
       >
         {#if !secrets.loaded}<p class="da-note">Loading encrypted key vault…</p>{/if}

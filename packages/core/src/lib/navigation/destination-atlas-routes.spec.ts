@@ -1,5 +1,6 @@
 import {
   DEFAULT_DESTINATION_ATLAS_SCREEN,
+  atlasScreenVisibleInNav,
   legacyAtlasPathRedirect,
   mapsPanelFromPath,
   pathForDestinationAtlasScreen,
@@ -23,6 +24,11 @@ describe('destination atlas routes', () => {
     expect(legacyAtlasPathRedirect('/scout')).toBe('/settings');
   });
 
+  it('redirects hidden Views and Intel paths to About', () => {
+    expect(legacyAtlasPathRedirect('/views')).toBe('/');
+    expect(legacyAtlasPathRedirect('/intel')).toBe('/');
+  });
+
   it('derives maps panel from nested paths', () => {
     expect(mapsPanelFromPath('/maps')).toBe('map');
     expect(mapsPanelFromPath('/maps/map')).toBe('map');
@@ -35,6 +41,13 @@ describe('destination atlas routes', () => {
     expect(legacyAtlasPathRedirect('/map')).toBe('/maps');
     expect(legacyAtlasPathRedirect('/globe')).toBe('/maps/globe');
     expect(legacyAtlasPathRedirect('/maps/map')).toBe('/maps');
+  });
+
+  it('hides Intel and Views from the nav', () => {
+    expect(atlasScreenVisibleInNav('intel')).toBe(false);
+    expect(atlasScreenVisibleInNav('views')).toBe(false);
+    expect(atlasScreenVisibleInNav('settings')).toBe(true);
+    expect(atlasScreenVisibleInNav('about')).toBe(true);
   });
 
   it('falls back to about for unknown paths', () => {

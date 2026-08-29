@@ -564,7 +564,6 @@ function byokVaultActions(secrets: ReturnType<typeof getConsumerSecrets>): strin
 
 export function renderSettings(atlas: AtlasState, theme: ThemePreference): string {
   const secrets = getConsumerSecrets();
-  const selected = getDestinationById(atlas.selectedId);
   const highlight = isSettingFieldTarget(atlas.highlightTarget) ? atlas.highlightTarget : null;
   const cellClass = (key: string) =>
     `da-context-grid__cell${highlight === key ? ' rd-highlight-target' : ''}`;
@@ -572,13 +571,6 @@ export function renderSettings(atlas: AtlasState, theme: ThemePreference): strin
     value: dest.id,
     label: localizedDestinationName(dest, atlas.locale),
   }));
-  const sampleStops = MOCK_DESTINATIONS.slice(0, 3).map((dest, index) => ({
-    day: index + 1,
-    name: localizedDestinationName(dest, atlas.locale),
-    note: index === 0 ? 'Arrival + neighborhood walk' : index === 1 ? 'Museum day' : 'Departure buffer',
-  }));
-  const selectedName = selected ? localizedDestinationName(selected, atlas.locale) : 'your destination';
-
   return `
     <section class="da-panel da-settings-panel">
       <div class="da-settings-head">
@@ -614,23 +606,15 @@ export function renderSettings(atlas: AtlasState, theme: ThemePreference): strin
       </div>
       <div data-ref="integrations" class="${atlas.highlightTarget === 'integrations' ? 'rd-highlight-target' : ''}">
         <rd-collapsible class="da-byok-collapsible" title="Integration keys (BYOK)" summary="Google Maps, MapTiler, News API"${atlas.integrationsOpen ? ' open' : ''}>
-          <rd-role-gate label="Integration keys (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage API keys for Map, Intel, and Stack" hidden-status-text="Integration keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">
+          <rd-role-gate label="Integration keys (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage API keys for maps, news, and Stack" hidden-status-text="Integration keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">
             <div class="da-byok-fields">${byokFields(secrets.integrationFields)}</div>
             ${byokVaultActions(secrets)}
           </rd-role-gate>
         </rd-collapsible>
       </div>
       <div data-ref="ai-settings" class="${atlas.highlightTarget === 'ai' ? 'rd-highlight-target' : ''}">
-        <rd-collapsible class="da-byok-collapsible" title="Scout / AI providers (BYOK)" summary="Deal scout — OpenAI, Anthropic, Gemini, Azure, Ollama"${atlas.aiOpen || atlas.settingsScoutFocus ? ' open' : ''}>
-          <div class="da-scout-settings">
-            <p class="da-scout-settings__intro">Scout is the premium AI deal scout — compare routes and draft itineraries around <strong>${escapeHtml(selectedName)}</strong>. Configure a provider below; keys stay in your browser.</p>
-            ${
-              secrets.scoutAiReady
-                ? `<div class="da-scout-demo"><p class="da-note">Demo itinerary (mock). A live Scout would call your configured provider with destination context and budget constraints.</p><ol class="da-scout-itinerary">${sampleStops.map((stop) => `<li><strong>Day ${stop.day}</strong> — ${escapeHtml(stop.name)}<span>${escapeHtml(stop.note)}</span></li>`).join('')}</ol><button type="button" class="rd-button" disabled>Regenerate with AI (demo)</button></div>`
-                : `<p class="da-note da-byok-cta">Add at least one AI provider key below (or set matching <code>VITE_*</code> vars) to unlock Scout.</p>`
-            }
-          </div>
-          <rd-role-gate label="AI providers (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage AI keys for Scout and future premium features" hidden-status-text="AI keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">
+        <rd-collapsible class="da-byok-collapsible" title="AI providers (BYOK)" summary="OpenAI, Anthropic, Gemini, Azure, Ollama"${atlas.aiOpen ? ' open' : ''}>
+          <rd-role-gate label="AI providers (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage AI provider keys" hidden-status-text="AI keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">
             <div class="da-byok-fields">${byokFields(secrets.aiFields)}</div>
             ${byokVaultActions(secrets)}
           </rd-role-gate>

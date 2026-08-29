@@ -15,9 +15,7 @@ export const SETTINGS_SOURCE = `<SettingsScreen>
   <header><h2>Settings</h2><da-theme-toggle /></header>
   <da-atlas-context-controls [highlightField]="…" />
   <da-collapsible title="Integration keys (BYOK)">…</da-collapsible>
-  <da-collapsible title="Scout / AI providers (BYOK)">
-    <da-scout-settings-section />
-  </da-collapsible>
+  <da-collapsible title="AI providers (BYOK)">…</da-collapsible>
   <da-bound-textarea-input label="Feedback" />
 </SettingsScreen>`;
 
