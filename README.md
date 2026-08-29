@@ -20,7 +20,7 @@ This is not a scaffold. As of this repo:
 | Multi-target export (UI + server + database) | Shipped |
 | GitHub Actions | `verify` + `e2e` on PRs — **does not publish npm** |
 
-Unscoped **`rosettadash`** is this product clone (`private: true`). It is **not** a component barrel and is **not** published to npm. Install `@rosettadash/<runtime>` instead.
+Unscoped **`rosettadash`** is this product clone (`private: true` in the repo). It is **not** a component barrel. The npm page is a landing README only — install `@rosettadash/<runtime>` for UI.
 
 ## Who this is for
 
@@ -45,16 +45,16 @@ Details: [Public API](docs/34-public-component-api.md) · [Styling](docs/35-styl
 
 ## Install from npm
 
-Packages live on [npm under `@rosettadash`](https://www.npmjs.com/org/rosettadash). Versions in **this checkout** vs **the registry** are not identical — that is the next publish, not a README fiction:
+Packages live on [npm under `@rosettadash`](https://www.npmjs.com/org/rosettadash). This checkout and the registry are both **0.1.3**:
 
-| Package | This repo | npm (latest, before this publish) |
-|---------|-----------|-----------------------------------|
-| [`@rosettadash/core`](https://www.npmjs.com/package/@rosettadash/core) | **0.1.3** | 0.1.2 |
-| [`@rosettadash/web-components`](https://www.npmjs.com/package/@rosettadash/web-components) | **0.1.3** | 0.1.1 |
-| [`@rosettadash/react`](https://www.npmjs.com/package/@rosettadash/react) | **0.1.3** | 0.1.2 |
-| [`@rosettadash/angular`](https://www.npmjs.com/package/@rosettadash/angular) | **0.1.3** | 0.1.2 |
-| [`@rosettadash/vue`](https://www.npmjs.com/package/@rosettadash/vue) | **0.1.3** | 0.1.2 |
-| [`@rosettadash/svelte`](https://www.npmjs.com/package/@rosettadash/svelte) | **0.1.3** | 0.1.2 |
+| Package | Version |
+|---------|---------|
+| [`@rosettadash/core`](https://www.npmjs.com/package/@rosettadash/core) | **0.1.3** |
+| [`@rosettadash/web-components`](https://www.npmjs.com/package/@rosettadash/web-components) | **0.1.3** |
+| [`@rosettadash/react`](https://www.npmjs.com/package/@rosettadash/react) | **0.1.3** |
+| [`@rosettadash/angular`](https://www.npmjs.com/package/@rosettadash/angular) | **0.1.3** |
+| [`@rosettadash/vue`](https://www.npmjs.com/package/@rosettadash/vue) | **0.1.3** |
+| [`@rosettadash/svelte`](https://www.npmjs.com/package/@rosettadash/svelte) | **0.1.3** |
 
 Framework packages pin `"@rosettadash/web-components": "0.1.3"` to match this release.
 
@@ -243,17 +243,20 @@ Playwright uses **4201** (client) and **3001** (API) so it can run alongside `np
 
 ## Publish to npm and GitHub
 
-Maintainers only. CI does **not** publish. Do not publish the unscoped `rosettadash` product, exporters, proof apps, or Storybook.
+Maintainers only. CI does **not** publish. Do not publish exporters, proof apps, or Storybook. Do not `npm publish` this monorepo root.
 
 **Packages that go to npm** (built into `dist/packages/`, then packed from there — not from `packages/` source trees):
 
 `@rosettadash/core`, `@rosettadash/web-components`, `@rosettadash/react`, `@rosettadash/angular`, `@rosettadash/vue`, `@rosettadash/svelte`.
 
+Unscoped [`rosettadash`](https://www.npmjs.com/package/rosettadash) is a **thin landing page** (this README + LICENSE), published with `npm run publish:npm:product`. It is not a component barrel.
+
 ```bash
 npm whoami                          # must be logged in with publish rights on @rosettadash
 npm run pack:consumer               # build six packages + media bundle + npm pack
 npm run publish:npm:dry-run         # same, then npm publish --dry-run (no registry write)
-npm run publish:npm                 # live publish --access public
+npm run publish:npm                 # live publish scoped packages --access public
+npm run publish:npm:product         # thin unscoped landing page (README + LICENSE)
 ```
 
 `publish:npm:frameworks` skips `@rosettadash/web-components` when that package is unchanged.
@@ -264,7 +267,7 @@ After a successful publish:
 2. Push the tag: `git push origin v0.1.3`.
 3. Optional GitHub Release: `gh release create v0.1.3 --title "v0.1.3" --generate-notes`.
 
-This checkout is aligned at **0.1.3** for all six scoped packages (and the private product `rosettadash`). Registry copies stay at 0.1.1 / 0.1.2 until `npm run publish:npm`.
+This checkout and npm are aligned at **0.1.3** for all six scoped packages. The unscoped landing page is `rosettadash@0.1.3` after `npm run publish:npm:product`.
 
 ## Monorepo
 
@@ -361,6 +364,7 @@ Example body:
 | `npm run pack:consumer` | Build and pack the six scoped npm packages |
 | `npm run publish:npm:dry-run` | Pack, then `npm publish --dry-run` (no registry write) |
 | `npm run publish:npm` | Pack and publish the six scoped packages `--access public` |
+| `npm run publish:npm:product` | Thin unscoped `rosettadash@0.1.3` landing page (README + LICENSE) |
 | `npm run verify` | Lint + typecheck + unit tests |
 | `npm run e2e` | Playwright E2E tests |
 | `npm run verify:all` | verify + e2e |

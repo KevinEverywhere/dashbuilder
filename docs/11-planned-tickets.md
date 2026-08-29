@@ -79,13 +79,14 @@ Forward-looking Jira ticket plan for RosettaDash.
 | [DAS-70](https://planetkevin.atlassian.net/browse/DAS-70) | `feature/DAS-70-byok-key-management` | BYOK key management — unified `/environment` page, encrypted storage, validation (Phase 19) |
 | [DAS-71](https://planetkevin.atlassian.net/browse/DAS-71) | `feature/DAS-71-app-lock-and-content-library` | App lock for env secrets + welcome stack reset |
 | [DAS-72](https://planetkevin.atlassian.net/browse/DAS-72) | `feature/DAS-72-app-lock-recovery-codes` | App lock recovery codes + forgot-password reset |
+| [DAS-160](https://planetkevin.atlassian.net/browse/DAS-160) | `feature/DAS-160-readme-truth-and-npm-release` | Root README as current truth; npm/GitHub publish docs and `publish:npm` |
+| [DAS-161](https://planetkevin.atlassian.net/browse/DAS-161) | `feature/DAS-161-destination-atlas-library-30` | 30-city Destination Atlas library, 10-year history, scrolling place lists |
 
 ## Active work
 
 | Ticket | Branch | Status |
 |--------|--------|--------|
-| [DAS-161](https://planetkevin.atlassian.net/browse/DAS-161) | `feature/DAS-161-destination-atlas-library-30` | 30-city Destination Atlas library, 10-year history, scrolling place lists |
-| [DAS-160](https://planetkevin.atlassian.net/browse/DAS-160) | `feature/DAS-160-readme-truth-and-npm-release` | Root README as current truth; npm/GitHub publish docs and `publish:npm` / `publish:npm:dry-run` |
+| [DAS-162](https://planetkevin.atlassian.net/browse/DAS-162) | `feature/DAS-162-readme-npm-013-truth` | README and npm landing page match published `@rosettadash/*@0.1.3` |
 | [DAS-74](https://planetkevin.atlassian.net/browse/DAS-74) | `feature/DAS-74-admin-control-panel` | Admin control panel + content library |
 | [DAS-90](https://planetkevin.atlassian.net/browse/DAS-90) | `feature/DAS-90-npm-package-prep` | npm prep docs (`rosettadash` public API) — docs only |
 

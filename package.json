@@ -47,6 +47,8 @@
     "publish:npm": "npm run pack:consumer && npm publish ./dist/packages/core --access public && npm publish ./dist/packages/web-components --access public && npm publish ./dist/packages/react --access public && npm publish ./dist/packages/angular --access public && npm publish ./dist/packages/vue --access public && npm publish ./dist/packages/svelte --access public",
     "publish:npm:dry-run": "npm run pack:consumer && npm publish ./dist/packages/core --access public --dry-run && npm publish ./dist/packages/web-components --access public --dry-run && npm publish ./dist/packages/react --access public --dry-run && npm publish ./dist/packages/angular --access public --dry-run && npm publish ./dist/packages/vue --access public --dry-run && npm publish ./dist/packages/svelte --access public --dry-run",
     "publish:npm:frameworks": "npm run pack:consumer && npm publish ./dist/packages/core --access public && npm publish ./dist/packages/react --access public && npm publish ./dist/packages/angular --access public && npm publish ./dist/packages/vue --access public && npm publish ./dist/packages/svelte --access public",
+    "pack:product": "node scripts/pack-npm-product.mjs",
+    "publish:npm:product": "node scripts/pack-npm-product.mjs && npm publish ./dist/packages/rosettadash --access public",
     "setup:e2e": "playwright install chromium",
     "start": "nx run-many -t serve -p client,server --parallel=2",
     "prestart:client": "npm run sync:readme",

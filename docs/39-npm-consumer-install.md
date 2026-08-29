@@ -4,9 +4,9 @@
 **Author:** Kevin Ready \<kevin@planetkevin.com\>  
 **Agents never commit.**
 
-## Import shape (future registry publish)
+## Import shape
 
-Yes — after scoped packages are published, consumers import with **one or more taxonomy group segments**, then the component name:
+Consumers import with **one or more taxonomy group segments**, then the component name:
 
 ```ts
 import { Accordion } from '@rosettadash/web-components/layout/accordion';
@@ -16,7 +16,7 @@ import { registerRosettaDashMediaElements } from '@rosettadash/web-components/me
 
 Same subpaths on every runtime: `@rosettadash/react/layout/accordion`, `@rosettadash/vue/visual/media/video-source`, etc. See [docs/34-public-component-api.md](./34-public-component-api.md).
 
-Until scoped packages are on the registry, use **local pack** (`npm run pack:consumer`) or `file:` / tarball install. Current checkout: `@rosettadash/*@0.1.3` (core, web-components, react, angular, vue, svelte).
+Install from npm at **0.1.3**. Local pack (`npm run pack:consumer`) or `file:` / tarball is for dogfood before the next version.
 
 ## Critical distinction
 
@@ -26,7 +26,7 @@ Until scoped packages are on the registry, use **local pack** (`npm run pack:con
 | `@rosettadash/web-components` | Default CE runtime | **Yes** |
 | `@rosettadash/core` | Shared helpers (`buildEquirectExtractFilter`, …) | **Yes** (dependency of WC; also direct for CLI/filter math) |
 
-Unscoped `rosettadash@0.1.0` on the public registry is the **product workspace**, not `<rd-*>` elements. Consumers must use **scoped** packages.
+Unscoped [`rosettadash@0.1.3`](https://www.npmjs.com/package/rosettadash) on the public registry is a **landing README**, not `<rd-*>` elements. Consumers must use **scoped** packages.
 
 ## Components ffmp3Console needs
 
@@ -73,7 +73,7 @@ From RosettaDash:
 ```bash
 cd /Volumes/Three/apps/dashbuilder/rosettadash
 npm run pack:consumer
-# writes rosettadash-core-0.1.0.tgz and rosettadash-web-components-0.1.0.tgz in repo root
+# writes rosettadash-core-0.1.3.tgz and rosettadash-web-components-0.1.3.tgz in repo root
 ```
 
 From ffmp3Console:
@@ -81,8 +81,8 @@ From ffmp3Console:
 ```bash
 cd /Volumes/Three/apps/ffmp3Console
 npm install \
-  ../dashbuilder/rosettadash/rosettadash-core-0.1.0.tgz \
-  ../dashbuilder/rosettadash/rosettadash-web-components-0.1.0.tgz
+  ../dashbuilder/rosettadash/rosettadash-core-0.1.3.tgz \
+  ../dashbuilder/rosettadash/rosettadash-web-components-0.1.3.tgz
 ```
 
 ### C) `file:` deps (local monorepo path)
@@ -131,6 +131,7 @@ npm run pack:web-components  # dry-run
 npm run pack:runtimes        # dry-run react, angular, vue, svelte
 npm run pack:consumer        # real .tgz — core + web-components + all four runtimes @ 0.1.3
 npm run publish:npm          # pack then publish all six scoped packages (maintainers)
+npm run publish:npm:product  # thin unscoped landing page (README + LICENSE)
 ```
 
 Always pack from **`dist/packages/…`**, not `packages/…` source trees.

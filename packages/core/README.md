@@ -10,7 +10,7 @@ Shared types, defaults, and media helpers for RosettaDash runtimes.
 npm install @rosettadash/core
 ```
 
-Sibling apps (before registry publish) can use local pack / `file:` — see [docs/39-npm-consumer-install.md](../../docs/39-npm-consumer-install.md).
+On npm at **0.1.3**. Sibling apps can also use local pack / `file:` — see [docs/39-npm-consumer-install.md](../../docs/39-npm-consumer-install.md).
 
 ## Media filters (ffmp3 / FFmpeg)
 
