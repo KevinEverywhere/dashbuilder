@@ -17,6 +17,7 @@
   "scripts": {
     "build": "nx run-many -t build -p client,server,core,web-components,runtime-react,runtime-angular,runtime-vue,runtime-svelte",
     "build-storybook": "nx run-many -t build-storybook -p storybook-web-components,storybook-react,storybook-vue,storybook-angular,storybook-svelte",
+    "demo:weather": "nx serve react-weather-widget",
     "docker:app": "docker compose --profile app up --build",
     "docker:app:down": "docker compose --profile app down",
     "docker:dev": "docker compose --profile dev up --build",
