@@ -1,0 +1,38 @@
+{
+  "name": "svelte-transit-arrivals",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/svelte-transit-arrivals/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["runtime-svelte", "web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/svelte-transit-arrivals"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/svelte-transit-arrivals"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/svelte-transit-arrivals"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4329",
+        "cwd": "demos/svelte-transit-arrivals"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/svelte-transit-arrivals/tsconfig.json"
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "angular-sports-scoreboard",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/angular-sports-scoreboard/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["runtime-angular", "web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/angular-sports-scoreboard"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/angular-sports-scoreboard"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/angular-sports-scoreboard"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4324",
+        "cwd": "demos/angular-sports-scoreboard"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/angular-sports-scoreboard/tsconfig.json"
+      }
+    }
+  }
+}

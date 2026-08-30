@@ -42,6 +42,7 @@ export const GeoMap = defineCustomElementHost(
     apiKey: { type: String, default: undefined },
     center: { type: String, default: undefined },
     zoom: { type: Number, default: undefined },
+    markers: { type: Array, default: undefined },
     selectedId: { type: String, default: undefined },
   },
 );

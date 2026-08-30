@@ -1,0 +1,32 @@
+.rd-media-player {
+  box-sizing: border-box;
+  max-width: 26rem;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--rd-color-border, #d9dee7);
+  border-radius: var(--rd-radius-md, 0.5rem);
+  background: var(--rd-color-surface-raised, #fff);
+}
+
+.rd-media-player .rd-flex__flex {
+  min-width: 0;
+}
+
+.rd-media-player__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #111;
+  border-radius: var(--rd-radius-sm, 0.35rem);
+}
+
+.rd-media-player__source {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+.rd-media-player__source a {
+  color: inherit;
+}

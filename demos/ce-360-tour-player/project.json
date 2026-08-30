@@ -1,0 +1,38 @@
+{
+  "name": "ce-360-tour-player",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/ce-360-tour-player/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/ce-360-tour-player"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/ce-360-tour-player"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/ce-360-tour-player"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4330",
+        "cwd": "demos/ce-360-tour-player"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/ce-360-tour-player/tsconfig.json"
+      }
+    }
+  }
+}

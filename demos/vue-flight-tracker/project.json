@@ -1,0 +1,38 @@
+{
+  "name": "vue-flight-tracker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/vue-flight-tracker/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["runtime-vue", "web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/vue-flight-tracker"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/vue-flight-tracker"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/vue-flight-tracker"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4327",
+        "cwd": "demos/vue-flight-tracker"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/vue-flight-tracker/tsconfig.json"
+      }
+    }
+  }
+}

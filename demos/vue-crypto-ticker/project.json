@@ -1,0 +1,38 @@
+{
+  "name": "vue-crypto-ticker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/vue-crypto-ticker/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["runtime-vue", "web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/vue-crypto-ticker"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/vue-crypto-ticker"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/vue-crypto-ticker"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4326",
+        "cwd": "demos/vue-crypto-ticker"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/vue-crypto-ticker/tsconfig.json"
+      }
+    }
+  }
+}

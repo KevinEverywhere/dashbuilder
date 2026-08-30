@@ -1,0 +1,38 @@
+{
+  "name": "react-news-brief",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/react-news-brief/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["runtime-react", "web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/react-news-brief"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/react-news-brief"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/react-news-brief"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4321",
+        "cwd": "demos/react-news-brief"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/react-news-brief/tsconfig.json"
+      }
+    }
+  }
+}

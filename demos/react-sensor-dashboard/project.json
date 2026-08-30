@@ -1,0 +1,38 @@
+{
+  "name": "react-sensor-dashboard",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/react-sensor-dashboard/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["runtime-react", "web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/react-sensor-dashboard"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/react-sensor-dashboard"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/react-sensor-dashboard"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4322",
+        "cwd": "demos/react-sensor-dashboard"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/react-sensor-dashboard/tsconfig.json"
+      }
+    }
+  }
+}

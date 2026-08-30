@@ -1,0 +1,38 @@
+{
+  "name": "ce-listing-browser",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "demos/ce-listing-browser/src",
+  "tags": ["scope:demo", "type:demo-app"],
+  "implicitDependencies": ["web-components"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "demos/ce-listing-browser"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/demos/ce-listing-browser"],
+      "options": {
+        "command": "vite build",
+        "cwd": "demos/ce-listing-browser"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview --port 4331",
+        "cwd": "demos/ce-listing-browser"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p demos/ce-listing-browser/tsconfig.json"
+      }
+    }
+  }
+}

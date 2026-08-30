@@ -1,0 +1,54 @@
+.rd-tour-player {
+  box-sizing: border-box;
+  max-width: 26rem;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--rd-color-border, #d9dee7);
+  border-radius: var(--rd-radius-md, 0.5rem);
+  background: var(--rd-color-surface-raised, #fff);
+}
+
+.rd-tour-player .rd-flex__flex {
+  min-width: 0;
+}
+
+rd-geo-map.rd-tour-player__map {
+  min-height: 11rem;
+  height: 11rem;
+}
+
+.rd-tour-pano {
+  box-sizing: border-box;
+  position: relative;
+  height: 11rem;
+  border-radius: var(--rd-radius-md, 0.5rem);
+  overflow: hidden;
+  cursor: grab;
+  background-color: #1a2233;
+  background-size: 220% 100%;
+  background-repeat: repeat-x;
+  background-position: 50% 50%;
+  user-select: none;
+  touch-action: none;
+}
+
+.rd-tour-pano--dragging {
+  cursor: grabbing;
+}
+
+.rd-tour-pano--fallback {
+  background-image: linear-gradient(120deg, #2c3d5c, #6b8cce 45%, #c9a46a);
+}
+
+.rd-tour-pano__label {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.3rem;
+  background: rgb(26 34 51 / 0.65);
+  color: #fff;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
