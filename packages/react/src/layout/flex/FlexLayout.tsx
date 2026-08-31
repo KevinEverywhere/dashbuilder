@@ -1,9 +1,12 @@
 import { Children, cloneElement, forwardRef, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
+export type FlexDensity = 'comfortable' | 'compact';
+
 export interface FlexLayoutProps {
   title?: string;
   direction?: 'row' | 'column';
   gap?: number | string;
+  density?: FlexDensity;
   /** Per-child flex grow weights (e.g. [1.4, 1] for table + detail). */
   itemFlex?: number[];
   stretchItems?: boolean;
@@ -17,8 +20,13 @@ export const FlexLayout = forwardRef<HTMLElement, FlexLayoutProps>(function Flex
   props,
   ref,
 ) {
-  const { className, style, children, itemFlex, stretchItems } = props;
-  const rootClass = ['rd-flex', stretchItems ? 'rd-flex--stretch-items' : '', className]
+  const { className, style, children, itemFlex, stretchItems, density } = props;
+  const rootClass = [
+    'rd-flex',
+    stretchItems ? 'rd-flex--stretch-items' : '',
+    density === 'compact' ? 'rd-flex--compact' : '',
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 

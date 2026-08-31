@@ -17,6 +17,37 @@ rd-geo-map.rd-tour-player__map {
   height: 11rem;
 }
 
+.rd-tour-player__look {
+  min-height: 9rem;
+}
+
+.rd-tour-player__facts {
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.rd-tour-player__facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.rd-tour-player__facts dt {
+  margin: 0;
+  color: var(--rd-color-muted, #5b667a);
+}
+
+.rd-tour-player__facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.rd-tour-player__facts a {
+  color: inherit;
+}
+
 .rd-tour-pano {
   box-sizing: border-box;
   position: relative;
@@ -25,11 +56,24 @@ rd-geo-map.rd-tour-player__map {
   overflow: hidden;
   cursor: grab;
   background-color: #1a2233;
-  background-size: 220% 100%;
-  background-repeat: repeat-x;
-  background-position: 50% 50%;
   user-select: none;
   touch-action: none;
+}
+
+.rd-tour-pano__strip {
+  display: flex;
+  height: 100%;
+  width: max-content;
+}
+
+.rd-tour-pano__strip img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: none;
+  flex: 0 0 auto;
+  pointer-events: none;
+  user-select: none;
 }
 
 .rd-tour-pano--dragging {
@@ -40,8 +84,13 @@ rd-geo-map.rd-tour-player__map {
   background-image: linear-gradient(120deg, #2c3d5c, #6b8cce 45%, #c9a46a);
 }
 
+.rd-tour-pano--fallback .rd-tour-pano__strip {
+  visibility: hidden;
+}
+
 .rd-tour-pano__label {
   position: absolute;
+  z-index: 1;
   left: 0.6rem;
   bottom: 0.5rem;
   padding: 0.15rem 0.45rem;

@@ -2,6 +2,7 @@ import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { resolve } from 'node:path';
+import { rosettadashAliasEntries } from '../../tools/storybook-shared/vite-final';
 
 export default defineConfig({
   plugins: [
@@ -11,12 +12,16 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      '@rosettadash/web-components/styles.css': resolve(
-        __dirname,
-        '../../packages/web-components/src/styles/styles.css',
-      ),
-    },
+    alias: [
+      {
+        find: '@rosettadash/web-components/styles.css',
+        replacement: resolve(
+          __dirname,
+          '../../packages/web-components/src/styles/styles.css',
+        ),
+      },
+      ...(rosettadashAliasEntries() as Array<{ find: string | RegExp; replacement: string }>),
+    ],
   },
   root: __dirname,
   cacheDir: resolve(__dirname, '../../node_modules/.vite/vue-crypto-ticker'),

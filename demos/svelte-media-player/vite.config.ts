@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { rosettadashAliasEntries } from '../../tools/storybook-shared/vite-final';
 
 const sveltePackageRoot = resolve(__dirname, '../../packages/svelte');
 const sveltePackage = JSON.parse(
@@ -41,10 +42,17 @@ export default defineConfig({
     conditions: ['svelte', 'browser', 'import', 'module', 'default'],
     alias: [
       {
+        find: '@destination-atlas',
+        replacement: resolve(__dirname, '../../libs/destination-atlas/src/index.ts'),
+      },
+      {
         find: '@rosettadash/web-components/styles.css',
         replacement: resolve(__dirname, '../../packages/web-components/src/styles/styles.css'),
       },
       ...svelteRuntimeAliases(),
+      ...(rosettadashAliasEntries() as Array<{ find: string | RegExp; replacement: string }>).filter(
+        (entry) => !String(entry.find).includes('@rosettadash/svelte'),
+      ),
     ],
   },
   root: __dirname,

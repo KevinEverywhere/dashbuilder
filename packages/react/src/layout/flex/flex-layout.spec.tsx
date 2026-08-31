@@ -12,4 +12,9 @@ describe('FlexLayout', () => {
     render(<FlexLayout ref={ref} />);
     expect(ref.current).toBeTruthy();
   });
+
+  it('applies compact density on the root', () => {
+    render(<FlexLayout density="compact" />);
+    expect(screen.getByTestId('rd-flex').className).toContain('rd-flex--compact');
+  });
 });

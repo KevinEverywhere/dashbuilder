@@ -1,12 +1,9 @@
+import { formatPanHeading, headingFromPanOffset, wrapPeriod } from '@rosettadash/core';
+
 export interface PanoramaViewport {
   element: HTMLDivElement;
   setImage(url: string): void;
   setHeading(label: string): void;
-}
-
-function headingFromOffset(percent: number): string {
-  const deg = Math.round((((percent % 100) + 100) % 100) * 3.6) % 360;
-  return `${deg}°`;
 }
 
 export function createPanoramaViewport(
@@ -18,31 +15,59 @@ export function createPanoramaViewport(
   element.setAttribute('role', 'img');
   element.setAttribute('aria-label', 'Scene viewport');
 
+  const strip = document.createElement('div');
+  strip.className = 'rd-tour-pano__strip';
+
+  const first = document.createElement('img');
+  const second = document.createElement('img');
+  first.alt = '';
+  second.alt = '';
+  first.draggable = false;
+  second.draggable = false;
+  strip.append(first, second);
+
   const label = document.createElement('span');
   label.className = 'rd-tour-pano__label';
   label.textContent = 'Scene viewport';
-  element.append(label);
+  element.append(strip, label);
 
-  let offset = 50;
+  let offsetPx = 0;
+  let period = 0;
   let dragging = false;
   let lastX = 0;
 
-  function applyBackground(url: string): void {
-    element.classList.remove('rd-tour-pano--fallback');
-    element.style.backgroundImage = `url("${url}")`;
-    const probe = new Image();
-    probe.onerror = () => {
-      element.classList.add('rd-tour-pano--fallback');
-      element.style.backgroundImage = '';
-    };
-    probe.src = url;
+  function emitHeading(): void {
+    onHeading?.(formatPanHeading(headingFromPanOffset(offsetPx, period)));
   }
 
   function paintOffset(): void {
-    element.style.backgroundPosition = `${offset}% 50%`;
+    if (period <= 0) {
+      strip.style.transform = 'translate3d(0, 0, 0)';
+      return;
+    }
+    const wrapped = wrapPeriod(offsetPx, period);
+    strip.style.transform = `translate3d(${-wrapped}px, 0, 0)`;
+    emitHeading();
   }
 
-  applyBackground(imageUrl);
+  function measurePeriod(): void {
+    period = first.getBoundingClientRect().width;
+    paintOffset();
+  }
+
+  function applyImage(url: string): void {
+    element.classList.remove('rd-tour-pano--fallback');
+    first.onerror = () => {
+      element.classList.add('rd-tour-pano--fallback');
+    };
+    first.src = url;
+    second.src = url;
+  }
+
+  first.addEventListener('load', measurePeriod);
+  new ResizeObserver(measurePeriod).observe(element);
+
+  applyImage(imageUrl);
   paintOffset();
 
   element.addEventListener('pointerdown', (event) => {
@@ -56,11 +81,9 @@ export function createPanoramaViewport(
     if (!dragging) {
       return;
     }
-    const width = element.clientWidth || 1;
-    offset = (offset + ((event.clientX - lastX) / width) * 50 + 100) % 100;
+    offsetPx -= event.clientX - lastX;
     lastX = event.clientX;
     paintOffset();
-    onHeading?.(headingFromOffset(offset));
   });
 
   const endDrag = (event: PointerEvent) => {
@@ -80,9 +103,9 @@ export function createPanoramaViewport(
   return {
     element,
     setImage(url: string) {
-      offset = 50;
-      applyBackground(url);
-      paintOffset();
+      offsetPx = 0;
+      applyImage(url);
+      measurePeriod();
     },
     setHeading(next: string) {
       label.textContent = next;

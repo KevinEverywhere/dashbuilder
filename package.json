@@ -22,7 +22,6 @@
     "demo:sensor": "nx serve react-sensor-dashboard",
     "demo:stock": "nx serve angular-stock-tracker",
     "demo:sports": "nx serve angular-sports-scoreboard",
-    "demo:poll": "nx serve angular-poll-tracker",
     "demo:crypto": "nx serve vue-crypto-ticker",
     "demo:flight": "nx serve vue-flight-tracker",
     "demo:media": "nx serve svelte-media-player",

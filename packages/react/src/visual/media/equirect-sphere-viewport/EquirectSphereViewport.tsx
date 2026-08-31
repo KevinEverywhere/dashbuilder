@@ -1,3 +1,4 @@
+import { wrapSignedDegrees } from '@rosettadash/core';
 import { forwardRef, useEffect, useImperativeHandle, useRef, type CSSProperties, type RefObject } from 'react';
 import * as THREE from 'three';
 import { VIEWPORT_FRAGMENT_SHADER, VIEWPORT_VERTEX_SHADER } from './planet-shader';
@@ -325,7 +326,7 @@ export const EquirectSphereViewport = forwardRef<EquirectSphereViewportHandle, E
       planetScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), planetMaterial));
 
       let displayFov = clamp(propsRef.current.horizontalFov, MIN_HFOV, PLANET_MAX_HFOV);
-      let viewYaw = propsRef.current.yaw;
+      let viewYaw = wrapSignedDegrees(propsRef.current.yaw);
       let viewPitch = clamp(propsRef.current.pitch, MIN_PITCH, MAX_PITCH);
 
       const bounds = () => ({
@@ -382,7 +383,7 @@ export const EquirectSphereViewport = forwardRef<EquirectSphereViewportHandle, E
 
       const applyOrientationProps = () => {
         applyingPropsRef.current = true;
-        viewYaw = propsRef.current.yaw;
+        viewYaw = wrapSignedDegrees(propsRef.current.yaw);
         viewPitch = clamp(propsRef.current.pitch, MIN_PITCH, MAX_PITCH);
         applyingPropsRef.current = false;
       };
@@ -466,7 +467,7 @@ export const EquirectSphereViewport = forwardRef<EquirectSphereViewportHandle, E
         lastDragX = event.clientX;
         lastDragY = event.clientY;
 
-        viewYaw -= deltaX * DRAG_SENSITIVITY;
+        viewYaw = wrapSignedDegrees(viewYaw - deltaX * DRAG_SENSITIVITY);
         viewPitch = clamp(viewPitch - deltaY * DRAG_SENSITIVITY, MIN_PITCH, MAX_PITCH);
         emitCameraChange();
       };

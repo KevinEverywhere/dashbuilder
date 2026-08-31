@@ -17,7 +17,9 @@ export interface NewsArticleDetailProps {
     <section [attr.data-testid]="'rd-news-article-detail'" [ngClass]="rootClass()">
       <header class="rd-detail__header"><span>{{ title() ?? 'Article' }}</span></header>
       <p class="rd-detail__empty">{{ emptyMessage() ?? 'Select a headline in News Results' }}</p>
-      <ng-content />
+      <div class="rd-detail__body">
+        <ng-content />
+      </div>
     </section>
   `,
 })
@@ -27,6 +29,6 @@ export class NewsArticleDetail {
   readonly emptyMessage = input<string | undefined>(undefined);
 
   readonly rootClass = computed(() =>
-    ['rd-news-article-detail', this.className()].filter(Boolean).join(' '),
+    ['rd-news-article-detail', 'rd-detail', this.className()].filter(Boolean).join(' '),
   );
 }

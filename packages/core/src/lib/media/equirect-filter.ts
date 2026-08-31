@@ -1,3 +1,5 @@
+import { wrapSignedDegrees } from './panorama-wrap.js';
+
 export interface EquirectFlatCropOptions {
   cropX: number;
   cropY: number;
@@ -35,7 +37,7 @@ function roundAngle(value: number): number {
 }
 
 export function buildEquirectRectilinearFilter(options: EquirectRectilinearOptions, reverse = false): string {
-  const yaw = roundAngle(Number(options.yaw) || 0);
+  const yaw = roundAngle(wrapSignedDegrees(Number(options.yaw) || 0));
   const pitch = roundAngle(Number(options.pitch) || 0);
   const roll = roundAngle(Number(options.roll ?? 0) || 0);
   const horizontalFov = Math.max(1, Number(options.horizontalFov) || 90);

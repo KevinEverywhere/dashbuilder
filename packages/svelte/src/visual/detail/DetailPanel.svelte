@@ -15,6 +15,9 @@
 
 <section class={rootClass} data-testid="rd-detail">
 	<header class="rd-detail__header"><span>{title ?? 'Details'}</span></header>
-	<p class="rd-detail__empty">{emptyMessage ?? 'Select a row to view details'}</p>
-	{@render children?.()}
+	{#if children}
+		<div class="rd-detail__body">{@render children()}</div>
+	{:else}
+		<p class="rd-detail__empty">{emptyMessage ?? 'Select a row to view details'}</p>
+	{/if}
 </section>

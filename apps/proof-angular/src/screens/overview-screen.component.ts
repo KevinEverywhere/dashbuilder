@@ -9,7 +9,12 @@ import { MetricChip } from '@rosettadash/angular/visual/plugin/metric-chip';
 import { StatusBadge } from '@rosettadash/angular/visual/plugin/status-badge';
 import { MOCK_DESTINATIONS, formatVisitorCount } from '@destination-atlas';
 import type { AtlasUserRole } from '../lib/roles';
-import { computeVisitorDelta, localizedDestinationName } from '../lib/atlas-utils';
+import {
+  aggregateVisitorTrend,
+  computeVisitorDelta,
+  destinationBarSeries,
+  localizedDestinationName,
+} from '../lib/atlas-utils';
 
 @Component({
   selector: 'da-overview-screen',
@@ -34,8 +39,19 @@ import { computeVisitorDelta, localizedDestinationName } from '../lib/atlas-util
           </rd-grid>
         </rd-scroll-region>
         <div class="da-stack da-stack--2">
-          <rd-chart-line title="Visitors over time (aggregate trend)" />
-          <rd-chart-bar title="2024 visitors by destination" />
+          <rd-chart-line
+            title="Visitors over time (aggregate trend)"
+            [points]="trend"
+            xAxisLabel="Year"
+            yAxisLabel="Total visitors"
+            [valueFormat]="formatCount"
+          />
+          <rd-chart-bar
+            title="2024 visitors by destination"
+            [bars]="bars()"
+            yAxisLabel="Visitors"
+            [valueFormat]="formatCount"
+          />
         </div>
         <rd-role-gate
           label="Operations metrics"
@@ -57,6 +73,11 @@ export class OverviewScreenComponent {
 
   readonly destinations = MOCK_DESTINATIONS;
   readonly formatCount = formatVisitorCount;
+  readonly trend = aggregateVisitorTrend();
+
+  bars() {
+    return destinationBarSeries(this.locale(), localizedDestinationName);
+  }
 
   destTitle(dest: (typeof MOCK_DESTINATIONS)[number]): string {
     return localizedDestinationName(dest, this.locale());

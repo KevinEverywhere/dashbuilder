@@ -88,6 +88,17 @@ export function formatTemperature(value: number, unit: TemperatureUnit): string 
   return unit === 'fahrenheit' ? `${rounded}°F` : `${rounded}°C`;
 }
 
+export const FORECAST_DAYS = 3;
+
+/** Weekday labels so the Report forecast slots exist before the API returns. */
+export function forecastSlotLabels(from = new Date()): string[] {
+  return Array.from({ length: FORECAST_DAYS }, (_, offset) => {
+    const day = new Date(from);
+    day.setDate(day.getDate() + offset);
+    return new Intl.DateTimeFormat('en', { weekday: 'short' }).format(day);
+  });
+}
+
 export function weatherBadgeTone(
   code: number,
 ): 'success' | 'warning' | 'error' | 'neutral' {

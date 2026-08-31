@@ -5,10 +5,10 @@ import { GeoMap } from '@rosettadash/react/visual/display/geo-map';
 import { SelectInput } from '@rosettadash/react/visual/input/select';
 import { KpiCard } from '@rosettadash/react/visual/kpi';
 import { StatusBadge } from '@rosettadash/react/visual/plugin/status-badge';
-import { LoadingSkeleton } from '@rosettadash/react/visual/skeleton';
 import { DEFAULT_WEATHER_LOCATIONS, getWeatherLocation, type WeatherLocation } from './locations.js';
 import {
   fetchWeatherReport,
+  forecastSlotLabels,
   formatTemperature,
   weatherBadgeTone,
   type TemperatureUnit,
@@ -24,6 +24,33 @@ export interface WeatherWidgetProps {
   unit?: TemperatureUnit;
   className?: string;
   style?: CSSProperties;
+}
+
+const DASH = '—';
+
+function reportStats(report: WeatherReport | null, windUnit: string, precipUnit: string) {
+  return [
+    { label: 'Condition', value: report?.summary ?? DASH },
+    { label: 'Humidity', value: report ? `${Math.round(report.humidity)}%` : DASH },
+    { label: 'Wind', value: report ? `${Math.round(report.windSpeed)} ${windUnit}` : DASH },
+    {
+      label: 'Precipitation',
+      value: report ? `${report.precipitation.toFixed(1)} ${precipUnit}` : DASH,
+    },
+  ];
+}
+
+function reportForecast(report: WeatherReport | null) {
+  return forecastSlotLabels().map((label, index) => {
+    const day = report?.daily[index];
+    if (!day || !report) {
+      return { label, value: DASH };
+    }
+    return {
+      label: day.label,
+      value: `${formatTemperature(day.min, report.unit)} / ${formatTemperature(day.max, report.unit)} · ${day.summary}`,
+    };
+  });
 }
 
 /** Page-embed weather widget composed from @rosettadash/react atoms. */
@@ -65,7 +92,6 @@ export const WeatherWidget = forwardRef<HTMLElement, WeatherWidgetProps>(functio
     if (!selected) {
       setStatus('error');
       setErrorMessage('No locations available');
-      setReport(null);
       return;
     }
 
@@ -82,7 +108,6 @@ export const WeatherWidget = forwardRef<HTMLElement, WeatherWidgetProps>(functio
         if (controller.signal.aborted) {
           return;
         }
-        setReport(null);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Weather request failed');
       });
@@ -129,15 +154,11 @@ export const WeatherWidget = forwardRef<HTMLElement, WeatherWidgetProps>(functio
       <FlexLayout direction="row" gap={8} stretchItems>
         <KpiCard
           title={selected ? `${selected.label} temperature` : 'Temperature'}
-          value={
-            status === 'ready' && report
-              ? formatTemperature(report.temperature, report.unit)
-              : '—'
-          }
+          value={report ? formatTemperature(report.temperature, report.unit) : DASH}
           delta={
-            status === 'ready' && report
+            report
               ? `Feels like ${formatTemperature(report.apparentTemperature, report.unit)}`
-              : undefined
+              : 'Feels like —'
           }
         />
         <StatusBadge
@@ -146,7 +167,7 @@ export const WeatherWidget = forwardRef<HTMLElement, WeatherWidgetProps>(functio
               ? 'Updating'
               : status === 'error'
                 ? 'Unavailable'
-                : (report?.summary ?? '—')
+                : (report?.summary ?? DASH)
           }
           tone={
             status === 'loading'
@@ -158,35 +179,12 @@ export const WeatherWidget = forwardRef<HTMLElement, WeatherWidgetProps>(functio
         />
       </FlexLayout>
       <DetailPanel
+        className="rd-weather-widget__report"
         title="Report"
         emptyMessage={status === 'error' ? errorMessage || 'Weather unavailable' : 'Select a location'}
       >
-        {status === 'loading' ? (
-          <LoadingSkeleton lines={3} />
-        ) : status === 'ready' && report ? (
-          <>
-            <DetailStats
-              compact
-              items={[
-                { label: 'Condition', value: report.summary },
-                { label: 'Humidity', value: `${Math.round(report.humidity)}%` },
-                { label: 'Wind', value: `${Math.round(report.windSpeed)} ${windUnit}` },
-                {
-                  label: 'Precipitation',
-                  value: `${report.precipitation.toFixed(1)} ${precipUnit}`,
-                },
-              ]}
-            />
-            <DetailHistoricList
-              compact
-              title="Next 3 days"
-              items={report.daily.map((day) => ({
-                label: day.label,
-                value: `${formatTemperature(day.min, report.unit)} / ${formatTemperature(day.max, report.unit)} · ${day.summary}`,
-              }))}
-            />
-          </>
-        ) : null}
+        <DetailStats compact items={reportStats(report, windUnit, precipUnit)} />
+        <DetailHistoricList compact title="Next 3 days" items={reportForecast(report)} />
       </DetailPanel>
     </FlexLayout>
   );

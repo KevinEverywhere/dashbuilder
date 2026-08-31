@@ -66,20 +66,56 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
     value: current.heading,
     delta: `${current.lat.toFixed(2)}, ${current.lng.toFixed(2)}`,
   });
-  const badge = createEl('rd-status-badge', { 'status-text': 'Live scene', tone: 'success' });
-  const skeleton = createEl('rd-loading-skeleton', { lines: '2' });
-  const detail = createEl('rd-detail-panel', {
-    title: 'Look',
-    'empty-message': 'Drag the panorama to look around',
-  });
+  const badge = createEl('rd-status-badge', { 'status-text': '360 still', tone: 'success' });
+  const detail = createEl(
+    'rd-detail-panel',
+    {
+      title: 'Look',
+      'empty-message': 'Drag the panorama to look around',
+    },
+    'rd-tour-player__look',
+  );
+  const facts = document.createElement('dl');
+  facts.className = 'rd-tour-player__facts';
+
+  const paintLook = (scene: TourScene, heading = scene.heading) => {
+    facts.replaceChildren();
+    const rows: Array<[string, string, string?]> = [
+      ['Scene', scene.label],
+      ['Look', heading],
+      ['Credit', scene.credit, scene.sourceUrl],
+      ['License', scene.license],
+    ];
+    for (const [label, value, href] of rows) {
+      const row = document.createElement('div');
+      const dt = document.createElement('dt');
+      const dd = document.createElement('dd');
+      dt.textContent = label;
+      if (href) {
+        const link = document.createElement('a');
+        link.href = href;
+        link.textContent = value;
+        link.rel = 'license noreferrer';
+        link.target = '_blank';
+        dd.append(link);
+      } else {
+        dd.textContent = value;
+      }
+      row.append(dt, dd);
+      facts.append(row);
+    }
+  };
 
   const pano = createPanoramaViewport(current.imageUrl, (heading) => {
     kpi.setAttribute('value', heading);
+    paintLook(current, heading);
   });
   pano.setHeading(current.heading);
 
   metrics.append(kpi, badge);
-  root.append(select, map, metrics, pano.element, skeleton, detail);
+  detail.append(facts);
+  root.append(select, map, metrics, pano.element, detail);
+  paintLook(current);
 
   const applyScene = (scene: TourScene) => {
     current = scene;
@@ -91,8 +127,9 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
     kpi.setAttribute('delta', `${scene.lat.toFixed(2)}, ${scene.lng.toFixed(2)}`);
     pano.setImage(scene.imageUrl);
     pano.setHeading(scene.heading);
-    badge.setAttribute('status-text', 'Live scene');
+    badge.setAttribute('status-text', '360 still');
     badge.setAttribute('tone', 'success');
+    paintLook(scene);
   };
 
   const setScene = (id: string) => {

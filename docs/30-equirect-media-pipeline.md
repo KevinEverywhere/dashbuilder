@@ -45,3 +45,5 @@ Set WASM Media operation to **Equirect extract** and extraction mode to **Flat c
 ## Rectilinear mode
 
 For yaw/pitch/FOV-based views instead of flat crop, set extraction mode to **Rectilinear reprojection** on WASM Media.
+
+Yaw wrap uses `wrapSignedDegrees` / `wrapPeriod` in `@rosettadash/core` so orbit and sliders cross 0° / ±180° without a viewport-sized jump. Do not pan 360 stills with CSS `background-position: N%` (0% and 100% are the same alignment).

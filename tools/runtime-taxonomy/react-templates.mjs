@@ -170,9 +170,17 @@ export interface ${name}Props {
   [key: string]: string | number | undefined;
 }
 
+export interface ${name}Column {
+  key: string;
+  header: string;
+  align?: 'left' | 'right' | 'center';
+  width?: string;
+}
+
 export interface ${name}Props {
   title?: string;
   rows?: ${name}Row[];
+  columns?: ${name}Column[];
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -260,10 +268,13 @@ export interface ${name}Props {
   children?: ReactNode;
 }`,
 
-  'layout-flex': (name) => `export interface ${name}Props {
+  'layout-flex': (name) => `export type ${name}Density = 'comfortable' | 'compact';
+
+export interface ${name}Props {
   title?: string;
   direction?: 'row' | 'column';
   gap?: number | string;
+  density?: ${name}Density;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -597,8 +608,11 @@ const KIND_BODIES = {
 
   'detail-panel': `<section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">
       <header className="{{bemBlock}}__header"><span>{rest.title ?? 'Details'}</span></header>
-      <p className="{{bemBlock}}__empty">{rest.emptyMessage ?? 'Select a row to view details'}</p>
-      {children}
+      {children ? (
+        <div className="rd-detail__body">{children}</div>
+      ) : (
+        <p className="rd-detail__empty">{rest.emptyMessage ?? 'Select a row to view details'}</p>
+      )}
     </section>`,
 
   'kpi-card': `<article ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="{{testId}}">

@@ -10,6 +10,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@rosettadash/core': resolve(__dirname, '../../packages/core/src/index.ts'),
       '@rosettadash/web-components/styles.css': resolve(
         __dirname,
         '../../packages/web-components/src/styles/styles.css',

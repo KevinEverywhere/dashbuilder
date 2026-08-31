@@ -23,10 +23,10 @@ export class RdDetailPanelElement extends RosettaAtomElement {
     const title = this.readAttr('title', 'Details');
     const empty = this.readAttr('empty-message', 'Select a row to view details');
     return `
-      <section class="rd-detail rd-detail" data-testid="rd-detail">
+      <section class="rd-detail" data-testid="rd-detail">
         <header class="rd-detail__header"><span>${this.esc(title)}</span></header>
-        <div class="rd-detail__body"><p class="rd-detail__empty">${this.esc(empty)}</p></div>
-        <div data-ref="slot"></div>
+        <p class="rd-detail__empty">${this.esc(empty)}</p>
+        <div class="rd-detail__body" data-ref="slot"></div>
       </section>`;
   }
 }

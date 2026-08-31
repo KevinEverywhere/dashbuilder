@@ -12,10 +12,21 @@
   min-width: 0;
 }
 
+.rd-crypto-ticker__title {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
 .rd-crypto-ticker .rd-table {
   max-height: 14rem;
 }
 
-.rd-crypto-ticker .rd-chart-line {
+.rd-crypto-ticker .rd-chart-line,
+.rd-crypto-ticker__chart {
   min-height: 11rem;
+}
+
+.rd-crypto-ticker__session {
+  min-height: 10rem;
 }

@@ -1,3 +1,4 @@
+import { wrapSignedDegrees } from '@rosettadash/core';
 import { NgClass } from '@angular/common';
 import {
   AfterViewInit,
@@ -375,7 +376,7 @@ export class EquirectSphereViewport
     planetScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), planetMaterial));
 
     let displayFov = clamp(this.horizontalFov(), MIN_HFOV, PLANET_MAX_HFOV);
-    let viewYaw = this.yaw();
+    let viewYaw = wrapSignedDegrees(this.yaw());
     let viewPitch = clamp(this.pitch(), MIN_PITCH, MAX_PITCH);
 
     const bounds = () => ({
@@ -432,7 +433,7 @@ export class EquirectSphereViewport
 
     const applyOrientationProps = () => {
       this.applyingProps = true;
-      viewYaw = this.yaw();
+      viewYaw = wrapSignedDegrees(this.yaw());
       viewPitch = clamp(this.pitch(), MIN_PITCH, MAX_PITCH);
       this.applyingProps = false;
     };
@@ -515,7 +516,7 @@ export class EquirectSphereViewport
       lastDragX = event.clientX;
       lastDragY = event.clientY;
 
-      viewYaw -= deltaX * DRAG_SENSITIVITY;
+      viewYaw = wrapSignedDegrees(viewYaw - deltaX * DRAG_SENSITIVITY);
       viewPitch = clamp(viewPitch - deltaY * DRAG_SENSITIVITY, MIN_PITCH, MAX_PITCH);
       emitCameraChange();
     };

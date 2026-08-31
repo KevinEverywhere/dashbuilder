@@ -10,11 +10,14 @@
 		emptyMessage,
 		children,
 	}: Props = $props();
-	const rootClass = $derived(['rd-news-article-detail', className].filter(Boolean).join(' '));
+	const rootClass = $derived(['rd-news-article-detail', 'rd-detail', className].filter(Boolean).join(' '));
 </script>
 
 <section class={rootClass} data-testid="rd-news-article-detail">
 	<header class="rd-detail__header"><span>{title ?? 'Article'}</span></header>
-	<p class="rd-detail__empty">{emptyMessage ?? 'Select a headline in News Results'}</p>
-	{@render children?.()}
+	{#if children}
+		<div class="rd-detail__body">{@render children()}</div>
+	{:else}
+		<p class="rd-detail__empty">{emptyMessage ?? 'Select a headline in News Results'}</p>
+	{/if}
 </section>

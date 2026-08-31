@@ -7,7 +7,6 @@ import { GeoMap } from '@rosettadash/react/visual/display/geo-map';
 import { SelectInput } from '@rosettadash/react/visual/input/select';
 import { KpiCard } from '@rosettadash/react/visual/kpi';
 import { StatusBadge } from '@rosettadash/react/visual/plugin/status-badge';
-import { LoadingSkeleton } from '@rosettadash/react/visual/skeleton';
 import { aqiLabel, aqiTone, fetchAirQuality, type AirQualityReading } from './air-quality.js';
 import { SENSOR_STATIONS, getSensorStation, type SensorStation } from './stations.js';
 import './SensorDashboard.css';
@@ -22,6 +21,17 @@ export interface SensorDashboardProps {
 }
 
 const REFRESH_MS = 60_000;
+const DASH = '—';
+
+function readingStats(reading: AirQualityReading | null) {
+  return [
+    { label: 'US AQI', value: reading ? String(reading.aqi) : DASH },
+    { label: 'PM2.5', value: reading ? `${reading.pm25.toFixed(1)} µg/m³` : DASH },
+    { label: 'PM10', value: reading ? `${reading.pm10.toFixed(1)} µg/m³` : DASH },
+    { label: 'Ozone', value: reading ? `${Math.round(reading.ozone)} µg/m³` : DASH },
+    { label: 'NO₂', value: reading ? `${Math.round(reading.nitrogenDioxide)} µg/m³` : DASH },
+  ];
+}
 
 /** Page-embed air-quality sensor board composed from @rosettadash/react atoms. */
 export const SensorDashboard = forwardRef<HTMLElement, SensorDashboardProps>(function SensorDashboard(
@@ -58,7 +68,6 @@ export const SensorDashboard = forwardRef<HTMLElement, SensorDashboardProps>(fun
     if (!selected) {
       setStatus('error');
       setErrorMessage('No stations available');
-      setReading(null);
       return;
     }
 
@@ -75,7 +84,6 @@ export const SensorDashboard = forwardRef<HTMLElement, SensorDashboardProps>(fun
         if (controller.signal.aborted) {
           return;
         }
-        setReading(null);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Sensor request failed');
       });
@@ -122,8 +130,8 @@ export const SensorDashboard = forwardRef<HTMLElement, SensorDashboardProps>(fun
       <FlexLayout direction="row" gap={8} stretchItems>
         <KpiCard
           title={selected ? `${selected.label} AQI` : 'AQI'}
-          value={status === 'ready' && reading ? reading.aqi : '—'}
-          delta={status === 'ready' && reading ? `${reading.pm25.toFixed(1)} µg/m³ PM2.5` : undefined}
+          value={reading ? reading.aqi : DASH}
+          delta={reading ? `${reading.pm25.toFixed(1)} µg/m³ PM2.5` : 'µg/m³ PM2.5'}
         />
         <StatusBadge
           statusText={
@@ -143,32 +151,19 @@ export const SensorDashboard = forwardRef<HTMLElement, SensorDashboardProps>(fun
         />
       </FlexLayout>
       <Timer label="Auto refresh" mode="interval" intervalMs={REFRESH_MS} tickCount={ticks} />
-      {status === 'loading' ? (
-        <LoadingSkeleton lines={3} />
-      ) : status === 'ready' && reading ? (
-        <LineChart
-          title="PM2.5 today"
-          points={reading.hourly}
-          xAxisLabel="Hour"
-          yAxisLabel="µg/m³"
-        />
-      ) : null}
+      <LineChart
+        className="rd-sensor-dashboard__chart"
+        title="PM2.5 today"
+        points={reading?.hourly ?? []}
+        xAxisLabel="Hour"
+        yAxisLabel="µg/m³"
+      />
       <DetailPanel
+        className="rd-sensor-dashboard__reading"
         title="Reading"
         emptyMessage={status === 'error' ? errorMessage || 'Sensors unavailable' : 'Select a station'}
       >
-        {status === 'ready' && reading ? (
-          <DetailStats
-            compact
-            items={[
-              { label: 'US AQI', value: String(reading.aqi) },
-              { label: 'PM2.5', value: `${reading.pm25.toFixed(1)} µg/m³` },
-              { label: 'PM10', value: `${reading.pm10.toFixed(1)} µg/m³` },
-              { label: 'Ozone', value: `${Math.round(reading.ozone)} µg/m³` },
-              { label: 'NO₂', value: `${Math.round(reading.nitrogenDioxide)} µg/m³` },
-            ]}
-          />
-        ) : null}
+        <DetailStats compact items={readingStats(reading)} />
       </DetailPanel>
     </FlexLayout>
   );

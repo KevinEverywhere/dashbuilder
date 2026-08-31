@@ -9,6 +9,7 @@ import {
   authoringExtractDownloadName,
   type AuthoringRecordRange,
   virtualCameraToCropRegion,
+  wrapSignedDegrees,
 } from '@rosettadash/core';
 import {
   EquirectSphereViewport,
@@ -411,7 +412,7 @@ export function AuthoringScreen({
                 outputHeight={outputHeight}
                 outputPreviewHostRef={outputPreviewHostRef}
                 onCameraChange={({ yaw: nextYaw, pitch: nextPitch, horizontalFov: nextFov }) => {
-                  setYaw(nextYaw);
+                  setYaw(wrapSignedDegrees(nextYaw));
                   setPitch(nextPitch);
                   setHorizontalFov(nextFov);
                 }}

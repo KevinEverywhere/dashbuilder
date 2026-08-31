@@ -129,6 +129,57 @@ export class PreviewNodeComponent {
   protected readonly tableRows = computed(
     () => this.slice()?.tableRows ?? this.previewData.bundle().tableRows,
   );
+
+  protected tableCell(row: PreviewRow, key: string): string | number {
+    if (key === 'name') {
+      return row.name;
+    }
+    if (key === 'status') {
+      return row.status;
+    }
+    if (key === 'amount') {
+      return row.amount;
+    }
+    if (key === 'date') {
+      return row.date;
+    }
+    return '';
+  }
+
+  protected readonly tableColumns = computed(() => {
+    const fallback = [
+      { key: 'name', header: 'Name' },
+      { key: 'status', header: 'Status' },
+      { key: 'amount', header: 'Amount', numeric: true },
+      { key: 'date', header: 'Date' },
+    ];
+    const raw = this.node().properties['columns'];
+    const parsed =
+      typeof raw === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(raw) as unknown;
+            } catch {
+              return raw
+                .split(',')
+                .map((part) => part.trim())
+                .filter(Boolean)
+                .map((header, index) => ({
+                  key: ['name', 'status', 'amount', 'date'][index] ?? `col${index}`,
+                  header,
+                }));
+            }
+          })()
+        : raw;
+    if (Array.isArray(parsed) && parsed.length && parsed.every((col) => col && typeof col === 'object' && 'key' in col && 'header' in col)) {
+      return (parsed as Array<{ key: string; header: string }>).map((col) => ({
+        key: String(col.key),
+        header: String(col.header),
+        numeric: col.key === 'amount',
+      }));
+    }
+    return fallback;
+  });
   protected readonly newsRows = computed(
     () => this.slice()?.newsRows ?? this.previewData.bundle().newsRows,
   );

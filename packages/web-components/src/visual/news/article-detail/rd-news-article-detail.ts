@@ -23,10 +23,10 @@ export class RdNewsArticleDetailElement extends RosettaAtomElement {
     const title = this.readAttr('title', 'Article');
     const empty = this.readAttr('empty-message', 'Select a headline in News Results');
     return `
-      <section class="rd-news-article-detail" data-testid="rd-news-article-detail">
+      <section class="rd-news-article-detail rd-detail" data-testid="rd-news-article-detail">
         <header class="rd-detail__header"><span>${this.esc(title)}</span></header>
         <p class="rd-detail__empty">${this.esc(empty)}</p>
-        <div data-ref="slot"></div>
+        <div class="rd-detail__body" data-ref="slot"></div>
       </section>`;
   }
 }

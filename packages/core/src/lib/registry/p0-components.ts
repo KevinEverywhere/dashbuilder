@@ -138,6 +138,12 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
       { key: 'pageSize', label: 'Page size', type: 'number', default: 25 },
       { key: 'sortable', label: 'Sortable', type: 'boolean', default: true },
       { key: 'filterable', label: 'Filterable', type: 'boolean', default: true },
+      {
+        key: 'columns',
+        label: 'Columns',
+        type: 'json',
+        default: [],
+      },
     ],
   },
   {
@@ -349,6 +355,16 @@ export const P0_COMPONENT_DEFINITIONS: ComponentDefinition[] = [
           { label: 'Stretch', value: 'stretch' },
           { label: 'Start', value: 'flex-start' },
           { label: 'Center', value: 'center' },
+        ],
+      },
+      {
+        key: 'density',
+        label: 'Density',
+        type: 'select',
+        default: 'comfortable',
+        options: [
+          { label: 'Comfortable', value: 'comfortable' },
+          { label: 'Compact', value: 'compact' },
         ],
       },
     ],

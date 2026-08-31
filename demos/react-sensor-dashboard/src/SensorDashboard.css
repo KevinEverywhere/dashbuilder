@@ -16,3 +16,11 @@ rd-geo-map.rd-sensor-dashboard__map {
   min-height: 11rem;
   height: 11rem;
 }
+
+.rd-sensor-dashboard__chart {
+  min-height: 11rem;
+}
+
+.rd-sensor-dashboard__reading {
+  min-height: 10rem;
+}

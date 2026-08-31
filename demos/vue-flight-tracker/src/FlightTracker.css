@@ -20,3 +20,7 @@ rd-geo-map.rd-flight-tracker__map {
   min-height: 11rem;
   height: 11rem;
 }
+
+.rd-flight-tracker__aircraft {
+  min-height: 10rem;
+}

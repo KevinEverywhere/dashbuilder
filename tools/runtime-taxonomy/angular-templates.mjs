@@ -96,7 +96,9 @@ const ANGULAR_KIND_HTML = {
   'detail-panel': `<section [attr.data-testid]="'{{bemBlock}}'" [ngClass]="rootClass()">
       <header class="{{bemBlock}}__header"><span>{{ title() ?? 'Details' }}</span></header>
       <p class="{{bemBlock}}__empty">{{ emptyMessage() ?? 'Select a row to view details' }}</p>
-      <ng-content />
+      <div class="rd-detail__body">
+        <ng-content />
+      </div>
     </section>`,
 
   'kpi-card': `<article [attr.data-testid]="'{{bemBlock}}'" [ngClass]="rootClass()">
@@ -266,7 +268,9 @@ const ANGULAR_KIND_HTML = {
   'news-article-detail': `<section [attr.data-testid]="'{{bemBlock}}'" [ngClass]="rootClass()">
       <header class="rd-detail__header"><span>{{ title() ?? 'Article' }}</span></header>
       <p class="rd-detail__empty">{{ emptyMessage() ?? 'Select a headline in News Results' }}</p>
-      <ng-content />
+      <div class="rd-detail__body">
+        <ng-content />
+      </div>
     </section>`,
 
   'status-badge': `<span [attr.data-testid]="'{{bemBlock}}'" [ngClass]="badgeClass()">{{ statusText() ?? 'Active' }}</span>`,

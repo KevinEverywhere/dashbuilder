@@ -1,6 +1,8 @@
 # Svelte media player
 
-Page-embed Svelte widget assembled from existing `@rosettadash/svelte` atoms. Plays public sample MP4s (no key). Native HTML `<video>` — the Svelte package has no FlatVideoViewport.
+Page-embed Svelte widget assembled from existing `@rosettadash/svelte`
+atoms. Plays two Destination Atlas YouTube clips per
+inhabited continent through `YoutubeEmbed` (no API key).
 
 ## Run
 

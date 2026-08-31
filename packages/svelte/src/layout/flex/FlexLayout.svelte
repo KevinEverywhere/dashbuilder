@@ -9,10 +9,13 @@
 		title,
 		direction,
 		gap,
+		density,
 		children,
 	}: Props = $props();
 	const flexGap = $derived(typeof gap === 'number' ? gap : 12);
-	const rootClass = $derived(['rd-flex', className].filter(Boolean).join(' '));
+	const rootClass = $derived(
+		['rd-flex', density === 'compact' ? 'rd-flex--compact' : '', className].filter(Boolean).join(' '),
+	);
 </script>
 
 <section class={rootClass} data-testid="rd-flex">

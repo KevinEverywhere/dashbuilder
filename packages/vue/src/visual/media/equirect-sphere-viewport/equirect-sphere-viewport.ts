@@ -1,3 +1,4 @@
+import { wrapSignedDegrees } from '@rosettadash/core';
 import {
   defineComponent,
   h,
@@ -335,7 +336,7 @@ export const EquirectSphereViewport = defineComponent({
       planetScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), planetMaterial));
 
       let displayFov = clamp(props.horizontalFov ?? NORMAL_HFOV, MIN_HFOV, PLANET_MAX_HFOV);
-      let viewYaw = props.yaw ?? 25;
+      let viewYaw = wrapSignedDegrees(props.yaw ?? 25);
       let viewPitch = clamp(props.pitch ?? -8, MIN_PITCH, MAX_PITCH);
 
       const bounds = () => ({
@@ -392,7 +393,7 @@ export const EquirectSphereViewport = defineComponent({
 
       const applyOrientationProps = () => {
         applyingProps = true;
-        viewYaw = props.yaw ?? 25;
+        viewYaw = wrapSignedDegrees(props.yaw ?? 25);
         viewPitch = clamp(props.pitch ?? -8, MIN_PITCH, MAX_PITCH);
         applyingProps = false;
       };
@@ -476,7 +477,7 @@ export const EquirectSphereViewport = defineComponent({
         lastDragX = event.clientX;
         lastDragY = event.clientY;
 
-        viewYaw -= deltaX * DRAG_SENSITIVITY;
+        viewYaw = wrapSignedDegrees(viewYaw - deltaX * DRAG_SENSITIVITY);
         viewPitch = clamp(viewPitch - deltaY * DRAG_SENSITIVITY, MIN_PITCH, MAX_PITCH);
         emitCameraChange();
       };

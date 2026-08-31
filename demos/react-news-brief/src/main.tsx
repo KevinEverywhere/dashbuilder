@@ -20,7 +20,7 @@ if (root) {
             RosettaDash news selects, table, KPI, badge, and detail atoms.
           </p>
         </header>
-        <NewsBrief />
+        <NewsBrief width="34rem" height="36rem" />
       </div>
     </StrictMode>,
   );

@@ -8,6 +8,18 @@ describe('virtual-camera', () => {
     expect(camera.roll).toBe(0);
   });
 
+  it('wraps yaw across 0° / 360°', () => {
+    const camera = new VirtualCamera({ yaw: 370 });
+    camera.normalizeReadable();
+    expect(camera.yaw).toBe(10);
+    camera.yaw = -20;
+    camera.normalizeReadable();
+    expect(camera.yaw).toBe(-20);
+    camera.yaw = 181;
+    camera.normalizeReadable();
+    expect(camera.yaw).toBe(-179);
+  });
+
   it('builds rectilinear crop region for wasm media', () => {
     const region = virtualCameraToCropRegion({
       camera: { yaw: 25, pitch: -8, roll: 0, fov: 75 },

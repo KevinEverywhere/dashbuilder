@@ -137,7 +137,7 @@ const KIND_OBSERVED = {
   'textarea-input': ['label', 'placeholder', 'rows', 'value'],
   'date-range': ['label', 'start-date', 'end-date', 'preset-label'],
   'time-preset': ['label', 'presets', 'active-preset-id'],
-  'data-table': ['title', 'rows'],
+  'data-table': ['title', 'rows', 'columns'],
   'detail-panel': ['title', 'empty-message'],
   'kpi-card': ['title', 'value', 'delta', 'format'],
   'loading-skeleton': ['lines'],
@@ -146,7 +146,7 @@ const KIND_OBSERVED = {
   'bar-chart': ['title', 'bars'],
   'pie-chart': ['title'],
   'layout-grid': ['title', 'columns', 'gap'],
-  'layout-flex': ['title', 'direction', 'gap'],
+  'layout-flex': ['title', 'direction', 'gap', 'density'],
   'layout-tabs': ['title', 'tabs', 'active-tab-id'],
   'layout-modal': ['title', 'body', 'confirm-label', 'open'],
   'layout-collapsible': ['title', 'open', 'default-open'],
@@ -276,8 +276,8 @@ const KIND_MARKUP = {
     return \`
       <section class="${bem} rd-detail" data-testid="${bem}">
         <header class="rd-detail__header"><span>\${this.esc(title)}</span></header>
-        <div class="rd-detail__body"><p class="rd-detail__empty">\${this.esc(empty)}</p></div>
-        <div data-ref="slot"></div>
+        <p class="rd-detail__empty">\${this.esc(empty)}</p>
+        <div class="rd-detail__body" data-ref="slot"></div>
       </section>\`;`,
 
   'kpi-card': (bem) => `    const title = this.readAttr('title', 'Metric');
@@ -495,10 +495,10 @@ const KIND_MARKUP = {
   'news-article-detail': (bem) => `    const title = this.readAttr('title', 'Article');
     const empty = this.readAttr('empty-message', 'Select a headline in News Results');
     return \`
-      <section class="${bem}" data-testid="${bem}">
+      <section class="${bem} rd-detail" data-testid="${bem}">
         <header class="rd-detail__header"><span>\${this.esc(title)}</span></header>
         <p class="rd-detail__empty">\${this.esc(empty)}</p>
-        <div data-ref="slot"></div>
+        <div class="rd-detail__body" data-ref="slot"></div>
       </section>\`;`,
 
   'status-badge': (bem) => `    const text = this.readAttr('status-text', 'Active');

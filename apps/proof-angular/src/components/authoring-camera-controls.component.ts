@@ -1,3 +1,4 @@
+import { wrapSignedDegrees } from '@rosettadash/core';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 const MIN_HFOV = 30;
@@ -117,7 +118,7 @@ function hfovFromFocalLength(focal: number): number {
           step="0.5"
           [value]="yaw()"
           [disabled]="disabled()"
-          (input)="yawChange.emit(+$any($event.target).value)"
+          (input)="yawChange.emit(wrapSignedDegrees(+$any($event.target).value))"
         />
         <output class="da-authoring-camera__value">{{ yaw().toFixed(1) }}°</output>
       </label>

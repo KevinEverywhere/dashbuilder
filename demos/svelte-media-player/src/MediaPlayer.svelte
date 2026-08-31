@@ -1,27 +1,25 @@
 <script lang="ts">
   import FlexLayout from '@rosettadash/svelte/layout/flex';
-  import Timer from '@rosettadash/svelte/logic/timer';
   import DetailPanel from '@rosettadash/svelte/visual/detail';
   import SelectInput from '@rosettadash/svelte/visual/input/select';
   import KpiCard from '@rosettadash/svelte/visual/kpi';
+  import YoutubeEmbed from '@rosettadash/svelte/visual/media/youtube-embed';
   import StatusBadge from '@rosettadash/svelte/visual/plugin/status-badge';
-  import { formatPlaybackTime, getSampleVideo, SAMPLE_VIDEOS } from './videos';
+  import { getSampleVideo, SAMPLE_VIDEOS, watchUrl } from './videos';
   import './MediaPlayer.css';
 
   let { className }: { className?: string } = $props();
 
   let selectedId = $state(SAMPLE_VIDEOS[0].id);
-  let currentTime = $state(0);
-  let paused = $state(true);
-  let duration = $state(0);
-  let tickCount = $state(0);
 
   const selected = $derived(getSampleVideo(selectedId) ?? SAMPLE_VIDEOS[0]);
-  const selectOptions = $derived(SAMPLE_VIDEOS.map((video) => ({ value: video.id, label: video.title })));
-  const timeLabel = $derived(formatPlaybackTime(currentTime));
-  const durationLabel = $derived(
-    Number.isFinite(duration) && duration > 0 ? formatPlaybackTime(duration) : '—',
+  const selectOptions = $derived(
+    SAMPLE_VIDEOS.map((video) => ({
+      value: video.id,
+      label: `${video.title} · ${video.continentLabel}`,
+    })),
   );
+  const sourceUrl = $derived(watchUrl(selected.videoId));
   const rootClass = $derived(['rd-media-player', className].filter(Boolean).join(' '));
 
   function handleVideoChange(value: string) {
@@ -29,10 +27,6 @@
       return;
     }
     selectedId = value;
-    currentTime = 0;
-    duration = 0;
-    paused = true;
-    tickCount = 0;
   }
 </script>
 
@@ -43,34 +37,24 @@
     bind:value={selectedId}
     onChange={handleVideoChange}
   />
-  {#key selected.url}
-    <video
-      class="rd-media-player__video"
-      src={selected.url}
-      controls
-      playsinline
-      aria-label={selected.title}
-      bind:currentTime
-      bind:paused
-      bind:duration
-      ontimeupdate={() => {
-        tickCount += 1;
-      }}
-    >
-      <track kind="captions" />
-    </video>
-  {/key}
-  <FlexLayout direction="row" gap={8}>
-    <KpiCard title="Current time" value={timeLabel} delta={durationLabel} />
-    <StatusBadge
-      statusText={paused ? 'Paused' : 'Playing'}
-      tone={paused ? 'neutral' : 'success'}
+  {#key selected.videoId}
+    <YoutubeEmbed
+      className="rd-media-player__video"
+      videoId={selected.videoId}
+      title={selected.title}
     />
+  {/key}
+  <FlexLayout direction="row" gap={8} density="compact">
+    <KpiCard title={selected.continentLabel} value={selected.title} delta={selected.videoId} />
+    <StatusBadge statusText="Ready" tone="success" />
   </FlexLayout>
-  <Timer label="Time updates" mode="interval" tickCount={tickCount} />
-  <DetailPanel title={selected.title} emptyMessage="Choose a source">
+  <DetailPanel
+    className="rd-media-player__source-panel"
+    title={selected.title}
+    emptyMessage="Choose a source"
+  >
     <p class="rd-media-player__source">
-      <a href={selected.url}>{selected.url}</a>
+      <a href={sourceUrl}>{sourceUrl}</a>
     </p>
   </DetailPanel>
 </FlexLayout>

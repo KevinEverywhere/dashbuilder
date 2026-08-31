@@ -6,8 +6,8 @@ export const ABOUT_SOURCE = `<AboutScreen>
 
 export const OVERVIEW_SOURCE = `<OverviewScreen [locale]="locale" [userRole]="userRole">
   <rd-grid columns="3" gap="12" title="Destination KPIs">…</rd-grid>
-  <rd-chart-line title="Visitors over time (aggregate trend)" />
-  <rd-chart-bar title="2024 visitors by destination" />
+  <rd-chart-line [points]="trend" xAxisLabel="Year" yAxisLabel="Total visitors" />
+  <rd-chart-bar [bars]="bars()" yAxisLabel="Visitors" />
   <rd-role-gate label="Operations metrics" [allowedRoles]="['admin']">…</rd-role-gate>
 </OverviewScreen>`;
 

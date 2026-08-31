@@ -13,7 +13,7 @@ import { SportsScoreboardComponent } from './sports-scoreboard.component';
         <h1>Sports column</h1>
         <p>
           The block on the right is <code>SportsScoreboardComponent</code> — an Angular drop-in
-          composed from RosettaDash select, KPI, badge, chart, table, and detail atoms.
+          composed from RosettaDash select, badge, table, and detail atoms.
         </p>
       </header>
       <rd-sports-scoreboard />

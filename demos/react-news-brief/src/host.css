@@ -13,7 +13,7 @@ body {
 .rd-demo-page {
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 26rem);
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 34rem);
   gap: 1.5rem;
   max-width: 60rem;
   margin: 0 auto;

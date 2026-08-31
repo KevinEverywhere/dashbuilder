@@ -16,4 +16,15 @@ describe('rd-detail-panel', () => {
     expect(root).toBeTruthy();
     el.remove();
   });
+
+  it('keeps empty copy outside the projected body slot', () => {
+    const el = document.createElement(RD_DETAIL_PANEL_TAG);
+    document.body.appendChild(el);
+    const empty = el.querySelector('.rd-detail__empty');
+    const body = el.querySelector('.rd-detail__body');
+    expect(empty).toBeTruthy();
+    expect(body).toBeTruthy();
+    expect(body?.contains(empty)).toBe(false);
+    el.remove();
+  });
 });

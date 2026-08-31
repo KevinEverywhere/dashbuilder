@@ -9,3 +9,10 @@ npm run demo:news
 ```
 
 Opens [http://localhost:4321](http://localhost:4321).
+
+The widget paints its full rectangle immediately. Pass `width` and `height` so a host can reserve the slot:
+
+```tsx
+<NewsBrief width="34rem" height="36rem" />
+```
+

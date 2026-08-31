@@ -21,8 +21,13 @@ rd-geo-map.rd-transit-arrivals__map {
   height: 11rem;
 }
 
+.rd-transit-arrivals__trip {
+  min-height: 5.5rem;
+}
+
 .rd-transit-arrivals__detail {
   margin: 0;
+  min-height: 2.6em;
   font-size: 0.8125rem;
   line-height: 1.45;
 }

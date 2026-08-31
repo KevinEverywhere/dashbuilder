@@ -9,12 +9,39 @@ export interface DataTableRow {
   [key: string]: string | number | undefined;
 }
 
+export interface DataTableColumn {
+  key: string;
+  header: string;
+  align?: 'left' | 'right' | 'center';
+  width?: string;
+  format?: (value: unknown, row: DataTableRow) => string;
+}
+
 export interface DataTableProps {
   title?: string;
   rows?: DataTableRow[];
+  columns?: DataTableColumn[];
   selectedRowId?: string;
   onRowSelect?: (rowId: string) => void;
   className?: string;
+}
+
+const DEFAULT_COLUMNS: DataTableColumn[] = [
+  { key: 'name', header: 'Name' },
+  { key: 'status', header: 'Status' },
+  { key: 'amount', header: 'Amount', align: 'right' },
+  { key: 'date', header: 'Date', align: 'right' },
+];
+
+function cellValue(row: DataTableRow, column: DataTableColumn): string {
+  const raw = row[column.key];
+  if (column.format) {
+    return column.format(raw, row);
+  }
+  if (raw === undefined || raw === null) {
+    return '—';
+  }
+  return String(raw);
 }
 
 /** @rosettadash/vue/visual/table — visual.table */
@@ -24,6 +51,7 @@ export const DataTable = defineComponent({
     className: { type: String as PropType<string | undefined>, default: undefined },
     title: { type: String as PropType<string | undefined>, default: undefined },
     rows: { type: Array as PropType<DataTableRow[] | undefined>, default: undefined },
+    columns: { type: Array as PropType<DataTableColumn[] | undefined>, default: undefined },
     selectedRowId: { type: String as PropType<string | undefined>, default: undefined },
     onRowSelect: { type: Function as PropType<((rowId: string) => void) | undefined>, default: undefined },
   },
@@ -35,11 +63,30 @@ export const DataTable = defineComponent({
         .filter(Boolean)
         .join(' ');
       const selectable = props.selectedRowId !== undefined || Boolean(props.onRowSelect);
+      const columns = props.columns?.length ? props.columns : DEFAULT_COLUMNS;
       return h('section', { class: rootClass, 'data-testid': 'rd-table' }, [
         h('header', { class: 'rd-table__header' }, h('span', null, props.title ?? 'Data table')),
         h('div', { class: 'rd-table__scroll' }, [
           h('table', { class: 'rd-table__table' }, [
-            h('thead', null, h('tr', null, ['Name', 'Status', 'Amount', 'Date'].map((col) => h('th', { key: col }, col)))),
+            h(
+              'thead',
+              null,
+              h(
+                'tr',
+                null,
+                columns.map((column) =>
+                  h(
+                    'th',
+                    {
+                      key: column.key,
+                      class: column.align ? `rd-table__cell--${column.align}` : undefined,
+                      style: column.width ? { width: column.width } : undefined,
+                    },
+                    column.header,
+                  ),
+                ),
+              ),
+            ),
             h(
               'tbody',
               null,
@@ -64,12 +111,17 @@ export const DataTable = defineComponent({
                         }
                       : undefined,
                   },
-                  [
-                    h('td', null, row.name),
-                    h('td', null, row.status),
-                    h('td', null, row.amount),
-                    h('td', null, row.date),
-                  ],
+                  columns.map((column) =>
+                    h(
+                      'td',
+                      {
+                        key: column.key,
+                        class: column.align ? `rd-table__cell--${column.align}` : undefined,
+                        style: column.width ? { width: column.width } : undefined,
+                      },
+                      cellValue(row, column),
+                    ),
+                  ),
                 );
               }),
             ),

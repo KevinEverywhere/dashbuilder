@@ -24,6 +24,15 @@ describe('equirect-filter', () => {
     ).toBe(
       'v360=input=equirect:output=rectilinear:yaw=90:pitch=0:roll=0:d_fov=75,scale=720:480',
     );
+    expect(
+      buildEquirectRectilinearFilter({
+        yaw: 370,
+        pitch: 0,
+        horizontalFov: 75,
+        outputWidth: 720,
+        outputHeight: 480,
+      }),
+    ).toContain('yaw=10');
   });
 
   it('selects filter mode via buildEquirectExtractFilter', () => {

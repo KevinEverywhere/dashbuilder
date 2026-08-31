@@ -9,7 +9,6 @@ Standalone consumer-style samples that sit outside the Destination Atlas proof a
 | [react-sensor-dashboard](./react-sensor-dashboard/README.md) | React | Sensor dashboard | `npm run demo:sensor` | 4322 |
 | [angular-stock-tracker](./angular-stock-tracker/README.md) | Angular | Stock tracker | `npm run demo:stock` | 4323 |
 | [angular-sports-scoreboard](./angular-sports-scoreboard/README.md) | Angular | Sports scoreboard | `npm run demo:sports` | 4324 |
-| [angular-poll-tracker](./angular-poll-tracker/README.md) | Angular | Poll tracker | `npm run demo:poll` | 4325 |
 | [vue-crypto-ticker](./vue-crypto-ticker/README.md) | Vue | Crypto ticker | `npm run demo:crypto` | 4326 |
 | [vue-flight-tracker](./vue-flight-tracker/README.md) | Vue | Flight tracker | `npm run demo:flight` | 4327 |
 | [svelte-media-player](./svelte-media-player/README.md) | Svelte | Media player | `npm run demo:media` | 4328 |

@@ -1,3 +1,5 @@
+import { wrapSignedDegrees } from './panorama-wrap.js';
+
 /** Framework-agnostic virtual camera for equirect authoring (browser + CLI). */
 export type VirtualCameraVantage = 'inside' | 'outside';
 
@@ -68,6 +70,7 @@ export class VirtualCamera implements VirtualCameraState {
 
   normalizeReadable(options: { lockRoll?: boolean; maxPitch?: number } = {}): this {
     const { lockRoll = true, maxPitch = 89 } = options;
+    this.yaw = wrapSignedDegrees(this.yaw);
     this.pitch = clamp(this.pitch, -maxPitch, maxPitch);
     if (lockRoll) {
       this.roll = 0;
@@ -112,7 +115,7 @@ import { buildEquirectExtractFilter } from './equirect-filter.js';
 
 /** Build crop-region payload for WasmMedia from virtual camera + output dimensions. */
 export function virtualCameraToCropRegion(input: AuthoringCropRegionInput): AuthoringCropRegion {
-  const yaw = num(input.camera.yaw, 0);
+  const yaw = wrapSignedDegrees(num(input.camera.yaw, 0));
   const pitch = num(input.camera.pitch, 0);
   const roll = num(input.camera.roll, 0);
   const horizontalFov = Math.max(1, num(input.camera.fov, 90));

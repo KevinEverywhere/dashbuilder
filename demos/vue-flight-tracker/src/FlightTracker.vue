@@ -6,11 +6,26 @@ import { GeoMap } from '@rosettadash/vue/visual/display/geo-map';
 import { SelectInput } from '@rosettadash/vue/visual/input/select';
 import { KpiCard } from '@rosettadash/vue/visual/kpi';
 import { StatusBadge } from '@rosettadash/vue/visual/plugin/status-badge';
-import { LoadingSkeleton } from '@rosettadash/vue/visual/skeleton';
 import { DataTable } from '@rosettadash/vue/visual/table';
 import { AIRPORTS, getAirport } from './airports';
 import { fetchAirportTraffic, type Aircraft, type FlightSnapshot } from './flights';
 import './FlightTracker.css';
+
+const TABLE_SLOTS = 6;
+const DASH = '—';
+const TRAFFIC_COLUMNS = [
+  { key: 'name', header: 'Callsign' },
+  { key: 'status', header: 'Origin' },
+  { key: 'amount', header: 'Altitude', align: 'right' as const },
+  { key: 'date', header: 'Speed', align: 'right' as const },
+];
+const PLACEHOLDER_ROWS = Array.from({ length: TABLE_SLOTS }, (_, index) => ({
+  id: `slot-${index}`,
+  name: '\u00a0',
+  status: '\u00a0',
+  amount: '\u00a0',
+  date: '\u00a0',
+}));
 
 const props = withDefaults(
   defineProps<{
@@ -32,15 +47,18 @@ const selected = computed<Aircraft | undefined>(
   () => aircraft.value.find((plane) => plane.id === selectedId.value) ?? aircraft.value[0],
 );
 const airborneCount = computed(() => aircraft.value.filter((plane) => !plane.onGround).length);
-const rows = computed(() =>
-  aircraft.value.map((plane) => ({
+const rows = computed(() => {
+  const filled = aircraft.value.slice(0, TABLE_SLOTS).map((plane) => ({
     id: plane.id,
     name: plane.callsign,
     status: plane.country,
     amount: `${plane.altitudeFt.toLocaleString('en-US')} ft`,
     date: `${plane.speedKts} kts`,
-  })),
-);
+  }));
+  return filled.length >= TABLE_SLOTS
+    ? filled
+    : [...filled, ...PLACEHOLDER_ROWS.slice(filled.length)];
+});
 const markers = computed(() =>
   aircraft.value.map((plane) => ({
     id: plane.id,
@@ -85,7 +103,7 @@ function onAirport(value: string): void {
 }
 
 function onSelect(id: string): void {
-  if (id) {
+  if (id && aircraft.value.some((plane) => plane.id === id)) {
     selectedId.value = id;
   }
 }
@@ -101,7 +119,6 @@ watch(
     if (!current) {
       status.value = 'error';
       errorMessage.value = 'No airports available';
-      snapshot.value = null;
       return;
     }
     const controller = new AbortController();
@@ -118,8 +135,6 @@ watch(
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        snapshot.value = null;
-        selectedId.value = '';
         status.value = 'error';
         errorMessage.value = error instanceof Error ? error.message : 'Traffic request failed';
       });
@@ -143,40 +158,39 @@ watch(
     <FlexLayout direction="row" :gap="8">
       <KpiCard
         :title="airport ? `${airport.id.toUpperCase()} airborne` : 'Airborne'"
-        :value="status === 'ready' ? airborneCount : '—'"
-        :delta="selected ? selected.callsign : undefined"
+        :value="snapshot ? airborneCount : DASH"
+        :delta="selected ? selected.callsign : DASH"
       />
       <StatusBadge :status-text="badgeText" :tone="badgeTone" />
     </FlexLayout>
-    <LoadingSkeleton v-if="status === 'loading'" :lines="4" />
     <DataTable
-      v-else
       title="Nearby traffic"
       :rows="rows"
+      :columns="TRAFFIC_COLUMNS"
       :selected-row-id="selected?.id"
-      :on-row-select="onSelect"
+      :on-row-select="aircraft.length ? onSelect : undefined"
     />
-    <DetailPanel title="Aircraft" :empty-message="emptyMessage">
-      <dl v-if="status === 'ready' && selected" class="rd-detail-stats">
+    <DetailPanel class="rd-flight-tracker__aircraft" title="Aircraft" :empty-message="emptyMessage">
+      <dl class="rd-detail-stats rd-detail-stats--compact">
         <div>
           <dt>Callsign</dt>
-          <dd>{{ selected.callsign }}</dd>
+          <dd>{{ selected?.callsign ?? DASH }}</dd>
         </div>
         <div>
           <dt>Country</dt>
-          <dd>{{ selected.country }}</dd>
+          <dd>{{ selected?.country ?? DASH }}</dd>
         </div>
         <div>
           <dt>Altitude</dt>
-          <dd>{{ selected.altitudeFt.toLocaleString('en-US') }} ft</dd>
+          <dd>{{ selected ? `${selected.altitudeFt.toLocaleString('en-US')} ft` : DASH }}</dd>
         </div>
         <div>
           <dt>Speed</dt>
-          <dd>{{ selected.speedKts }} kts</dd>
+          <dd>{{ selected ? `${selected.speedKts} kts` : DASH }}</dd>
         </div>
         <div>
           <dt>State</dt>
-          <dd>{{ selected.onGround ? 'On ground' : 'Airborne' }}</dd>
+          <dd>{{ selected ? (selected.onGround ? 'On ground' : 'Airborne') : DASH }}</dd>
         </div>
       </dl>
     </DetailPanel>

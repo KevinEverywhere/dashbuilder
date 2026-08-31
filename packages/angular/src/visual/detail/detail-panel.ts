@@ -17,7 +17,9 @@ export interface DetailPanelProps {
     <section [attr.data-testid]="'rd-detail'" [ngClass]="rootClass()">
       <header class="rd-detail__header"><span>{{ title() ?? 'Details' }}</span></header>
       <p class="rd-detail__empty">{{ emptyMessage() ?? 'Select a row to view details' }}</p>
-      <ng-content />
+      <div class="rd-detail__body">
+        <ng-content />
+      </div>
     </section>
   `,
 })

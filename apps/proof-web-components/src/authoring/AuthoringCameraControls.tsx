@@ -1,3 +1,5 @@
+import { wrapSignedDegrees } from '@rosettadash/core';
+
 /** Full-frame horizontal reference for focal-length display. */
 const SENSOR_WIDTH_MM = 36;
 const MIN_HFOV = 30;
@@ -180,7 +182,7 @@ export function AuthoringCameraControls({
         step={0.5}
         unit="°"
         disabled={disabled}
-        onChange={onYawChange}
+        onChange={(next) => onYawChange(wrapSignedDegrees(next))}
       />
       <SliderRow
         label="Pitch"

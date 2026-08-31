@@ -1,4 +1,12 @@
-import { CITIES, filterListings, formatUsd, LISTINGS, type Listing } from './listings';
+import {
+  CITIES,
+  filterListings,
+  formatListed,
+  formatUsd,
+  LISTINGS,
+  statusSymbol,
+  type Listing,
+} from './listings';
 import './ListingBrowser.css';
 
 export interface ListingBrowserOptions {
@@ -21,14 +29,21 @@ function cityOptions(): string {
   return JSON.stringify([{ value: '', label: 'All cities' }, ...CITIES]);
 }
 
+const LISTING_COLUMNS = JSON.stringify([
+  { key: 'name', header: 'Listing' },
+  { key: 'status', header: 'Status', align: 'center', width: '3.25rem' },
+  { key: 'amount', header: 'Price', align: 'right', width: '5.5rem' },
+  { key: 'date', header: 'Listed', align: 'right', width: '3.75rem' },
+]);
+
 function tableRows(listings: Listing[]): string {
   return JSON.stringify(
     listings.map((listing) => ({
       id: listing.id,
       name: listing.title,
-      status: listing.status,
+      status: statusSymbol(listing.status),
       amount: formatUsd(listing.price),
-      date: listing.listed,
+      date: formatListed(listing.listed),
     })),
   );
 }
@@ -75,7 +90,7 @@ export function createListingBrowser(options: ListingBrowserOptions = {}): HTMLE
     },
     'rd-listing-browser__map',
   );
-  const metrics = createEl('rd-flex-layout', { direction: 'row', gap: '8' });
+  const metrics = createEl('rd-flex-layout', { direction: 'row', gap: '8', density: 'compact' });
   const kpi = createEl('rd-kpi-card', {
     title: selected ? selected.title : 'List price',
     value: selected ? formatUsd(selected.price) : '—',
@@ -84,18 +99,25 @@ export function createListingBrowser(options: ListingBrowserOptions = {}): HTMLE
     kpi.setAttribute('delta', `${selected.beds} bed`);
   }
   const badge = createEl('rd-status-badge', {
-    'status-text': selected?.status ?? '—',
+    'status-text': selected ? statusSymbol(selected.status) : '—',
     tone: selected ? badgeTone(selected.status) : 'neutral',
   });
   const table = createEl('rd-data-table', {
     title: city || 'All cities',
     rows: tableRows(visible),
+    columns: LISTING_COLUMNS,
     'selected-row-id': selected?.id ?? '',
   });
-  const detail = createEl('rd-detail-panel', {
-    title: 'Home',
-    'empty-message': selected ? `${selected.city} · listed ${selected.listed}` : 'Select a listing',
-  });
+  const detail = createEl(
+    'rd-detail-panel',
+    {
+      title: 'Home',
+      'empty-message': selected
+        ? `${selected.city} · listed ${formatListed(selected.listed)}`
+        : 'Select a listing',
+    },
+    'rd-listing-browser__home',
+  );
   const facts = document.createElement('dl');
   facts.className = 'rd-listing-browser__facts';
 
@@ -105,16 +127,13 @@ export function createListingBrowser(options: ListingBrowserOptions = {}): HTMLE
 
   const paintFacts = (listing: Listing | undefined) => {
     facts.replaceChildren();
-    if (!listing) {
-      return;
-    }
     const rows: Array<[string, string]> = [
-      ['Title', listing.title],
-      ['City', listing.city],
-      ['Price', formatUsd(listing.price)],
-      ['Beds', String(listing.beds)],
-      ['Status', listing.status],
-      ['Listed', listing.listed],
+      ['Title', listing?.title ?? '—'],
+      ['City', listing?.city ?? '—'],
+      ['Price', listing ? formatUsd(listing.price) : '—'],
+      ['Beds', listing ? String(listing.beds) : '—'],
+      ['Status', listing ? statusSymbol(listing.status) : '—'],
+      ['Listed', listing ? formatListed(listing.listed) : '—'],
     ];
     for (const [label, value] of rows) {
       const row = document.createElement('div');
@@ -143,9 +162,9 @@ export function createListingBrowser(options: ListingBrowserOptions = {}): HTMLE
     kpi.setAttribute('value', listing ? formatUsd(listing.price) : '—');
     if (listing) {
       kpi.setAttribute('delta', `${listing.beds} bed`);
-      badge.setAttribute('status-text', listing.status);
+      badge.setAttribute('status-text', statusSymbol(listing.status));
       badge.setAttribute('tone', badgeTone(listing.status));
-      detail.setAttribute('empty-message', `${listing.city} · listed ${listing.listed}`);
+      detail.setAttribute('empty-message', `${listing.city} · listed ${formatListed(listing.listed)}`);
     } else {
       kpi.removeAttribute('delta');
       badge.setAttribute('status-text', '—');

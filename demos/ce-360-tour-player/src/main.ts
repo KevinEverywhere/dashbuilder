@@ -14,7 +14,7 @@ if (root) {
         <h1>Visit desk</h1>
         <p>
           The block on the right is <code>TourPlayer</code> — a vanilla drop-in composed from
-          RosettaDash select, map, KPI, badge, and detail atoms plus a local panorama viewport.
+          RosettaDash select, map, KPI, badge, and detail atoms plus a Wikimedia 360 still.
         </p>
       </header>
     </div>

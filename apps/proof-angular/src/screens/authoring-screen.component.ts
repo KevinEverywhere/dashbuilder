@@ -18,6 +18,7 @@ import {
   isEquirectSourceDimensions,
   type AuthoringRecordRange,
   virtualCameraToCropRegion,
+  wrapSignedDegrees,
 } from '@rosettadash/core';
 import { EquirectSphereViewport } from '@rosettadash/angular/visual/media/equirect-sphere-viewport';
 import { FlatVideoViewport } from '@rosettadash/angular/visual/media/flat-video-viewport';
@@ -198,7 +199,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                   [pitch]="pitch()"
                   [horizontalFov]="horizontalFov()"
                   [disabled]="false"
-                  (yawChange)="yaw.set($event)"
+                  (yawChange)="yaw.set(wrapSigned($event))"
                   (pitchChange)="pitch.set($event)"
                   (horizontalFovChange)="horizontalFov.set($event)"
                   (reset)="resetView()"
@@ -315,7 +316,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 <div class="da-media-extract-controls__camera">
                   <section class="rd-input-number">
                     <span class="rd-field__label">Yaw (°)</span>
-                    <input type="number" class="rd-input" step="0.5" min="-180" max="180" [value]="formatDegree(yaw())" (change)="yaw.set(+$any($event.target).value)" />
+                    <input type="number" class="rd-input" step="0.5" min="-180" max="180" [value]="formatDegree(yaw())" (change)="yaw.set(wrapSigned(+$any($event.target).value))" />
                   </section>
                   <section class="rd-input-number">
                     <span class="rd-field__label">Pitch (°)</span>
@@ -634,8 +635,12 @@ export class AuthoringScreenComponent {
     return Math.round(value * 10) / 10;
   }
 
+  wrapSigned(value: number): number {
+    return wrapSignedDegrees(value);
+  }
+
   onCameraChange(detail: { yaw: number; pitch: number; horizontalFov: number }): void {
-    this.yaw.set(detail.yaw);
+    this.yaw.set(wrapSignedDegrees(detail.yaw));
     this.pitch.set(detail.pitch);
     this.horizontalFov.set(detail.horizontalFov);
   }

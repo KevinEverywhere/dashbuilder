@@ -199,10 +199,12 @@ function kindRender(kind, bemBlock) {
       slots.default?.(),
     ]);`,
 
-    'detail-panel': `return h('section', { class: rootClass, 'data-testid': '${b}' }, [
+    'detail-panel': `const content = slots.default?.() ?? [];
+      return h('section', { class: rootClass, 'data-testid': '${b}' }, [
       h('header', { class: '${b}__header' }, h('span', null, props.title ?? 'Details')),
-      h('p', { class: '${b}__empty' }, props.emptyMessage ?? 'Select a row to view details'),
-      slots.default?.(),
+      content.length
+        ? h('div', { class: 'rd-detail__body' }, content)
+        : h('p', { class: '${b}__empty' }, props.emptyMessage ?? 'Select a row to view details'),
     ]);`,
 
     'kpi-card': `return h('article', { class: rootClass, 'data-testid': '${b}' }, [

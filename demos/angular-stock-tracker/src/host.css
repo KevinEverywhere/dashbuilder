@@ -43,6 +43,16 @@ body {
   line-height: 1.5;
 }
 
+.rd-stock-tracker,
+.rd-stock-tracker rd-flex,
+.rd-stock-tracker rd-input-select,
+.rd-stock-tracker rd-plugin-status-badge,
+.rd-stock-tracker rd-chart-line,
+.rd-stock-tracker rd-table,
+.rd-stock-tracker rd-detail {
+  display: block;
+}
+
 .rd-stock-tracker {
   box-sizing: border-box;
   max-width: 26rem;
@@ -51,6 +61,22 @@ body {
   border: 1px solid var(--rd-color-border, #d9dee7);
   border-radius: var(--rd-radius-md, 0.5rem);
   background: var(--rd-color-surface-raised, #fff);
+}
+
+.rd-stock-tracker__title {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.rd-stock-tracker__chart {
+  min-height: 8rem;
+}
+
+.rd-stock-tracker__quote {
+  min-height: 7.5rem;
 }
 
 @media (max-width: 720px) {

@@ -1,10 +1,13 @@
 import { NgClass } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
+export type FlexDensity = 'comfortable' | 'compact';
+
 export interface FlexLayoutProps {
   title?: string;
   direction?: 'row' | 'column';
   gap?: number | string;
+  density?: FlexDensity;
   className?: string;
 }
 
@@ -26,9 +29,16 @@ export class FlexLayout {
   readonly title = input<string | undefined>(undefined);
   readonly direction = input<'row' | 'column' | undefined>(undefined);
   readonly gap = input<number | string | undefined>(undefined);
+  readonly density = input<FlexDensity | undefined>(undefined);
 
   readonly rootClass = computed(() =>
-    ['rd-flex', this.className()].filter(Boolean).join(' '),
+    [
+      'rd-flex',
+      this.density() === 'compact' ? 'rd-flex--compact' : '',
+      this.className(),
+    ]
+      .filter(Boolean)
+      .join(' '),
   );
   flexGap(): number {
     const gap = this.gap();

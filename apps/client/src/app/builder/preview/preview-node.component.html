@@ -171,10 +171,9 @@
       <table>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th class="preview-table__cell--numeric">Amount</th>
-            <th>Date</th>
+            @for (column of tableColumns(); track column.key) {
+              <th [class.preview-table__cell--numeric]="column.numeric">{{ column.header }}</th>
+            }
           </tr>
         </thead>
         <tbody>
@@ -184,10 +183,15 @@
               [class.preview-table__row--selected]="isSelectedTableRow(row)"
               (click)="selectTableRow(row)"
             >
-              <td>{{ row.name }}</td>
-              <td>{{ row.status }}</td>
-              <td class="preview-table__cell--numeric">{{ row.amount | currency: 'USD' : 'symbol' : '1.0-0' }}</td>
-              <td>{{ row.date }}</td>
+              @for (column of tableColumns(); track column.key) {
+                <td [class.preview-table__cell--numeric]="column.numeric">
+                  @if (column.key === 'amount') {
+                    {{ row.amount | currency: 'USD' : 'symbol' : '1.0-0' }}
+                  } @else {
+                    {{ tableCell(row, column.key) }}
+                  }
+                </td>
+              }
             </tr>
           }
         </tbody>
@@ -335,7 +339,7 @@
         class="preview-layout__flex"
         [class.preview-layout__flex--column]="readString('direction', 'row') === 'column'"
         [style.gap.px]="readNumber('gap', 16)"
-        [style.alignItems]="readString('align', 'stretch')"
+        [style.alignItems]="readString('density', 'comfortable') === 'compact' ? 'center' : readString('align', 'stretch')"
       >
         @for (slot of [1, 2, 3]; track slot) {
           <div class="preview-layout__slot"></div>

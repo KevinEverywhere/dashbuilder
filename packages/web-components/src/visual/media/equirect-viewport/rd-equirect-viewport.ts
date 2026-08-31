@@ -2,6 +2,7 @@ import {
   buildEquirectExtractFilter,
   DEFAULT_EQUIRECT_FLAT_CROP,
   DEFAULT_EQUIRECT_SOURCE,
+  wrapSignedDegrees,
 } from '@rosettadash/core';
 import { defineRosettaElement, type DashRow, readNumber, readString } from '../../../lib/element-utils.js';
 import { applyShadowMount, ensureShadowBase, getShadowBase, loadShadowPairForTag } from '../../../lib/shadow-base.js';
@@ -148,7 +149,7 @@ export class RdEquirectViewportElement extends HTMLElement {
   }
 
   private get yaw(): number {
-    return readNumber(this.getAttribute('yaw'), 0);
+    return wrapSignedDegrees(readNumber(this.getAttribute('yaw'), 0));
   }
 
   private get pitch(): number {

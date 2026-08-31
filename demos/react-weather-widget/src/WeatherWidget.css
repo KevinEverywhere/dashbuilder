@@ -16,3 +16,7 @@ rd-geo-map.rd-weather-widget__map {
   min-height: 11rem;
   height: 11rem;
 }
+
+.rd-weather-widget__report {
+  min-height: 13.5rem;
+}

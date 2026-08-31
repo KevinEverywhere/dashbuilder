@@ -12,13 +12,17 @@
   min-width: 0;
 }
 
-.rd-listing-browser .rd-table {
-  max-height: 14rem;
+.rd-listing-browser .rd-table__scroll {
+  max-height: 12.5rem;
 }
 
 rd-geo-map.rd-listing-browser__map {
   min-height: 11rem;
   height: 11rem;
+}
+
+.rd-listing-browser__home {
+  min-height: 11rem;
 }
 
 .rd-listing-browser__facts {
