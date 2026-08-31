@@ -1,0 +1,221 @@
+@if (showPanel() && wiringReport(); as report) {
+  <div class="data-wiring" data-testid="inspector-data-wiring">
+    @if (!showingLiveData()) {
+      <div class="data-wiring__callout" data-testid="inspector-data-preview-callout">
+        <strong>Canvas rows are preview content — not your database</strong>
+        <p>
+          Rows like <em>{{ previewRowPreview() }}</em> come from
+          <code>packages/ui-primitives/preview-content.json</code>
+          (<code>datasets.orders.rows</code>). Edit that file and refresh
+          to change preview rows. Wire a source and click Verify to
+          replace them with live probe data.
+        </p>
+      </div>
+    } @else {
+      <div class="data-wiring__callout data-wiring__callout--live">
+        <strong>Showing live sample rows from your source</strong>
+        <p>Verified probe data replaces the design-time sample on this table.</p>
+      </div>
+    }
+
+    @if (report.status === 'unwired') {
+      <ol class="data-wiring__steps" data-testid="inspector-data-wiring-steps">
+        @if (!canvasRowsetSources().length) {
+          <li>
+            Add <strong>PostgreSQL</strong> (or Supabase / MySQL) from
+            <strong>Data Sources</strong> in the palette.
+          </li>
+          <li>
+            Set its <strong>table name</strong> in Properties, then connect
+            <code>rowset</code> → this table's <code>data</code> port on the canvas
+            — or use Connect below once the source is on the canvas.
+          </li>
+        } @else {
+          <li>
+            Connect a source to this table — click Connect or drag
+            <code>rowset</code> on the source to <code>data</code> here.
+          </li>
+        }
+        <li>Set <strong>DATABASE_URL</strong> on the Environment page (or below).</li>
+        <li>Click <strong>Verify wiring &amp; fetch sample</strong> to load real rows.</li>
+      </ol>
+
+      @if (canvasRowsetSources().length) {
+        <div class="data-wiring__connect-list">
+          @for (source of canvasRowsetSources(); track source.nodeId + source.portId) {
+            <button
+              type="button"
+              class="data-wiring__connect"
+              [attr.data-testid]="'inspector-connect-source-' + source.nodeId"
+              (click)="connectSource(source)"
+            >
+              Connect {{ source.nodeLabel }}
+              <span class="data-wiring__connect-meta">
+                {{ source.typeLabel }} · {{ source.portName }} → data
+              </span>
+            </button>
+          }
+        </div>
+      }
+
+      @if (connectMessage()) {
+        <p
+          class="data-wiring__result"
+          [class.data-wiring__result--ok]="connectMessage()?.startsWith('Connected')"
+          [class.data-wiring__result--error]="!connectMessage()?.startsWith('Connected')"
+          data-testid="inspector-data-connect-result"
+        >
+          {{ connectMessage() }}
+        </p>
+      }
+    }
+
+    <div class="data-wiring__source" data-testid="inspector-data-source-summary">
+      <span class="data-wiring__source-label">Data source</span>
+      @if (report.sourceNodeLabel && report.sourceNodeType) {
+        <p class="data-wiring__source-value">
+          <strong>{{ report.sourceNodeLabel }}</strong>
+          <span class="data-wiring__source-type">{{ sourceTypeLabel(report.sourceNodeType) }}</span>
+        </p>
+        <p class="data-wiring__source-binding">
+          {{ report.sourceNodeLabel }}.{{ report.sourcePortName }}
+          → {{ report.targetPortName }}
+        </p>
+      } @else {
+        <p class="data-wiring__source-value">
+          <strong>Not connected</strong>
+        </p>
+      }
+    </div>
+
+    <div class="data-wiring__status-row">
+      <span class="data-wiring__status" [class]="wiringStatusClass(report)">
+        {{ wiringStatusLabel(report) }}
+      </span>
+      @if (lastVerifiedAt()) {
+        <span class="data-wiring__verified-at">Verified {{ lastVerifiedAt() }}</span>
+      }
+    </div>
+
+    @if (report.issues.length) {
+      <ul class="data-wiring__issues">
+        @for (issue of report.issues; track issue.code) {
+          <li>{{ issue.message }}</li>
+        }
+      </ul>
+    }
+
+    @if (report.connectionEnvKey) {
+      <div class="data-wiring__field">
+        <label [attr.for]="'wiring-url-' + report.targetNodeId">
+          Source URL
+          <span class="data-wiring__env-key">({{ report.connectionEnvKey }})</span>
+        </label>
+        <input
+          [id]="'wiring-url-' + report.targetNodeId"
+          type="text"
+          data-testid="inspector-data-source-url"
+          [value]="connectionUrlDraft()"
+          placeholder="postgresql://user:pass@host:5432/db"
+          (input)="onConnectionUrlInput($any($event.target).value)"
+        />
+        <p class="data-wiring__hint">
+          Loaded from Environment when set. Override here for probe only — not saved
+          to the composite.
+        </p>
+      </div>
+    } @else if (report.sourceNodeType) {
+      <p class="data-wiring__hint">
+        Set connection env keys on the source node or Environment page before
+        verifying.
+      </p>
+    }
+
+    @if (report.anonKeyEnvKey) {
+      <div class="data-wiring__field">
+        <label [attr.for]="'wiring-anon-' + report.targetNodeId">
+          Supabase anon key
+          <span class="data-wiring__env-key">({{ report.anonKeyEnvKey }})</span>
+        </label>
+        <input
+          [id]="'wiring-anon-' + report.targetNodeId"
+          type="password"
+          data-testid="inspector-data-anon-key"
+          [value]="anonKeyDraft()"
+          (input)="onAnonKeyInput($any($event.target).value)"
+        />
+      </div>
+    }
+
+    @if (report.tableName) {
+      <p class="data-wiring__meta">
+        Table: <code>{{ report.tableName }}</code>
+      </p>
+    }
+    @if (report.collectionName) {
+      <p class="data-wiring__meta">
+        Collection: <code>{{ report.collectionName }}</code>
+      </p>
+    }
+
+    @if (report.status !== 'unwired') {
+      <label class="data-wiring__check">
+        <input
+          type="checkbox"
+          data-testid="inspector-data-use-credentials"
+          [checked]="useProbeCredentials()"
+          (change)="toggleProbeCredentials($any($event.target).checked)"
+        />
+        Provide database login for probe (optional)
+      </label>
+
+      @if (useProbeCredentials()) {
+        <div class="data-wiring__cred-row">
+          <div class="data-wiring__field">
+            <label for="wiring-probe-user">Login</label>
+            <input
+              id="wiring-probe-user"
+              type="text"
+              autocomplete="username"
+              data-testid="inspector-data-probe-username"
+              [value]="probeUsername()"
+              (input)="probeUsername.set($any($event.target).value)"
+            />
+          </div>
+          <div class="data-wiring__field">
+            <label for="wiring-probe-pass">Password</label>
+            <input
+              id="wiring-probe-pass"
+              type="password"
+              autocomplete="current-password"
+              data-testid="inspector-data-probe-password"
+              [value]="probePassword()"
+              (input)="probePassword.set($any($event.target).value)"
+            />
+          </div>
+        </div>
+      }
+
+      <button
+        type="button"
+        class="data-wiring__verify"
+        data-testid="inspector-verify-data-wiring"
+        [disabled]="probing()"
+        (click)="verifyWiring()"
+      >
+        {{ probing() ? 'Verifying…' : 'Verify wiring & fetch sample' }}
+      </button>
+    }
+
+    @if (probeMessage()) {
+      <p
+        class="data-wiring__result"
+        [class.data-wiring__result--ok]="probeOk() === true"
+        [class.data-wiring__result--error]="probeOk() === false"
+        data-testid="inspector-data-wiring-result"
+      >
+        {{ probeMessage() }}
+      </p>
+    }
+  </div>
+}

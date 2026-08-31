@@ -126,14 +126,19 @@
             [attr.data-selected]="state.selectedNodeIdsSet().has(node.id) ? 'true' : 'false'"
             [style.left.px]="node.layout?.x ?? 24"
             [style.top.px]="node.layout?.y ?? 24"
-            [style.width.px]="node.layout?.width ?? 220"
+            [style.width.px]="node.layout?.width ?? defaultNodeWidth"
             [style.height.px]="nodeHeight(node)"
             (click)="selectNode(node.id, $event)"
             (keydown)="onNodeKeydown(node, $event)"
             (keydown.enter)="selectNode(node.id, $event)"
             (keydown.space)="selectNode(node.id, $event)"
           >
-            <div class="canvas__node-shell">
+            <div
+              class="canvas__node-shell"
+              (pointerdown)="onShellPointerDown(node.id, $event)"
+              (pointermove)="onShellPointerMove($event)"
+              (pointerup)="onShellPointerUp($event)"
+            >
               <div class="canvas__node-frame">
                 <header
                   class="canvas__node-namebar"
@@ -144,37 +149,42 @@
                   (click)="stopHeaderEvent($event)"
                   (keydown.enter)="stopHeaderEvent($event)"
                   (keydown.space)="stopHeaderEvent($event)"
-                  (pointerdown)="onHeaderPointerDown(node.id, $event)"
-                  (pointermove)="onHeaderPointerMove($event)"
-                  (pointerup)="onHeaderPointerUp($event)"
                 >
-                  @if (renamingNodeId() === node.id) {
-                    <input
-                      #renameInput
-                      type="text"
-                      class="canvas__node-name-input"
-                      data-testid="canvas-node-rename-input"
-                      data-builder-tab="name"
-                      [value]="renameDraft()"
-                      (input)="renameDraft.set($any($event.target).value)"
-                      (pointerdown)="onRenameInputEvent($event)"
-                      (click)="onRenameInputEvent($event)"
-                      (blur)="commitRename(node.id)"
-                      (keydown)="onRenameKeydown(node, $event)"
-                    />
-                  } @else {
-                    <button
-                      type="button"
-                      class="canvas__node-name"
-                      data-testid="canvas-node-name"
-                      data-builder-tab="name"
-                      title="Click to edit label"
-                      (pointerdown)="onNamePointerDown(node, $event)"
-                      (click)="onNameClick(node, $event)"
-                    >
-                      {{ node.label }}
-                    </button>
-                  }
+                  <div class="canvas__node-name-slot">
+                    @if (renamingNodeId() === node.id) {
+                      <input
+                        #renameInput
+                        type="text"
+                        class="canvas__node-name-input"
+                        data-testid="canvas-node-rename-input"
+                        data-builder-tab="name"
+                        [value]="renameDraft()"
+                        (input)="renameDraft.set($any($event.target).value)"
+                        (pointerdown)="onRenameInputEvent($event)"
+                        (click)="onRenameInputEvent($event)"
+                        (blur)="commitRename(node.id)"
+                        (keydown)="onRenameKeydown(node, $event)"
+                      />
+                    } @else {
+                      <button
+                        type="button"
+                        class="canvas__node-name"
+                        data-testid="canvas-node-name"
+                        data-builder-tab="name"
+                        title="Double-click to edit label"
+                        (pointerdown)="onNamePointerDown(node, $event)"
+                        (dblclick)="onNameDoubleClick(node, $event)"
+                        (click)="onNameClick(node, $event)"
+                      >
+                        {{ node.label }}
+                      </button>
+                    }
+                  </div>
+                  <div
+                    class="canvas__node-drag-handle"
+                    data-testid="canvas-node-drag-handle"
+                    aria-hidden="true"
+                  ></div>
                   <button
                     type="button"
                     class="canvas__node-close"
@@ -190,10 +200,7 @@
                 </header>
 
                 <div class="canvas__node-body">
-                  <div
-                    class="canvas__node-preview"
-                    (pointerdown)="stopPreviewEvent($event)"
-                  >
+                  <div class="canvas__node-preview">
                     <app-preview-node [node]="node" [builderMode]="true" />
                   </div>
 
@@ -207,11 +214,15 @@
                       [class.canvas__port--bound]="state.boundInputPortKeys().has(node.id + ':' + port.id)"
                       [class.canvas__port--pending-target]="isPendingTarget(node.id, port.id)"
                       [attr.data-testid]="'port-input-' + node.id + '-' + port.id"
+                      [attr.title]="portInputHint(node.id, port.id, port.name, port.dataType)"
                       (click)="onInputPortClick(node.id, port.id, $event)"
                     >
                       <span class="canvas__port-dot" aria-hidden="true"></span>
                       <span class="canvas__port-name">{{ port.name }}</span>
                       <span class="canvas__port-type">{{ port.dataType }}</span>
+                      @if (portInputSourceLabel(node.id, port.id); as sourceLabel) {
+                        <span class="canvas__port-source">← {{ sourceLabel }}</span>
+                      }
                     </button>
                   </li>
                 }
@@ -225,8 +236,14 @@
                       class="canvas__port canvas__port--output"
                       [class.canvas__port--pending]="isPendingOutput(node.id, port.id)"
                       [attr.data-testid]="'port-output-' + node.id + '-' + port.id"
+                      [attr.title]="portOutputHint(node.id, port.id, port.name, port.dataType)"
                       (click)="onOutputPortClick(node.id, port.id, $event)"
                     >
+                      @if (portOutputTargetLabels(node.id, port.id); as targets) {
+                        @if (targets.length) {
+                          <span class="canvas__port-source">{{ targets.join(', ') }} →</span>
+                        }
+                      }
                       <span class="canvas__port-name">{{ port.name }}</span>
                       <span class="canvas__port-type">{{ port.dataType }}</span>
                       <span class="canvas__port-dot" aria-hidden="true"></span>

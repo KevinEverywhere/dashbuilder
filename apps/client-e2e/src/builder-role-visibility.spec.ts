@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { addFromPalette, expandInspectorSection, openBuilder, selectAppOption, selectCanvasNode } from './test-helpers';
+import { addFromPalette, expandInspectorSection, inspectFromPalette, openBuilder, selectAppOption, selectCanvasNode } from './test-helpers';
 
 test.describe('Builder role visibility', () => {
   test.beforeEach(async ({ page }) => {
@@ -8,7 +8,7 @@ test.describe('Builder role visibility', () => {
 
   test('shows and hides role gates based on preview role', async ({ page }) => {
     await addFromPalette(page, 'visual.input.text');
-    await selectCanvasNode(page, page.getByTestId('canvas-node'));
+    await inspectFromPalette(page, 'visual.input.text');
     await expandInspectorSection(page, 'domain');
     await selectAppOption(page, 'domain-role-preset', 'admin');
     await selectAppOption(page, 'domain-role-preset', 'viewer');

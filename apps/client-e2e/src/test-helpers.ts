@@ -26,6 +26,11 @@ export async function expandPaletteGroupForType(page: Page, type: string): Promi
   await expandPaletteGroup(page, groupId);
 }
 
+export async function inspectFromPalette(page: Page, type: string): Promise<void> {
+  await expandPaletteGroupForType(page, type);
+  await page.locator('.palette__item').filter({ has: page.getByTestId(`palette-add-${type}`) }).click();
+}
+
 export async function addFromPalette(page: Page, type: string): Promise<void> {
   await expandPaletteGroupForType(page, type);
   await page.getByTestId(`palette-add-${type}`).click();

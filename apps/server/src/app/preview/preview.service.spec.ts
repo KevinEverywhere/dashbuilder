@@ -7,8 +7,8 @@ describe('PreviewService', () => {
     service = new PreviewService();
   });
 
-  it('generates mock preview data', () => {
-    const data = service.generateMockData({
+  it('generates preview content from preview-content.json', () => {
+    const data = service.generatePreviewContent({
       projectName: 'Revenue Ops',
       compositeName: 'Dashboard',
       dateRangePreset: 'last-30-days',
@@ -27,8 +27,8 @@ describe('PreviewService', () => {
       projectName: 'Alpha',
       compositeName: 'Main',
     };
-    expect(service.generateMockData(request)).toEqual(
-      service.generateMockData(request),
+    expect(service.generatePreviewContent(request)).toEqual(
+      service.generatePreviewContent(request),
     );
   });
 });

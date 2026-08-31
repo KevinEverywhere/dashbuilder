@@ -7,6 +7,11 @@ import type {
 } from './preview-types';
 import { mapRowsToGlobeMarkers, resolveGlobeFields, type PreviewGlobeMarker } from './map-globe-markers';
 import { mapRowsToScatterPoints, resolveScatterFields } from './map-scatter-points';
+import {
+  BUILTIN_PREVIEW_CONTENT_SLICE,
+  clonePreviewContentSlice,
+  type PreviewContentSlice,
+} from './preview-content';
 
 export interface PreviewBindingInput {
   id: string;
@@ -36,6 +41,10 @@ export interface PreviewDataRequest {
   limit?: number;
   nodes?: PreviewNodeInput[];
   bindings?: PreviewBindingInput[];
+  /** Override content slice (defaults to preview-content.json). */
+  contentSlice?: PreviewContentSlice;
+  /** @deprecated Use contentSlice */
+  sampleData?: PreviewContentSlice;
 }
 
 export interface NodePreviewSlice {
@@ -68,20 +77,25 @@ export interface PreviewDataBundle {
   nodes: Record<string, NodePreviewSlice>;
 }
 
-const COMPANY_PREFIXES = ['Northwind', 'Acme', 'Blue Harbor', 'Summit', 'Lumen'];
-const COMPANY_SUFFIXES = ['Logistics', 'Analytics', 'Systems', 'Group', 'Works'];
-const STATUSES = ['Active', 'Pending', 'Review', 'Closed'];
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const NEWS_HEADLINES = [
-  'Markets rally as inflation cools in latest report',
-  'Regional summit focuses on cross-border trade policy',
-  'Tech leaders unveil open standards for AI safety',
-  'Local team advances after overtime thriller',
-  'Researchers publish breakthrough in battery storage',
-  'City council approves downtown transit expansion',
-];
-const NEWS_SOURCES = ['Global Wire', 'Metro Daily', 'Tech Chronicle', 'Sports Network', 'Science Today'];
-const NEWS_REGIONS = ['US', 'UK', 'EU', 'Global'];
+export type {
+  PreviewContentDocument,
+  PreviewContentSlice,
+  PreviewContentSource,
+  PreviewSampleData,
+} from './preview-content';
+export {
+  BUILTIN_PREVIEW_CONTENT,
+  BUILTIN_PREVIEW_CONTENT_SLICE,
+  BUILTIN_PREVIEW_SAMPLE_DATA,
+  clonePreviewContentSlice,
+  clonePreviewSampleData,
+  flattenPreviewContent,
+  formatPreviewRowNames,
+  parsePreviewContentDocument,
+  parsePreviewSampleData,
+  previewContentSourceForTable,
+  resolvePreviewContent,
+} from './preview-content';
 
 export const PRESET_LABELS: Record<string, string> = {
   'last-7-days': 'Last 7 days',
@@ -95,24 +109,10 @@ const PRESET_DAYS: Record<string, number> = {
   qtd: 90,
 };
 
-export function hashSeed(input: string): number {
-  let hash = 0;
-  for (let index = 0; index < input.length; index += 1) {
-    hash = (hash * 31 + input.charCodeAt(index)) >>> 0;
-  }
-  return hash || 1;
-}
-
-export function createRandom(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 0xffffffff;
-  };
-}
-
-export function pick<T>(values: T[], random: () => number): T {
-  return values[Math.floor(random() * values.length)] ?? values[0];
+function resolveContentSlice(request: PreviewDataRequest): PreviewContentSlice {
+  const slice =
+    request.contentSlice ?? request.sampleData ?? BUILTIN_PREVIEW_CONTENT_SLICE;
+  return clonePreviewContentSlice(slice);
 }
 
 export function formatIsoDate(base: Date, offsetDays: number): string {
@@ -180,44 +180,36 @@ function rowsToChartPoints(rows: PreviewRow[]): PreviewChartPoint[] {
   }));
 }
 
-function generateBaseRows(request: PreviewDataRequest, random: () => number): PreviewRow[] {
-  const limit = Math.min(Math.max(request.limit ?? 10, 3), 12);
-  const baseDate = new Date('2026-08-08T12:00:00.000Z');
+function resolveTableRows(
+  content: PreviewContentSlice,
+  request: PreviewDataRequest,
+): PreviewRow[] {
+  const limit = Math.min(Math.max(request.limit ?? content.tableRows.length, 3), 12);
   const clientName = request.domainContext?.client?.name?.trim();
-
-  return Array.from({ length: limit }, (_, index) => {
-    const prefix = pick(COMPANY_PREFIXES, random);
-    const suffix = pick(COMPANY_SUFFIXES, random);
-    return {
-      id: String(index + 1),
-      name: clientName ? `${clientName} ${suffix}` : `${prefix} ${suffix}`,
-      status: pick(STATUSES, random),
-      amount: Math.round(20_000 + random() * 60_000),
-      date: formatIsoDate(baseDate, -(index + 1)),
-    };
-  });
+  return content.tableRows.slice(0, limit).map((row, index) => ({
+    ...row,
+    id: row.id || String(index + 1),
+    name: clientName ? `${clientName} — ${row.name}` : row.name,
+  }));
 }
 
-function generateNewsRows(request: PreviewDataRequest, random: () => number): PreviewNewsRow[] {
-  const limit = Math.min(Math.max(request.limit ?? 8, 4), 12);
-  const baseDate = new Date('2026-08-10T12:00:00.000Z');
+function resolveNewsRows(content: PreviewContentSlice, request: PreviewDataRequest): PreviewNewsRow[] {
+  const limit = Math.min(Math.max(request.limit ?? content.newsRows.length, 4), 12);
+  return content.newsRows.slice(0, limit).map((row, index) => ({
+    ...row,
+    id: row.id || `news-${index + 1}`,
+  }));
+}
 
-  return Array.from({ length: limit }, (_, index) => {
-    const headline = pick(NEWS_HEADLINES, random);
-    const source = pick(NEWS_SOURCES, random);
-    const region = pick(NEWS_REGIONS, random);
-    const slug = headline.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48);
-
-    return {
-      id: `news-${index + 1}`,
-      headline,
-      source,
-      region,
-      publishedAt: formatIsoDate(baseDate, -(index + 1)),
-      summary: `${headline}. Analysts note regional impacts across ${region} markets while ${source} continues coverage.`,
-      url: `https://news.example/${region.toLowerCase()}/${slug}`,
-    };
-  });
+function resolveSelectOptions(
+  content: PreviewContentSlice,
+  request: PreviewDataRequest,
+): PreviewSelectOption[] {
+  const projectLabel = request.domainContext?.project?.name ?? request.projectName ?? 'Project';
+  return [
+    ...content.selectOptions.map((option) => ({ ...option })),
+    { label: `${projectLabel} KPI`, value: 'project-kpi' },
+  ];
 }
 
 function readNodeBoolean(node: PreviewNodeInput | undefined, key: string, fallback: boolean): boolean {
@@ -264,11 +256,8 @@ function findBindingSource(
   );
 }
 
-function buildDefaultChartPoints(random: () => number): PreviewChartPoint[] {
-  return WEEKDAYS.map((label) => ({
-    label,
-    value: Math.round(35 + random() * 45),
-  }));
+function buildDefaultChartPoints(content: PreviewContentSlice): PreviewChartPoint[] {
+  return content.chartPoints.map((point) => ({ ...point }));
 }
 
 export function resolvePreviewGraph(
@@ -278,21 +267,14 @@ export function resolvePreviewGraph(
   const bindings = request.bindings ?? [];
   const domain = request.domainContext;
   const domainPreset = domain?.defaultTimeRange ?? 'last-7-days';
-  const seedKey = [
-    request.projectName ?? 'project',
-    request.compositeName ?? 'composite',
-    domain?.client?.id ?? domain?.client?.name ?? '',
-    domain?.project?.id ?? domain?.project?.name ?? '',
-    request.dateRangePreset ?? domainPreset,
-  ].join(':');
-  const random = createRandom(hashSeed(seedKey));
+  const content = resolveContentSlice(request);
 
   const activePreset = resolveActivePreset(request, nodes, domainPreset);
-  const dateRangeLabel = PRESET_LABELS[activePreset] ?? PRESET_LABELS['last-7-days'];
+  const dateRangeLabel = PRESET_LABELS[activePreset] ?? content.dateRangeLabel;
 
-  const baseRows = generateBaseRows(request, random);
+  const baseRows = resolveTableRows(content, request);
   const filteredRows = filterRowsByPreset(baseRows, activePreset);
-  const newsRows = generateNewsRows(request, random);
+  const newsRows = resolveNewsRows(content, request);
 
   const nodeSlices: Record<string, NodePreviewSlice> = {};
   const tableNodes = nodes.filter((node) => node.type === 'visual.table');
@@ -461,18 +443,10 @@ export function resolvePreviewGraph(
     newsRows: primaryNewsRows,
     chartPoints: tableNodes.length
       ? rowsToChartPoints(primaryTableRows)
-      : buildDefaultChartPoints(random),
-    selectOptions: [
-      { label: 'Revenue', value: 'revenue' },
-      { label: 'Orders', value: 'orders' },
-      { label: 'Customers', value: 'customers' },
-      {
-        label: `${domain?.project?.name ?? request.projectName ?? 'Project'} KPI`,
-        value: 'project-kpi',
-      },
-    ],
-    kpiValue: Math.round(90_000 + random() * 80_000),
-    kpiDelta: Math.round((random() * 12 + 2) * 10) / 10,
+      : buildDefaultChartPoints(content),
+    selectOptions: resolveSelectOptions(content, request),
+    kpiValue: content.kpiValue,
+    kpiDelta: content.kpiDelta,
     dateRangeLabel,
     nodes: nodeSlices,
   };

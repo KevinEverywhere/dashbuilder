@@ -4,11 +4,18 @@
       <h2>Preview</h2>
       <span class="preview__count">{{ state.previewNodes().length }} visual component(s)</span>
     </div>
-    @if (previewData.loading()) {
-      <span class="preview__status" data-testid="preview-loading">Loading mock data…</span>
-    }     @else {
+      @if (previewData.loading()) {
+      <span class="preview__status" data-testid="preview-loading">Loading preview content…</span>
+    } @else {
       <span class="preview__status" data-testid="preview-data-source">
-        Data source: {{ previewData.source() === 'api' ? 'API' : 'Fallback' }}
+        Data source:
+        {{
+          previewData.source() === 'api'
+            ? 'API'
+            : previewData.source() === 'file'
+              ? 'preview-content.json'
+              : 'Fallback'
+        }}
       </span>
     }
     <div class="preview__role-switch">
@@ -52,7 +59,6 @@
           <div
             class="preview__node"
             data-testid="preview-node"
-            [class.preview__node--selected]="state.isNodeSelected(node.id)"
             [class.preview__node--fullscreen]="isFullscreenNode(node)"
             [style.left.px]="node.layout?.x ?? 24"
             [style.top.px]="node.layout?.y ?? 24"

@@ -130,6 +130,35 @@ export class PreviewNodeComponent {
     () => this.slice()?.tableRows ?? this.previewData.bundle().tableRows,
   );
 
+  /** Fewer rows on the design canvas so port wiring stays visible. */
+  protected readonly visibleTableRows = computed(() => {
+    const pageSize = this.readNumber('pageSize', 25);
+    const limit = this.builderMode() ? Math.min(pageSize, 4) : pageSize;
+    return this.tableRows().slice(0, limit);
+  });
+
+  protected readonly tablePreviewOrigin = computed(() => {
+    if (!this.builderMode() || this.node().type !== 'visual.table') {
+      return null;
+    }
+    const slice = this.slice();
+    if (slice?.linkedToData) {
+      return 'live' as const;
+    }
+    const wired = this.state.bindings().some(
+      (binding) =>
+        binding.targetNodeId === this.node().id && binding.targetPortId === 'data',
+    );
+    if (wired) {
+      return 'wired' as const;
+    }
+    return 'mock' as const;
+  });
+
+  protected readonly previewRowPreview = computed(() =>
+    this.previewData.previewRowPreviewForNode(this.node().id),
+  );
+
   protected tableCell(row: PreviewRow, key: string): string | number {
     if (key === 'name') {
       return row.name;

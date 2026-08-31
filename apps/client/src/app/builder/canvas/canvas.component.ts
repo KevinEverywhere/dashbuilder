@@ -6,6 +6,7 @@ import { BuilderTabNavigationService } from '../builder-tab-navigation.service';
 import { CreationWizardService } from '../creation-wizard/creation-wizard.service';
 import { PreviewNodeComponent } from '../preview/preview-node.component';
 import {
+  CANVAS_DEFAULT_NODE_WIDTH,
   CANVAS_MIN_NODE_HEIGHT,
   clampCanvasNodeHeight,
   clampCanvasNodeWidth,
@@ -13,6 +14,7 @@ import {
 } from './canvas-layout';
 import {
   type CanvasViewport,
+  canvasNodeContentMinHeight,
   canvasNodeHeaderHeight,
   computeCanvasContentBounds,
   estimateCanvasNodeHeight,
@@ -63,6 +65,8 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   private resizeState: ResizeState | null = null;
 
   @ViewChild('renameInput') private renameInputRef?: ElementRef<HTMLInputElement>;
+
+  protected readonly defaultNodeWidth = CANVAS_DEFAULT_NODE_WIDTH;
 
   protected readonly viewportScroll = signal<CanvasViewport>({
     left: 0,
@@ -169,7 +173,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected promptLeft(prompt: PlacementPrompt): number {
     const source = this.state.nodesById().get(prompt.sourceNodeId);
-    return (source?.layout?.x ?? 24) + (source?.layout?.width ?? 220) + 16;
+    return (source?.layout?.x ?? 24) + (source?.layout?.width ?? CANVAS_DEFAULT_NODE_WIDTH) + 16;
   }
 
   protected promptTop(prompt: PlacementPrompt): number {
@@ -214,7 +218,6 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected onNamePointerDown(node: ComponentNode, event: PointerEvent): void {
     event.stopPropagation();
-    // Label fills the header; Shift+click must multi-select, not start rename.
     if (event.shiftKey) {
       this.state.selectNode(node.id, { additive: true });
       return;
@@ -222,14 +225,14 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.state.selectedNodeIdsSet().has(node.id)) {
       this.state.selectNode(node.id);
     }
+  }
+
+  protected onNameDoubleClick(node: ComponentNode, event: Event): void {
+    event.stopPropagation();
     this.startRename(node, event);
   }
 
   protected onNameClick(node: ComponentNode, event: Event): void {
-    event.stopPropagation();
-  }
-
-  protected stopPreviewEvent(event: Event): void {
     event.stopPropagation();
   }
 
@@ -315,14 +318,19 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.state.clearSelection();
   }
 
-  protected onHeaderPointerDown(nodeId: string, event: PointerEvent): void {
+  private isShellDragBlocked(target: EventTarget | null): boolean {
+    if (!(target instanceof Element)) {
+      return true;
+    }
+    return !!target.closest(
+      '.canvas__node-close, .canvas__node-name, .canvas__node-name-input, .canvas__port, .canvas__resize-handle, input, textarea, select, button, a, [contenteditable="true"]',
+    );
+  }
+
+  protected onShellPointerDown(nodeId: string, event: PointerEvent): void {
     event.stopPropagation();
 
-    const target = event.target;
-    if (
-      target instanceof Element &&
-      target.closest('.canvas__node-close, .canvas__node-name, .canvas__node-name-input')
-    ) {
+    if (this.isShellDragBlocked(event.target)) {
       return;
     }
 
@@ -366,7 +374,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
 
-  protected onHeaderPointerMove(event: PointerEvent): void {
+  protected onShellPointerMove(event: PointerEvent): void {
     if (!this.dragState || this.dragState.pointerId !== event.pointerId) {
       return;
     }
@@ -403,7 +411,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  protected onHeaderPointerUp(event: PointerEvent): void {
+  protected onShellPointerUp(event: PointerEvent): void {
     if (!this.dragState || this.dragState.pointerId !== event.pointerId) {
       return;
     }
@@ -447,7 +455,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     const deltaX = event.clientX - resizeState.startClientX;
     const deltaY = event.clientY - resizeState.startClientY;
     const node = this.state.nodes().find((item) => item.id === resizeState.nodeId);
-    const minHeight = node ? estimateCanvasNodeHeight(node) : CANVAS_MIN_NODE_HEIGHT;
+    const minHeight = node ? canvasNodeContentMinHeight(node) : CANVAS_MIN_NODE_HEIGHT;
     const rawHeight = resizeState.originHeight + deltaY;
     const nextHeight = clampCanvasNodeHeight(Math.max(minHeight, rawHeight));
 
@@ -528,6 +536,40 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected nodeHeight(node: ComponentNode): number {
     return estimateCanvasNodeHeight(node);
+  }
+
+  protected portInputHint(nodeId: string, portId: string, portName: string, dataType: string): string {
+    const sourceLabel = this.portInputSourceLabel(nodeId, portId);
+    if (sourceLabel) {
+      return `${portName} (${dataType}) — wired from ${sourceLabel}`;
+    }
+    return `${portName} (${dataType}) — click to connect an output port`;
+  }
+
+  protected portOutputHint(nodeId: string, portId: string, portName: string, dataType: string): string {
+    const targets = this.portOutputTargetLabels(nodeId, portId);
+    if (targets.length) {
+      return `${portName} (${dataType}) — wired to ${targets.join(', ')}`;
+    }
+    return `${portName} (${dataType}) — click to start a binding`;
+  }
+
+  protected portInputSourceLabel(nodeId: string, portId: string): string | null {
+    const binding = this.state
+      .bindings()
+      .find((entry) => entry.targetNodeId === nodeId && entry.targetPortId === portId);
+    if (!binding) {
+      return null;
+    }
+    return this.state.nodesById().get(binding.sourceNodeId)?.label ?? null;
+  }
+
+  protected portOutputTargetLabels(nodeId: string, portId: string): string[] {
+    return this.state
+      .bindings()
+      .filter((entry) => entry.sourceNodeId === nodeId && entry.sourcePortId === portId)
+      .map((entry) => this.state.nodesById().get(entry.targetNodeId)?.label)
+      .filter((label): label is string => !!label);
   }
 
   private edgeForBinding(

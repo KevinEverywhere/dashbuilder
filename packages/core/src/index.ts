@@ -1,3 +1,4 @@
+export * from './lib/bindings';
 export * from './lib/constants';
 export * from './lib/health';
 export * from './lib/model/data-types';

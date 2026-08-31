@@ -17,7 +17,9 @@ import {
   NodeLayout,
   PropertySchema,
   defaultComponentRegistry,
+  nodeHasRowsetDataInput,
   parseRoleGateAllowedRoles,
+  resolveDataWiring,
   resolveRoleOptions,
 } from '@rosettadash/core';
 import {
@@ -31,12 +33,13 @@ import {
   BuilderTabNavigationService,
 } from '../builder-tab-navigation.service';
 import { BuilderWorkspaceLayoutService } from '../builder-workspace-layout.service';
+import { DataWiringPanelComponent } from './data-wiring-panel.component';
 import { DomainContextPanelComponent } from './domain-context-panel.component';
 import { VersionHistoryPanelComponent } from './version-history-panel.component';
 
 @Component({
   selector: 'app-inspector',
-  imports: [JsonPipe, FormsModule, DomainContextPanelComponent, VersionHistoryPanelComponent, AppSelectComponent],
+  imports: [JsonPipe, FormsModule, DataWiringPanelComponent, DomainContextPanelComponent, VersionHistoryPanelComponent, AppSelectComponent],
   templateUrl: './inspector.component.html',
   styleUrl: './inspector.component.scss',
 })
@@ -84,6 +87,31 @@ export class InspectorComponent implements OnInit, OnDestroy {
   protected readonly canEditPlacement = computed(
     () => this.node()?.layout !== undefined && this.state.selectedNodeIds().length === 1,
   );
+  protected readonly showDataWiring = computed(() => {
+    const node = this.node();
+    return node ? nodeHasRowsetDataInput(defaultComponentRegistry, node.type) : false;
+  });
+  protected readonly dataWiringHeaderHint = computed(() => {
+    const node = this.node();
+    if (!node || !this.showDataWiring()) {
+      return null;
+    }
+    const report = resolveDataWiring(
+      this.state.nodes(),
+      this.state.bindings(),
+      defaultComponentRegistry,
+      node.id,
+    );
+    if (!report) {
+      return null;
+    }
+    if (report.sourceNodeLabel && report.sourceNodeType) {
+      const typeLabel =
+        defaultComponentRegistry.get(report.sourceNodeType)?.label ?? report.sourceNodeType;
+      return `${report.sourceNodeLabel} · ${typeLabel}`;
+    }
+    return 'No source connected';
+  });
   protected readonly nodeLayout = computed(() => this.node()?.layout ?? null);
   protected readonly canvasGridSize = CANVAS_GRID_SIZE;
   protected readonly canvasMinNodeWidth = CANVAS_MIN_NODE_WIDTH;
@@ -132,26 +160,6 @@ export class InspectorComponent implements OnInit, OnDestroy {
   protected isPropertyDimmed(prop: PropertySchema): boolean {
     return prop.key === 'staticOptions' && this.hasOptionsBinding();
   }
-
-  /** Primary form controls on one row. */
-  protected readonly primaryPropertyKeys = ['label', 'id', 'required', 'border'] as const;
-
-  protected readonly primaryProperties = computed(() => {
-    const byKey = new Map(this.editableProperties().map((prop) => [prop.key, prop]));
-    return this.primaryPropertyKeys
-      .map((key) => byKey.get(key))
-      .filter((prop): prop is PropertySchema => prop !== undefined);
-  });
-
-  protected readonly placeholderProperty = computed(() =>
-    this.editableProperties().find((prop) => prop.key === 'placeholder') ?? null,
-  );
-
-  /** Remaining properties in a compact 2-column grid. */
-  protected readonly secondaryProperties = computed(() => {
-    const reserved = new Set<string>([...this.primaryPropertyKeys, 'placeholder']);
-    return this.editableProperties().filter((prop) => !reserved.has(prop.key));
-  });
 
   constructor() {
     effect(() => {
@@ -214,10 +222,13 @@ export class InspectorComponent implements OnInit, OnDestroy {
     }
 
     this.expandedSectionIds.update((current) => {
-      if (current.has(sectionId) && current.size === 1) {
-        return new Set();
+      const next = new Set(current);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
       }
-      return new Set([sectionId]);
+      return next;
     });
     this.suggestionBrowseMode.set(false);
     this.bindingBrowseMode.set(false);
@@ -350,7 +361,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
   protected openSuggestionsBrowse(): void {
     this.bindingBrowseMode.set(false);
     this.suggestionBrowseMode.set(true);
-    this.expandedSectionIds.set(new Set(['suggestions']));
+    this.expandedSectionIds.set(this.withDataWiringExpanded(new Set(['suggestions'])));
     setTimeout(() => {
       const firstAction = document.querySelector<HTMLElement>(
         '[data-testid="inspector-suggestions"] [data-suggestion-action]',
@@ -361,7 +372,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   protected closeSuggestionBrowse(): void {
     this.suggestionBrowseMode.set(false);
-    this.expandedSectionIds.set(new Set());
+    this.expandedSectionIds.set(this.defaultExpandedSections());
     setTimeout(() => {
       document
         .querySelector<HTMLElement>('[data-builder-tab="suggestions"]')
@@ -383,7 +394,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   protected closeBindingBrowse(): void {
     this.bindingBrowseMode.set(false);
-    this.expandedSectionIds.set(new Set());
+    this.expandedSectionIds.set(this.defaultExpandedSections());
     setTimeout(() => {
       document
         .querySelector<HTMLElement>('[data-builder-tab="bindings"]')
@@ -428,7 +439,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
     }
 
     const stops: BuilderInspectorTabStop[] = [
-      { key: 'inspector-name', sectionId: 'overview' },
+      { key: 'inspector-name', sectionId: 'properties' },
     ];
 
     if (this.canEditPlacement()) {
@@ -454,13 +465,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
       }
     }
 
-    for (const prop of this.primaryProperties()) {
-      stops.push({ key: `prop-${prop.key}`, sectionId: 'properties' });
-    }
-    if (this.placeholderProperty()) {
-      stops.push({ key: 'prop-placeholder', sectionId: 'properties' });
-    }
-    for (const prop of this.secondaryProperties()) {
+    for (const prop of this.editableProperties()) {
       stops.push({ key: `prop-${prop.key}`, sectionId: 'properties' });
     }
 
@@ -469,12 +474,23 @@ export class InspectorComponent implements OnInit, OnDestroy {
   }
 
   private defaultExpandedSections(): ReadonlySet<string> {
-    // Node editing: accordion — start collapsed; tab focus opens one section.
     if (this.node()) {
-      return new Set();
+      if (this.showDataWiring()) {
+        const report = resolveDataWiring(
+          this.state.nodes(),
+          this.state.bindings(),
+          defaultComponentRegistry,
+          this.node()!.id,
+        );
+        if (report?.status === 'unwired') {
+          return new Set(['data-wiring']);
+        }
+        return new Set(['data-wiring', 'placement', 'properties']);
+      }
+      return new Set(['placement', 'properties']);
     }
 
-    const next = new Set<string>(['overview']);
+    const next = new Set<string>();
     const def = this.definition();
     if (def) {
       if (def.properties.length) {
@@ -485,6 +501,13 @@ export class InspectorComponent implements OnInit, OnDestroy {
       }
     }
     return next;
+  }
+
+  private withDataWiringExpanded(sectionIds: ReadonlySet<string>): ReadonlySet<string> {
+    if (!this.showDataWiring()) {
+      return sectionIds;
+    }
+    return new Set([...sectionIds, 'data-wiring']);
   }
 
   protected onHeaderClick(): void {

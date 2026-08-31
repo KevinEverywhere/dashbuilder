@@ -63,7 +63,7 @@ const TEXTAREA_ROW_HEIGHT = 22;
 /** Extra preview height beyond single-line before text becomes multiline. */
 const TEXT_MULTILINE_THRESHOLD_PX = 24;
 
-const DEFAULT_FORM_FIELD_WIDTH = 280;
+const DEFAULT_FORM_FIELD_WIDTH = 336;
 const DEFAULT_FORM_FIELD_HEIGHT =
   LABEL_LINE_HEIGHT + FIELD_GAP + INPUT_HEIGHT + FORM_FIELD_PADDING * 2;
 

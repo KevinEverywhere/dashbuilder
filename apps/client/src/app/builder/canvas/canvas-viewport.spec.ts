@@ -1,7 +1,9 @@
 import type { ComponentNode } from '@rosettadash/core';
 import {
   CANVAS_MIN_CONTENT_HEIGHT_PX,
+  canvasNodeContentMinHeight,
   computeCanvasContentBounds,
+  estimateCanvasNodeHeight,
   filterVisibleCanvasNodes,
   isNodeInViewport,
 } from './canvas-viewport';
@@ -98,5 +100,15 @@ describe('canvas viewport helpers', () => {
       createNode({ layout: { x: 24, y: 1200, width: 220, height: 120 } }),
     ]);
     expect(bounds.height).toBeGreaterThan(1200);
+  });
+
+  it('lets content min height stay below an expanded layout height', () => {
+    const node = createNode({
+      type: 'visual.kpi',
+      layout: { x: 24, y: 24, width: 220, height: 320 },
+      ports: { inputs: [], outputs: [] },
+    });
+    expect(canvasNodeContentMinHeight(node)).toBeLessThan(320);
+    expect(estimateCanvasNodeHeight(node)).toBe(320);
   });
 });

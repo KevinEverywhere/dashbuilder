@@ -30,6 +30,8 @@ import {
   type PlacementPrompt,
 } from '@rosettadash/core';
 import {
+  CANVAS_DEFAULT_NODE_MIN_HEIGHT,
+  CANVAS_DEFAULT_NODE_WIDTH,
   CANVAS_GRID_SIZE,
   clampCanvasNodeHeight,
   clampCanvasNodeWidth,
@@ -191,7 +193,12 @@ export class BuilderStateService {
         if (!patch) {
           return node;
         }
-        const current = node.layout ?? { x: 24, y: 24, width: 220, height: 72 };
+        const current = node.layout ?? {
+          x: 24,
+          y: 24,
+          width: CANVAS_DEFAULT_NODE_WIDTH,
+          height: CANVAS_DEFAULT_NODE_MIN_HEIGHT,
+        };
         const next: NodeLayout = { ...current, ...patch };
         if (patch.x !== undefined) {
           next.x = snapToCanvasGrid(patch.x);
@@ -324,8 +331,8 @@ export class BuilderStateService {
 
     const layout = computeCompanionLayout(source.layout, prompt.sourceType, companionType, {
       gridSize: CANVAS_GRID_SIZE,
-      defaultWidth: clampCanvasNodeWidth(220),
-      defaultHeight: clampCanvasNodeHeight(72),
+      defaultWidth: clampCanvasNodeWidth(CANVAS_DEFAULT_NODE_WIDTH),
+      defaultHeight: clampCanvasNodeHeight(CANVAS_DEFAULT_NODE_MIN_HEIGHT),
     });
 
     const node = this.addNodeFromDefinition(definition, {
@@ -448,12 +455,42 @@ export class BuilderStateService {
   ): NodeLayout {
     const defaults = defaultComponentRegistry.createNode(type);
     const presentation = resolvePresentationDimensions(defaults);
-    return {
-      x: partial.x,
-      y: partial.y,
-      width: clampCanvasNodeWidth(partial.width ?? presentation?.width ?? 220),
-      height: clampCanvasNodeHeight(partial.height ?? presentation?.height ?? 72),
+    const width = clampCanvasNodeWidth(
+      partial.width ?? presentation?.width ?? CANVAS_DEFAULT_NODE_WIDTH,
+    );
+
+    if (partial.height !== undefined) {
+      return {
+        x: partial.x,
+        y: partial.y,
+        width,
+        height: clampCanvasNodeHeight(partial.height),
+      };
+    }
+
+    if (presentation?.height !== undefined) {
+      return {
+        x: partial.x,
+        y: partial.y,
+        width,
+        height: clampCanvasNodeHeight(presentation.height),
+      };
+    }
+
+    const draftNode: ComponentNode = {
+      ...defaults,
+      layout: {
+        x: partial.x,
+        y: partial.y,
+        width,
+        height: CANVAS_DEFAULT_NODE_MIN_HEIGHT,
+      },
     };
+    const height = clampCanvasNodeHeight(
+      Math.max(CANVAS_DEFAULT_NODE_MIN_HEIGHT, estimateCanvasNodeHeight(draftNode)),
+    );
+
+    return { x: partial.x, y: partial.y, width, height };
   }
 
   private syncPresentationLayout(node: ComponentNode): void {
@@ -665,6 +702,41 @@ export class BuilderStateService {
     }
 
     this.bindingMessage.set(result.error);
+  }
+
+  /** One-click connect from the inspector (records history + suggestions). */
+  connectBinding(
+    sourceNodeId: string,
+    sourcePortId: string,
+    targetNodeId: string,
+    targetPortId: string,
+  ): CreateBindingResult {
+    const before = this.captureHistorySnapshot();
+    const result = this.createBinding(
+      sourceNodeId,
+      sourcePortId,
+      targetNodeId,
+      targetPortId,
+    );
+
+    if (result.ok) {
+      this.history.record(before);
+      this.syncHistoryAvailability();
+      this.bindingMessage.set(null);
+      this.mergeSuggestions(
+        evaluateDefaults(
+          this.defaultsContext(),
+          { type: 'bindingCreated', bindingId: result.binding.id },
+          defaultComponentRegistry,
+          { dismissedIds: this.dismissedSuggestionIds() },
+        ),
+      );
+      this.markDirty();
+      return result;
+    }
+
+    this.bindingMessage.set(result.error);
+    return result;
   }
 
   createBinding(

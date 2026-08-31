@@ -15,7 +15,7 @@ test.describe('Builder placement inspector', () => {
     await expandInspectorSection(page, 'placement');
     await expect(page.getByTestId('inspector-layout-x')).toHaveValue('32');
     await expect(page.getByTestId('inspector-layout-y')).toHaveValue('32');
-    await expect(page.getByTestId('inspector-layout-width')).toHaveValue('288');
+    await expect(page.getByTestId('inspector-layout-width')).toHaveValue('336');
     await expect(page.getByTestId('inspector-layout-height')).toHaveValue('72');
   });
 

@@ -20,7 +20,7 @@
   } @else if (definition(); as def) {
     <div class="inspector__workspace">
       <div class="inspector__scroll">
-        @if (hasComposite()) {
+        @if (hasComposite() && !isEditingNode()) {
           <section
             class="inspector__group"
             [class.inspector__group--expanded]="isSectionExpanded('domain')"
@@ -34,10 +34,14 @@
               (click)="toggleSection('domain')"
             >
               <span class="inspector__group-chevron" aria-hidden="true"></span>
-              <span class="inspector__group-label">Domain context</span>
+              <span class="inspector__group-label">Composite scope</span>
             </button>
             @if (isSectionExpanded('domain')) {
               <div class="inspector__group-panel" data-testid="inspector-group-panel-domain">
+                <p class="inspector__scope-hint">
+                  Client, project, time range, and roles for this dashboard —
+                  used in preview mock data, export queries, and role gates.
+                </p>
                 <app-domain-context-panel />
               </div>
             }
@@ -66,48 +70,38 @@
           </section>
         }
 
-        <section
-          class="inspector__group"
-          [class.inspector__group--expanded]="isSectionExpanded('overview')"
-          data-testid="inspector-group-overview"
-        >
-          <button
-            type="button"
-            class="inspector__group-header"
-            data-testid="inspector-group-toggle-overview"
-            [attr.aria-expanded]="isSectionExpanded('overview')"
-            (click)="toggleSection('overview')"
-          >
-            <span class="inspector__group-chevron" aria-hidden="true"></span>
-            <span class="inspector__group-label">Overview</span>
-          </button>
-          @if (isSectionExpanded('overview')) {
-            <div class="inspector__group-panel" data-testid="inspector-group-panel-overview">
-              <h3 class="inspector__title">{{ def.label }}</h3>
-              <p class="inspector__type">{{ def.type }}</p>
-              @if (node(); as selectedNode) {
-                <div class="inspector__field">
-                  <label for="node-label">Name</label>
-                  <input
-                    id="node-label"
-                    type="text"
-                    data-testid="inspector-node-label"
-                    data-builder-tab="inspector-name"
-                    [value]="labelDraft()"
-                    (focus)="onLabelFocus()"
-                    (input)="onLabelInput($any($event.target).value)"
-                    (blur)="commitNodeLabel(selectedNode.id)"
-                    (keydown.enter)="commitNodeLabel(selectedNode.id)"
-                    (keydown.escape)="cancelNodeLabelEdit($event)"
-                  />
-                </div>
-              }
-              @if (def.description) {
-                <p class="inspector__description">{{ def.description }}</p>
-              }
-            </div>
+        @if (isEditingNode() && definition(); as def) {
+          @if (def.description) {
+            <p class="inspector__component-hint">{{ def.description }}</p>
           }
-        </section>
+        }
+
+        @if (showDataWiring()) {
+          <section
+            class="inspector__group"
+            [class.inspector__group--expanded]="isSectionExpanded('data-wiring')"
+            data-testid="inspector-group-data-wiring"
+          >
+            <button
+              type="button"
+              class="inspector__group-header inspector__group-header--with-sub"
+              data-testid="inspector-group-toggle-data-wiring"
+              [attr.aria-expanded]="isSectionExpanded('data-wiring')"
+              (click)="toggleSection('data-wiring')"
+            >
+              <span class="inspector__group-chevron" aria-hidden="true"></span>
+              <span class="inspector__group-label">Data wiring</span>
+              @if (dataWiringHeaderHint(); as hint) {
+                <span class="inspector__group-sub">{{ hint }}</span>
+              }
+            </button>
+            @if (isSectionExpanded('data-wiring')) {
+              <div class="inspector__group-panel" data-testid="inspector-group-panel-data-wiring">
+                <app-data-wiring-panel />
+              </div>
+            }
+          </section>
+        }
 
         @if (canEditPlacement()) {
           <section
@@ -287,7 +281,7 @@
           </section>
         }
 
-        @if (isEditingNode() && editableProperties().length) {
+        @if (isEditingNode()) {
           <section
             class="inspector__group"
             [class.inspector__group--expanded]="isSectionExpanded('properties')"
@@ -302,16 +296,39 @@
             >
               <span class="inspector__group-chevron" aria-hidden="true"></span>
               <span class="inspector__group-label">Properties</span>
-              <span class="inspector__group-count">{{ editableProperties().length }}</span>
+              @if (editableProperties().length) {
+                <span class="inspector__group-count">{{ editableProperties().length + 1 }}</span>
+              }
             </button>
             @if (isSectionExpanded('properties')) {
               <div class="inspector__group-panel" data-testid="inspector-group-panel-properties">
-                @if (primaryProperties().length) {
-                  <div class="inspector__props-row inspector__props-row--primary">
-                    @for (prop of primaryProperties(); track prop.key) {
-                      <div class="inspector__field">
-                        <label [attr.for]="'prop-' + prop.key">{{ prop.label }}</label>
-                        @if (prop.type === 'boolean') {
+                <div class="inspector__props-row inspector__props-row--single">
+                  @if (node(); as selectedNode) {
+                    <div class="inspector__field">
+                      <label for="node-label">Name</label>
+                      <input
+                        id="node-label"
+                        type="text"
+                        data-testid="inspector-node-label"
+                        data-builder-tab="inspector-name"
+                        [value]="labelDraft()"
+                        (focus)="onLabelFocus()"
+                        (input)="onLabelInput($any($event.target).value)"
+                        (blur)="commitNodeLabel(selectedNode.id)"
+                        (keydown.enter)="commitNodeLabel(selectedNode.id)"
+                        (keydown.escape)="cancelNodeLabelEdit($event)"
+                      />
+                    </div>
+                  }
+                  @for (prop of editableProperties(); track prop.key) {
+                    <div
+                      class="inspector__field"
+                      [class.inspector__field--check]="prop.type === 'boolean'"
+                      [class.inspector__field--dimmed]="isPropertyDimmed(prop)"
+                    >
+                      <label [attr.for]="'prop-' + prop.key">{{ prop.label }}</label>
+                      @switch (prop.type) {
+                        @case ('boolean') {
                           <div class="inspector__check-control">
                             <input
                               [id]="'prop-' + prop.key"
@@ -319,100 +336,49 @@
                               [attr.data-testid]="'inspector-prop-' + prop.key"
                               [attr.data-builder-tab]="'prop-' + prop.key"
                               [checked]="readProperty(prop.key) === true"
-                              [disabled]="prop.readOnly === true"
+                              [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
                               (change)="updateProperty(prop, $any($event.target).checked)"
                             />
                           </div>
-                        } @else {
+                        }
+                        @case ('number') {
+                          <input
+                            [id]="'prop-' + prop.key"
+                            type="number"
+                            [attr.data-testid]="'inspector-prop-' + prop.key"
+                            [attr.data-builder-tab]="'prop-' + prop.key"
+                            [ngModel]="readProperty(prop.key)"
+                            [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
+                            [attr.readonly]="prop.readOnly === true ? true : null"
+                            (ngModelChange)="updateProperty(prop, $event)"
+                          />
+                        }
+                        @case ('select') {
+                          <app-select
+                            [attr.data-builder-tab]="'prop-' + prop.key"
+                            [testId]="'inspector-prop-' + prop.key"
+                            [options]="selectOptions(prop)"
+                            [ngModel]="readSelectProperty(prop.key)"
+                            [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
+                            (ngModelChange)="updateSelectProperty(prop, $event)"
+                          />
+                        }
+                        @default {
                           <input
                             [id]="'prop-' + prop.key"
                             type="text"
                             [attr.data-testid]="'inspector-prop-' + prop.key"
                             [attr.data-builder-tab]="'prop-' + prop.key"
                             [ngModel]="readProperty(prop.key)"
-                            [disabled]="prop.readOnly === true"
+                            [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
                             [attr.readonly]="prop.readOnly === true ? true : null"
                             (ngModelChange)="updateProperty(prop, $event)"
                           />
                         }
-                      </div>
-                    }
-                  </div>
-                }
-                @if (placeholderProperty(); as placeholderProp) {
-                  <div class="inspector__props-row inspector__props-row--placeholder">
-                    <div class="inspector__field">
-                      <label [attr.for]="'prop-' + placeholderProp.key">{{ placeholderProp.label }}</label>
-                      <input
-                        [id]="'prop-' + placeholderProp.key"
-                        type="text"
-                        [attr.data-testid]="'inspector-prop-' + placeholderProp.key"
-                        [attr.data-builder-tab]="'prop-' + placeholderProp.key"
-                        [ngModel]="readProperty(placeholderProp.key)"
-                        (ngModelChange)="updateProperty(placeholderProp, $event)"
-                      />
+                      }
                     </div>
-                  </div>
-                }
-                @if (secondaryProperties().length) {
-                  <div class="inspector__props-grid">
-                    @for (prop of secondaryProperties(); track prop.key) {
-                      <div
-                        class="inspector__field"
-                        [class.inspector__field--check]="prop.type === 'boolean'"
-                        [class.inspector__field--dimmed]="isPropertyDimmed(prop)"
-                      >
-                        <label [attr.for]="'prop-' + prop.key">{{ prop.label }}</label>
-                        @switch (prop.type) {
-                          @case ('boolean') {
-                            <input
-                              [id]="'prop-' + prop.key"
-                              type="checkbox"
-                              [attr.data-builder-tab]="'prop-' + prop.key"
-                              [checked]="readProperty(prop.key) === true"
-                              [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
-                              (change)="updateProperty(prop, $any($event.target).checked)"
-                            />
-                          }
-                          @case ('number') {
-                            <input
-                              [id]="'prop-' + prop.key"
-                              type="number"
-                              [attr.data-testid]="'inspector-prop-' + prop.key"
-                              [attr.data-builder-tab]="'prop-' + prop.key"
-                              [ngModel]="readProperty(prop.key)"
-                              [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
-                              [attr.readonly]="prop.readOnly === true ? true : null"
-                              (ngModelChange)="updateProperty(prop, $event)"
-                            />
-                          }
-                          @case ('select') {
-                            <app-select
-                              [attr.data-builder-tab]="'prop-' + prop.key"
-                              [testId]="'inspector-prop-' + prop.key"
-                              [options]="selectOptions(prop)"
-                              [ngModel]="readSelectProperty(prop.key)"
-                              [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
-                              (ngModelChange)="updateSelectProperty(prop, $event)"
-                            />
-                          }
-                          @default {
-                            <input
-                              [id]="'prop-' + prop.key"
-                              type="text"
-                              [attr.data-testid]="'inspector-prop-' + prop.key"
-                              [attr.data-builder-tab]="'prop-' + prop.key"
-                              [ngModel]="readProperty(prop.key)"
-                              [disabled]="prop.readOnly === true || isPropertyDimmed(prop)"
-                              [attr.readonly]="prop.readOnly === true ? true : null"
-                              (ngModelChange)="updateProperty(prop, $event)"
-                            />
-                          }
-                        }
-                      </div>
-                    }
-                  </div>
-                }
+                  }
+                </div>
               </div>
             }
           </section>

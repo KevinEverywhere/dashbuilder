@@ -21,6 +21,11 @@
           {
             "glob": "**/*",
             "input": "apps/client/public"
+          },
+          {
+            "glob": "preview-content.json",
+            "input": "packages/ui-primitives",
+            "output": "/"
           }
         ],
         "styles": [

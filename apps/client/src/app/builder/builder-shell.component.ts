@@ -24,6 +24,7 @@ import { ContentLibraryService } from '../admin/content-library.service';
 import { InspectorComponent } from './inspector/inspector.component';
 import { PaletteComponent } from './palette/palette.component';
 import { PreviewPanelComponent } from './preview/preview-panel.component';
+import { PreviewDataService } from './preview/preview-data.service';
 
 @Component({
   selector: 'app-builder-shell',
@@ -56,6 +57,7 @@ export class BuilderShellComponent implements OnInit {
   protected readonly creationWizard = inject(CreationWizardService);
   protected readonly assistance = inject(BuilderAssistanceService);
   private readonly aiAssist = inject(AiAssistService);
+  private readonly previewData = inject(PreviewDataService);
 
   protected readonly exportWizardOpen = signal(false);
   protected readonly aiDrawerOpen = signal(false);
@@ -88,6 +90,7 @@ export class BuilderShellComponent implements OnInit {
     await this.auth.initialize();
     this.featureFlags.initialize();
     this.contentLibrary.initialize();
+    void this.previewData.refreshPreviewContentFromFile();
     if (this.auth.authenticated()) {
       await this.projectService.initialize();
       if (this.creationWizard.shouldAutoShowWelcomeBanner()) {

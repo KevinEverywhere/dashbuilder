@@ -1,6 +1,10 @@
 import type { ComponentNode, NodeLayout } from '@rosettadash/core';
 import { resolvePresentationDimensions } from '@rosettadash/core';
-import { CANVAS_MIN_NODE_HEIGHT } from './canvas-layout';
+import {
+  CANVAS_DEFAULT_NODE_MIN_HEIGHT,
+  CANVAS_DEFAULT_NODE_WIDTH,
+  CANVAS_MIN_NODE_HEIGHT,
+} from './canvas-layout';
 
 export const CANVAS_VIEWPORT_CULL_THRESHOLD = 50;
 export const CANVAS_VIEWPORT_BUFFER_PX = 120;
@@ -11,7 +15,7 @@ export const CANVAS_MIN_CONTENT_HEIGHT_PX = 480;
 const PORT_ROW_HEIGHT = 22;
 const NODE_NAME_BAR_HEIGHT = 28;
 const NODE_SHELL_CHROME = 8;
-const DEFAULT_PREVIEW_HEIGHT = 54;
+const DEFAULT_PREVIEW_HEIGHT = 128;
 
 export interface CanvasViewport {
   left: number;
@@ -37,16 +41,20 @@ export function canvasNodeHeaderHeight(_node: ComponentNode): number {
   return NODE_NAME_BAR_HEIGHT;
 }
 
-export function estimateCanvasNodeHeight(node: ComponentNode): number {
+export function canvasNodeContentMinHeight(node: ComponentNode): number {
   const portCount = Math.max(node.ports.inputs.length, node.ports.outputs.length, 1);
   const previewHeight = canvasNodePreviewHeight(node);
-  const minHeight = Math.max(
+  return Math.max(
     CANVAS_MIN_NODE_HEIGHT,
     canvasNodeHeaderHeight(node) +
       previewHeight +
       portCount * PORT_ROW_HEIGHT +
       NODE_SHELL_CHROME,
   );
+}
+
+export function estimateCanvasNodeHeight(node: ComponentNode): number {
+  const minHeight = canvasNodeContentMinHeight(node);
   const layoutHeight = node.layout?.height;
   if (layoutHeight !== undefined && layoutHeight >= minHeight) {
     return layoutHeight;
@@ -68,7 +76,7 @@ export function computeCanvasContentBounds(
   for (const node of nodes) {
     const x = node.layout?.x ?? 24;
     const y = node.layout?.y ?? 24;
-    const width = node.layout?.width ?? 220;
+    const width = node.layout?.width ?? CANVAS_DEFAULT_NODE_WIDTH;
     const height = heightEstimator(node);
     maxRight = Math.max(maxRight, x + width);
     maxBottom = Math.max(maxBottom, y + height);
@@ -85,7 +93,12 @@ export function isNodeInViewport(
   viewport: CanvasViewport,
   bufferPx = CANVAS_VIEWPORT_BUFFER_PX,
 ): boolean {
-  const layout = node.layout ?? { x: 24, y: 24, width: 220, height: 72 };
+  const layout = node.layout ?? {
+    x: 24,
+    y: 24,
+    width: CANVAS_DEFAULT_NODE_WIDTH,
+    height: CANVAS_DEFAULT_NODE_MIN_HEIGHT,
+  };
   const height = estimateCanvasNodeHeight(node);
   const right = layout.x + layout.width;
   const bottom = layout.y + height;

@@ -49,9 +49,9 @@ test.describe('Builder page templates', () => {
     await applyTemplate(page, 'analytics-overview');
 
     await expect(page.getByText('7 component(s)')).toBeVisible();
-    await expect(page.getByTestId('canvas-node').filter({ hasText: 'Date range' })).toBeVisible();
-    await expect(page.getByTestId('canvas-node').filter({ hasText: 'Sales table' })).toBeVisible();
-    await expect(page.getByTestId('canvas-node').filter({ hasText: 'Trend chart' })).toBeVisible();
+    await expect(page.getByTestId('canvas-node-name').filter({ hasText: 'Date range' })).toBeVisible();
+    await expect(page.getByTestId('canvas-node-name').filter({ hasText: 'Sales table' })).toBeVisible();
+    await expect(page.getByTestId('canvas-node-name').filter({ hasText: 'Trend chart' })).toBeVisible();
 
     await page.getByTestId('mode-preview').click();
     await waitForPreviewData(page);

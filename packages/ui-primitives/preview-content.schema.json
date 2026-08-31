@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rosettadash.dev/schemas/preview-content.json",
+  "title": "RosettaDash preview content",
+  "description": "Authoring-time content for builder preview. Sources describe live PostgreSQL wiring; datasets hold sample rows until verified.",
+  "type": "object",
+  "required": ["version", "sources", "datasets"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "description": { "type": "string" },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["kind", "label"],
+        "properties": {
+          "kind": {
+            "enum": ["rowset", "chart", "metric", "options"]
+          },
+          "label": { "type": "string" },
+          "table": { "type": "string" },
+          "collection": { "type": "string" },
+          "connectionEnvKey": { "type": "string" },
+          "derivedFrom": { "type": "string" }
+        }
+      }
+    },
+    "datasets": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "object",
+          "properties": {
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["key", "header"],
+                "properties": {
+                  "key": { "type": "string" },
+                  "header": { "type": "string" },
+                  "numeric": { "type": "boolean" }
+                }
+              }
+            },
+            "rows": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/tableRow" }
+            }
+          }
+        },
+        "news": {
+          "type": "object",
+          "properties": {
+            "rows": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/newsRow" }
+            }
+          }
+        },
+        "revenueChart": {
+          "type": "object",
+          "properties": {
+            "points": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/chartPoint" }
+            }
+          }
+        },
+        "dashboardMetrics": {
+          "type": "object",
+          "properties": {
+            "kpiValue": { "type": "number" },
+            "kpiDelta": { "type": "number" }
+          }
+        },
+        "filters": {
+          "type": "object",
+          "properties": {
+            "selectOptions": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/selectOption" }
+            },
+            "dateRangeLabel": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tableRow": {
+      "type": "object",
+      "required": ["id", "name", "status", "amount", "date"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date" }
+      }
+    },
+    "newsRow": {
+      "type": "object",
+      "required": ["id", "headline", "source", "region", "publishedAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "headline": { "type": "string" },
+        "source": { "type": "string" },
+        "region": { "type": "string" },
+        "publishedAt": { "type": "string" },
+        "summary": { "type": "string" },
+        "url": { "type": "string" }
+      }
+    },
+    "chartPoint": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "label": { "type": "string" },
+        "value": { "type": "number" }
+      }
+    },
+    "selectOption": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "label": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}

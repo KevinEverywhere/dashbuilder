@@ -168,6 +168,19 @@
   }
   @case ('visual.table') {
     <div class="preview-table" data-testid="preview-table">
+      @if (tablePreviewOrigin() === 'mock') {
+        <p class="preview-table__origin" data-testid="preview-table-mock-banner">
+          Preview: {{ previewRowPreview() }} — wire a source in Data wiring
+        </p>
+      } @else if (tablePreviewOrigin() === 'wired') {
+        <p class="preview-table__origin preview-table__origin--wired">
+          Wired — verify in inspector to load live rows
+        </p>
+      } @else if (tablePreviewOrigin() === 'live') {
+        <p class="preview-table__origin preview-table__origin--live">
+          Live sample from verified source
+        </p>
+      }
       <table>
         <thead>
           <tr>
@@ -177,7 +190,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of tableRows().slice(0, readNumber('pageSize', 25)); track row.id) {
+          @for (row of visibleTableRows(); track row.id) {
             <tr
               class="preview-table__row"
               [class.preview-table__row--selected]="isSelectedTableRow(row)"

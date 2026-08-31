@@ -148,7 +148,7 @@ export class PreviewPanelComponent {
   }
 
   protected previewNodeWidth(node: ComponentNode): number {
-    return resolvePresentationDimensions(node)?.width ?? node.layout?.width ?? 220;
+    return resolvePresentationDimensions(node)?.width ?? node.layout?.width ?? 352;
   }
 
   protected previewNodeHeight(node: ComponentNode): number {

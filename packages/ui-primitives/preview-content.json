@@ -1,0 +1,162 @@
+{
+  "$schema": "./preview-content.schema.json",
+  "version": 1,
+  "description": "Design-time preview content for the builder. Each source maps to a dataset below and to a PostgreSQL table when wired live.",
+  "sources": {
+    "orders": {
+      "kind": "rowset",
+      "label": "Orders",
+      "table": "orders",
+      "connectionEnvKey": "DATABASE_URL"
+    },
+    "news": {
+      "kind": "rowset",
+      "label": "News feed",
+      "table": "news_articles",
+      "connectionEnvKey": "DATABASE_URL"
+    },
+    "revenueChart": {
+      "kind": "chart",
+      "label": "Revenue trend",
+      "derivedFrom": "orders"
+    },
+    "dashboardMetrics": {
+      "kind": "metric",
+      "label": "Dashboard KPI",
+      "derivedFrom": "orders"
+    },
+    "filters": {
+      "kind": "options",
+      "label": "Filter presets"
+    }
+  },
+  "datasets": {
+    "orders": {
+      "columns": [
+        { "key": "name", "header": "Name" },
+        { "key": "status", "header": "Status" },
+        { "key": "amount", "header": "Amount", "numeric": true },
+        { "key": "date", "header": "Date" }
+      ],
+      "rows": [
+        {
+          "id": "1",
+          "name": "Globex LLC",
+          "status": "Active",
+          "amount": 12400,
+          "date": "2026-08-07"
+        },
+        {
+          "id": "2",
+          "name": "Initech",
+          "status": "Pending",
+          "amount": 8900,
+          "date": "2026-08-06"
+        },
+        {
+          "id": "3",
+          "name": "Umbrella Co",
+          "status": "Review",
+          "amount": 15250,
+          "date": "2026-08-05"
+        },
+        {
+          "id": "4",
+          "name": "Stark Industries",
+          "status": "Closed",
+          "amount": 22100,
+          "date": "2026-08-04"
+        },
+        {
+          "id": "5",
+          "name": "Wayne Enterprises",
+          "status": "Active",
+          "amount": 18750,
+          "date": "2026-08-03"
+        },
+        {
+          "id": "6",
+          "name": "Hooli",
+          "status": "Active",
+          "amount": 9600,
+          "date": "2026-08-02"
+        },
+        {
+          "id": "7",
+          "name": "Pied Piper",
+          "status": "Pending",
+          "amount": 4300,
+          "date": "2026-08-01"
+        },
+        {
+          "id": "8",
+          "name": "Massive Dynamic",
+          "status": "Review",
+          "amount": 31500,
+          "date": "2026-07-31"
+        }
+      ]
+    },
+    "news": {
+      "rows": [
+        {
+          "id": "news-1",
+          "headline": "Global markets react to policy shift",
+          "source": "Reuters",
+          "region": "Global",
+          "publishedAt": "2026-08-11",
+          "summary": "Analysts weigh impacts across sectors as central banks signal coordinated action.",
+          "url": "https://example.com/news/1"
+        },
+        {
+          "id": "news-2",
+          "headline": "Regional energy grid completes upgrade",
+          "source": "AP",
+          "region": "North America",
+          "publishedAt": "2026-08-10",
+          "summary": "The modernization project improves resilience ahead of peak demand.",
+          "url": "https://example.com/news/2"
+        },
+        {
+          "id": "news-3",
+          "headline": "Tech consortium publishes open media spec",
+          "source": "Bloomberg",
+          "region": "Europe",
+          "publishedAt": "2026-08-09",
+          "summary": "The draft standard targets interoperable authoring pipelines.",
+          "url": "https://example.com/news/3"
+        },
+        {
+          "id": "news-4",
+          "headline": "Shipping lanes report record throughput",
+          "source": "Financial Times",
+          "region": "Asia Pacific",
+          "publishedAt": "2026-08-08",
+          "summary": "Port operators cite automation and expanded berth capacity.",
+          "url": "https://example.com/news/4"
+        }
+      ]
+    },
+    "revenueChart": {
+      "points": [
+        { "label": "Mon", "value": 42 },
+        { "label": "Tue", "value": 58 },
+        { "label": "Wed", "value": 51 },
+        { "label": "Thu", "value": 73 },
+        { "label": "Fri", "value": 64 }
+      ]
+    },
+    "dashboardMetrics": {
+      "kpiValue": 142500,
+      "kpiDelta": 6.4
+    },
+    "filters": {
+      "selectOptions": [
+        { "label": "Revenue", "value": "revenue" },
+        { "label": "Orders", "value": "orders" },
+        { "label": "Customers", "value": "customers" }
+      ],
+      "dateRangeLabel": "Last 7 days"
+    }
+  }
+}
