@@ -89,6 +89,7 @@ Forward-looking Jira ticket plan for RosettaDash.
 | [DAS-162](https://planetkevin.atlassian.net/browse/DAS-162) | `feature/DAS-162-readme-npm-013-truth` | README and npm landing page match published `@rosettadash/*@0.1.3` |
 | [DAS-74](https://planetkevin.atlassian.net/browse/DAS-74) | `feature/DAS-74-admin-control-panel` | Admin control panel + content library |
 | [DAS-90](https://planetkevin.atlassian.net/browse/DAS-90) | `feature/DAS-90-npm-package-prep` | npm prep docs (`rosettadash` public API) — docs only |
+| [DAS-171](https://planetkevin.atlassian.net/browse/DAS-171) | `feature/DAS-171-refine-articles-demos-images` | Refine article series for demos and image placement (drafts live in sibling `docs/`) |
 
 ## npm library follow-ups (after DAS-90 docs; see [Post–DAS-90 plan](./36-npm-post-90-plan.md))
 
