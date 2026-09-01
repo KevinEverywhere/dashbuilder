@@ -180,11 +180,21 @@ export class AiAssistService {
       });
 
       const response = parseAiBuilderResponse(raw);
-      const validation = validateAiBuilderActions(
-        response.actions,
-        defaultComponentRegistry,
-        this.nodeSummaries(),
-      );
+      let validation;
+      try {
+        validation = validateAiBuilderActions(
+          response.actions,
+          defaultComponentRegistry,
+          this.nodeSummaries(),
+        );
+      } catch (error) {
+        const message = this.formatAssistError(error);
+        this.messages.update((current) => [
+          ...current,
+          { role: 'assistant', content: message, error: message },
+        ]);
+        return;
+      }
 
       this.messages.update((current) => [
         ...current,
@@ -203,7 +213,7 @@ export class AiAssistService {
         },
       ]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'AI request failed.';
+      const message = this.formatAssistError(error);
       this.messages.update((current) => [
         ...current,
         { role: 'assistant', content: message, error: message },
@@ -236,6 +246,22 @@ export class AiAssistService {
     return { ok: true };
   }
 
+  private formatAssistError(error: unknown): string {
+    if (error instanceof SyntaxError) {
+      return 'The model returned invalid JSON. Try a simpler, more specific request.';
+    }
+    if (error instanceof Error) {
+      if (error.message.includes('AI response must include')) {
+        return 'The model returned an incomplete response. Try again with a shorter prompt.';
+      }
+      if (/\.trim is not a function/.test(error.message)) {
+        return 'The model returned actions in an unexpected format. Try rephrasing your request.';
+      }
+      return error.message;
+    }
+    return 'AI request failed. Check Settings and try again.';
+  }
+
   private async checkReadiness(): Promise<AiReadiness> {
     const byok = this.config.settings().byok;
     const provider = getAiProvider(byok.activeProvider);
@@ -251,16 +277,32 @@ export class AiAssistService {
         apiKey: '',
         baseUrl,
       });
+      if (test.status !== 'success') {
+        return {
+          ready: false,
+          providerId: provider.id,
+          providerLabel: provider.label,
+          model,
+          freeLocal: true,
+          message: 'Start Ollama locally, then run: ollama pull llama3.2',
+        };
+      }
+      if (!model) {
+        return {
+          ready: false,
+          providerId: provider.id,
+          providerLabel: provider.label,
+          model: '',
+          freeLocal: true,
+          message: 'Choose a local model on the Settings page (for example llama3.2).',
+        };
+      }
       return {
-        ready: test.status === 'success',
+        ready: true,
         providerId: provider.id,
         providerLabel: provider.label,
         model,
         freeLocal: true,
-        message:
-          test.status === 'success'
-            ? undefined
-            : 'Start Ollama locally, then run: ollama pull llama3.2',
       };
     }
 

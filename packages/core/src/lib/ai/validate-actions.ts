@@ -1,6 +1,7 @@
 import type { ComponentRegistry } from '../registry/component-registry';
 import { areDataTypesCompatible } from '../model/data-types';
 import { listCompositeTemplates } from '../templates/composite-template-registry';
+import { readAiStringField } from './read-string-field';
 import type { AiBuilderAction, AiActionValidationResult, AiNodeSummary } from './types';
 
 function resolveNodeId(
@@ -60,8 +61,9 @@ export function validateAiBuilderActions(
 
   actions.forEach((action, index) => {
     if (action.op === 'explain') {
-      if (typeof action.markdown === 'string' && action.markdown.trim()) {
-        explainActions.push(action);
+      const markdown = readAiStringField(action.markdown);
+      if (markdown) {
+        explainActions.push({ op: 'explain', markdown });
       } else {
         issues.push({ index, message: 'Explain actions require markdown text.' });
       }
@@ -69,31 +71,43 @@ export function validateAiBuilderActions(
     }
 
     if (action.op === 'add_node') {
-      if (!action.type?.trim()) {
+      const type = readAiStringField(action.type);
+      if (!type) {
         issues.push({ index, message: 'add_node requires a component type.' });
         return;
       }
-      if (!registry.get(action.type)) {
-        issues.push({ index, message: `Unknown component type: ${action.type}` });
+      if (!registry.get(type)) {
+        issues.push({ index, message: `Unknown component type: ${type}` });
         return;
       }
       if (action.ref) {
-        if (pendingRefs.has(action.ref) || nodeIds.has(action.ref)) {
-          issues.push({ index, message: `Duplicate node ref: ${action.ref}` });
+        const ref = readAiStringField(action.ref);
+        if (!ref) {
+          issues.push({ index, message: 'add_node ref must be a text identifier.' });
           return;
         }
-        pendingRefs.add(action.ref);
+        if (pendingRefs.has(ref) || nodeIds.has(ref)) {
+          issues.push({ index, message: `Duplicate node ref: ${ref}` });
+          return;
+        }
+        pendingRefs.add(ref);
       }
-      applicableActions.push(action);
+      applicableActions.push({ ...action, type });
       return;
     }
 
     if (action.op === 'apply_template') {
-      if (!templateIds.has(action.templateId)) {
-        issues.push({ index, message: `Unknown template id: ${action.templateId}` });
+      const templateId = readAiStringField(action.templateId);
+      if (!templateId || !templateIds.has(templateId)) {
+        issues.push({
+          index,
+          message: templateId
+            ? `Unknown template id: ${templateId}`
+            : 'apply_template requires a template id.',
+        });
         return;
       }
-      applicableActions.push(action);
+      applicableActions.push({ ...action, templateId });
       return;
     }
 
@@ -103,11 +117,12 @@ export function validateAiBuilderActions(
         issues.push({ index, message: 'set_property requires nodeId or nodeRef.' });
         return;
       }
-      if (!action.key?.trim()) {
+      const key = readAiStringField(action.key);
+      if (!key) {
         issues.push({ index, message: 'set_property requires a property key.' });
         return;
       }
-      applicableActions.push(action);
+      applicableActions.push({ ...action, key });
       return;
     }
 
@@ -118,37 +133,46 @@ export function validateAiBuilderActions(
         issues.push({ index, message: 'bind requires source and target node identifiers.' });
         return;
       }
-      if (!action.sourcePort?.trim() || !action.targetPort?.trim()) {
-        issues.push({ index, message: 'bind requires sourcePort and targetPort.' });
+      const sourcePort = readAiStringField(action.sourcePort);
+      const targetPort = readAiStringField(action.targetPort);
+      if (!sourcePort || !targetPort) {
+        issues.push({
+          index,
+          message: 'bind requires sourcePort and targetPort as text port ids.',
+        });
         return;
       }
 
       const sourceNode = nodes.find((node) => node.id === source);
       const targetNode = nodes.find((node) => node.id === target);
-      if (sourceNode && !sourceNode.outputs.includes(action.sourcePort)) {
-        issues.push({ index, message: `Unknown output port ${action.sourcePort} on ${source}.` });
+      if (sourceNode && !sourceNode.outputs.includes(sourcePort)) {
+        issues.push({ index, message: `Unknown output port ${sourcePort} on ${source}.` });
         return;
       }
-      if (targetNode && !targetNode.inputs.includes(action.targetPort)) {
-        issues.push({ index, message: `Unknown input port ${action.targetPort} on ${target}.` });
+      if (targetNode && !targetNode.inputs.includes(targetPort)) {
+        issues.push({ index, message: `Unknown input port ${targetPort} on ${target}.` });
         return;
       }
 
       if (sourceNode && targetNode) {
         const sourceDef = registry.get(sourceNode.type);
         const targetDef = registry.get(targetNode.type);
-        const sourcePort = sourceDef?.outputs.find((port) => port.id === action.sourcePort);
-        const targetPort = targetDef?.inputs.find((port) => port.id === action.targetPort);
-        if (sourcePort && targetPort && !areDataTypesCompatible(sourcePort.dataType, targetPort.dataType)) {
+        const sourcePortDef = sourceDef?.outputs.find((port) => port.id === sourcePort);
+        const targetPortDef = targetDef?.inputs.find((port) => port.id === targetPort);
+        if (
+          sourcePortDef &&
+          targetPortDef &&
+          !areDataTypesCompatible(sourcePortDef.dataType, targetPortDef.dataType)
+        ) {
           issues.push({
             index,
-            message: `Incompatible bind: ${sourcePort.dataType} → ${targetPort.dataType}`,
+            message: `Incompatible bind: ${sourcePortDef.dataType} → ${targetPortDef.dataType}`,
           });
           return;
         }
       }
 
-      applicableActions.push(action);
+      applicableActions.push({ ...action, sourcePort, targetPort });
     }
   });
 

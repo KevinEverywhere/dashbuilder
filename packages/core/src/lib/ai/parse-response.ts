@@ -1,4 +1,5 @@
 import type { AiBuilderAction, AiBuilderResponse } from './types';
+import { normalizeAiBuilderActions } from './normalize-actions';
 
 export function extractJsonObject(raw: string): string {
   const trimmed = raw.trim();
@@ -24,7 +25,7 @@ export function parseAiBuilderResponse(raw: string): AiBuilderResponse {
 
   return {
     summary: parsed.summary,
-    actions: parsed.actions as AiBuilderAction[],
+    actions: normalizeAiBuilderActions(parsed.actions),
     followUp: typeof parsed.followUp === 'string' ? parsed.followUp : undefined,
   };
 }

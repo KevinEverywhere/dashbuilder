@@ -57,9 +57,6 @@ export const COMPONENT_CATALOG_EXTRAS: Partial<Record<string, ComponentCatalogEx
   'visual.media.carousel': {
     assumptions: ['Slides need id, title, and imageUrl; optional onSelect for destination or media binding.'],
   },
-  'visual.display.3d-scatter': {
-    assumptions: ['Points map x/y/z numeric fields (e.g. price, distance, rating); requires WebGL runtime.'],
-  },
   'layout.grid': {
     assumptions: ['Child visuals are placed in grid slots in the builder canvas.'],
   },
@@ -134,7 +131,9 @@ export const COMPONENT_CATALOG_EXTRAS: Partial<Record<string, ComponentCatalogEx
   },
   'visual.display.3d-scatter': {
     dependencies: ['Three.js runtime (builder preview + exported host).'],
-    assumptions: ['Rowset provides x, y, and z numeric fields per inspector mapping.'],
+    assumptions: [
+      'Rowset provides x, y, and z numeric fields per inspector mapping (e.g. price, distance, rating).',
+    ],
   },
   'visual.display.3d-scene': {
     dependencies: ['Three.js runtime (builder preview + exported host).'],

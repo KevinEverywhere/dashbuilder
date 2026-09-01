@@ -21,4 +21,53 @@ describe('validateAiBuilderActions', () => {
     expect(result.valid).toBe(false);
     expect(result.issues[0]?.message).toContain('Unknown component type');
   });
+
+  it('rejects bind actions with non-text ports instead of throwing', () => {
+    expect(() =>
+      validateAiBuilderActions(
+        [
+          {
+            op: 'bind',
+            sourceRef: 'table1',
+            sourcePort: true,
+            targetRef: 'chart1',
+            targetPort: 'data',
+          } as never,
+        ],
+        defaultComponentRegistry,
+        [],
+      ),
+    ).not.toThrow();
+
+    const result = validateAiBuilderActions(
+      [
+        {
+          op: 'bind',
+          sourceNodeId: 'n1',
+          sourcePort: {},
+          targetNodeId: 'n2',
+          targetPort: 'data',
+        } as never,
+      ],
+      defaultComponentRegistry,
+      [
+        {
+          id: 'n1',
+          type: 'visual.table',
+          label: 'Table',
+          outputs: ['rowset'],
+          inputs: [],
+        },
+        {
+          id: 'n2',
+          type: 'visual.chart.line',
+          label: 'Chart',
+          outputs: [],
+          inputs: ['data'],
+        },
+      ],
+    );
+    expect(result.valid).toBe(false);
+    expect(result.issues[0]?.message).toContain('sourcePort and targetPort');
+  });
 });
