@@ -61,7 +61,7 @@
     "pack:product": "node scripts/pack-npm-product.mjs",
     "publish:npm:product": "node scripts/pack-npm-product.mjs && npm publish ./dist/packages/rosettadash --access public",
     "setup:e2e": "playwright install chromium",
-    "start": "nx run-many -t serve -p client,server --parallel=2",
+    "start": "sh -c 'ulimit -n 10240 2>/dev/null; exec nx run-many -t serve -p client,server --parallel=2'",
     "prestart:client": "npm run sync:readme",
     "start:client": "nx serve client",
     "start:server": "nx serve server",

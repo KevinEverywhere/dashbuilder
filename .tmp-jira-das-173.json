@@ -1,0 +1,111 @@
+{
+  "fields": {
+    "project": { "key": "DAS" },
+    "issuetype": { "name": "Story" },
+    "summary": "Builder: fix template picker apply from menu dropdown",
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Selecting a page template from the builder menu dropdown and clicking Apply currently does nothing. Templates must load onto the canvas reliably."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 3 },
+          "content": [{ "type": "text", "text": "Acceptance criteria" }]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Choosing any template in the builder template picker and clicking Apply replaces the canvas with that template's nodes and bindings."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Analytics overview, onboarding, CRUD list, settings/admin, and empty starter templates all apply without a silent no-op."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Applied templates persist after save and reload."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "E2E coverage confirms at least onboarding and analytics overview templates apply from the dropdown."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "npm run verify:all passes."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Branch: feature/DAS-173-builder-template-picker-apply"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

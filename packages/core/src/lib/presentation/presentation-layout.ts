@@ -197,14 +197,22 @@ export function textInputUsesMultiline(
   return previewHeight > FORM_SINGLE_LINE_INPUT_HEIGHT + TEXT_MULTILINE_THRESHOLD_PX;
 }
 
+function canvasShellChromeForTextInput(ports?: ComponentNode['ports']): number {
+  const inputCount = ports?.inputs?.length ?? 0;
+  const outputCount = ports?.outputs?.length ?? 0;
+  if (inputCount === 0 && outputCount === 0) {
+    return 36;
+  }
+  const rows = Math.max(inputCount, outputCount, 1);
+  return 36 + 12 + 1 + rows * 28;
+}
+
 function resolveTextPreviewHeight(
   node: Pick<ComponentNode, 'properties'> & Partial<Pick<ComponentNode, 'layout' | 'ports'>>,
 ): number {
   const layoutHeight = node.layout?.height;
   if (typeof layoutHeight === 'number' && layoutHeight > 0) {
-    const portCount = Math.max(node.ports?.inputs?.length ?? 0, node.ports?.outputs?.length ?? 0, 1);
-    // Mirror canvas-viewport chrome so stretch on the shell drives the field body.
-    const chrome = 28 + portCount * 22 + 8;
+    const chrome = canvasShellChromeForTextInput(node.ports);
     return Math.max(FORM_SINGLE_LINE_INPUT_HEIGHT, layoutHeight - chrome);
   }
   const showsLabel = formFieldShowsLabel(node.properties);
@@ -395,12 +403,7 @@ export function resolvePresentationDimensions(
       if (textInputUsesMultiline(node)) {
         const layoutH = node.layout?.height;
         if (typeof layoutH === 'number' && layoutH > 0) {
-          const portCount = Math.max(
-            node.ports?.inputs?.length ?? 0,
-            node.ports?.outputs?.length ?? 0,
-            1,
-          );
-          const chrome = 28 + portCount * 22 + 8;
+          const chrome = canvasShellChromeForTextInput(node.ports);
           return {
             width: DEFAULT_FORM_FIELD_WIDTH,
             height: Math.max(base + TEXTAREA_ROW_HEIGHT, layoutH - chrome),

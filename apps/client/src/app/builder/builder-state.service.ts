@@ -43,6 +43,7 @@ import {
   type BuilderGraphSnapshot,
 } from './history/builder-history';
 import { BuilderAssistanceService } from './builder-assistance.service';
+import { layoutTemplateNodes } from './creation-wizard/guided-dashboard-layout';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 export type WorkspaceMode = 'design' | 'preview';
@@ -469,12 +470,19 @@ export class BuilderStateService {
     }
 
     if (presentation?.height !== undefined) {
-      return {
-        x: partial.x,
-        y: partial.y,
-        width,
-        height: clampCanvasNodeHeight(presentation.height),
+      const draftNode: ComponentNode = {
+        ...defaults,
+        layout: {
+          x: partial.x,
+          y: partial.y,
+          width,
+          height: presentation.height,
+        },
       };
+      const height = clampCanvasNodeHeight(
+        Math.max(presentation.height, estimateCanvasNodeHeight(draftNode)),
+      );
+      return { x: partial.x, y: partial.y, width, height };
     }
 
     const draftNode: ComponentNode = {
@@ -498,11 +506,22 @@ export class BuilderStateService {
     if (!presentation) {
       return;
     }
+    const layout = node.layout ?? { x: 0, y: 0, width: presentation.width, height: presentation.height };
+    const draftNode: ComponentNode = {
+      ...node,
+      layout: {
+        ...layout,
+        width: presentation.width,
+        height: layout.height ?? presentation.height,
+      },
+    };
     this.updateNodeLayout(
       node.id,
       {
         width: presentation.width,
-        height: presentation.height,
+        height: clampCanvasNodeHeight(
+          Math.max(presentation.height, estimateCanvasNodeHeight(draftNode)),
+        ),
       },
       { skipHistory: true },
     );
@@ -585,45 +604,58 @@ export class BuilderStateService {
     this.applyCompositeTemplate('onboarding');
   }
 
-  applyCompositeTemplate(templateId: string, options?: { skipConfirm?: boolean }): void {
+  applyCompositeTemplate(templateId: string, options?: { skipConfirm?: boolean }): boolean {
     const composite = this.composite();
-    if (!composite) {
-      return;
-    }
+    const hasContent = this.nodes().length > 0 || this.bindings().length > 0;
+    const replacingDifferentTemplate = composite?.templateId !== templateId;
 
     if (
       !options?.skipConfirm &&
       this.dirty() &&
+      hasContent &&
+      replacingDifferentTemplate &&
       typeof globalThis.confirm === 'function' &&
       !globalThis.confirm(
         'Replace the current canvas with this template? Unsaved changes will be lost.',
       )
     ) {
-      return;
+      return false;
     }
 
-    const template = buildCompositeTemplate(templateId, defaultComponentRegistry, {
-      id: composite.id,
-      version: composite.version,
-    });
+    let template: Composite;
+    try {
+      template = buildCompositeTemplate(templateId, defaultComponentRegistry, {
+        id: composite?.id,
+        version: composite?.version,
+      });
+    } catch (error) {
+      this.errorMessage.set(
+        error instanceof Error ? error.message : 'Could not apply that template.',
+      );
+      return false;
+    }
+
+    const laidOutNodes = layoutTemplateNodes(template.nodes);
 
     this.composite.set({
-      ...composite,
+      ...(composite ?? template),
       name: template.name,
       description: template.description,
       templateId: template.templateId,
-      nodes: template.nodes,
+      nodes: laidOutNodes,
       bindings: template.bindings,
       exportTargets: template.exportTargets,
       domainContext: template.domainContext,
     });
-    this.nodes.set([...template.nodes]);
+    this.nodes.set([...laidOutNodes]);
     this.bindings.set([...(template.bindings ?? [])]);
     this.selectedNodeIds.set([]);
     this.selectedDefinition.set(null);
+    this.errorMessage.set(null);
     this.clearPendingBinding();
     this.resetHistory();
     this.markDirty();
+    return true;
   }
 
   undo(): void {
@@ -851,6 +883,7 @@ export class BuilderStateService {
   markDirty(): void {
     this.dirty.set(true);
     this.saveStatus.set('idle');
+    this.errorMessage.set(null);
   }
 
   patchDomainContext(patch: {

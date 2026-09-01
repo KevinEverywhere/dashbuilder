@@ -16,6 +16,7 @@ import {
   type CanvasViewport,
   canvasNodeContentMinHeight,
   canvasNodeHeaderHeight,
+  canvasNodePreviewHeight,
   computeCanvasContentBounds,
   estimateCanvasNodeHeight,
   filterVisibleCanvasNodes,
@@ -536,6 +537,10 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected nodeHeight(node: ComponentNode): number {
     return estimateCanvasNodeHeight(node);
+  }
+
+  protected nodePreviewMinHeight(node: ComponentNode): number {
+    return canvasNodePreviewHeight(node);
   }
 
   protected portInputHint(nodeId: string, portId: string, portName: string, dataType: string): string {

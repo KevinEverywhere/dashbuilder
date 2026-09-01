@@ -1,8 +1,11 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   normalizeStackProfile,
   stackProfileToExportTargets,
+  type Composite,
+  type Project,
   type StackProfile,
 } from '@rosettadash/core';
 import { BuilderStateService } from './builder-state.service';
@@ -52,8 +55,10 @@ export class BuilderProjectService {
         }
       }
       await this.createNewWorkspace();
-    } catch (error) {
-      this.state.errorMessage.set(this.toMessage(error));
+    } catch {
+      if (!this.state.project()) {
+        this.bootstrapLocalWorkspace();
+      }
     } finally {
       this.state.loading.set(false);
     }
@@ -144,8 +149,51 @@ export class BuilderProjectService {
     sessionStorage.setItem(BUILDER_SESSION_KEY, JSON.stringify(session));
   }
 
+  /** Local-only workspace when the projects API is unavailable on load. */
+  private bootstrapLocalWorkspace(): void {
+    const pendingStack = readPendingStackProfile();
+    const stackProfile: StackProfile = normalizeStackProfile(pendingStack ?? { ui: 'web-components' }) ?? {
+      ui: 'web-components',
+    };
+    clearPendingStackProfile();
+
+    const exportTargets = stackProfileToExportTargets(stackProfile);
+    const now = new Date().toISOString();
+    const composite: Composite = {
+      id: crypto.randomUUID(),
+      version: 1,
+      name: 'Main',
+      nodes: [],
+      bindings: [],
+      ...(exportTargets ? { exportTargets } : {}),
+    };
+    const project: Project = {
+      id: crypto.randomUUID(),
+      name: 'Untitled Dashboard',
+      composites: [composite],
+      stackProfile,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.state.setProjectContext(project, composite);
+    writeActiveStackProfile(stackProfile);
+  }
+
   private toMessage(error: unknown): string {
-    if (error instanceof Error) {
+    if (error instanceof HttpErrorResponse) {
+      if (error.status === 0) {
+        return 'Could not reach the server. Is it running?';
+      }
+      if (typeof error.error === 'object' && error.error !== null && 'message' in error.error) {
+        const message = (error.error as { message?: unknown }).message;
+        if (typeof message === 'string' && message.trim().length > 0) {
+          return message;
+        }
+      }
+      return `Server error (${error.status}).`;
+    }
+    if (error instanceof Error && error.message.trim().length > 0) {
       return error.message;
     }
     return 'Something went wrong while talking to the server.';

@@ -200,7 +200,10 @@
                 </header>
 
                 <div class="canvas__node-body">
-                  <div class="canvas__node-preview">
+                  <div
+                    class="canvas__node-preview"
+                    [style.minHeight.px]="nodePreviewMinHeight(node)"
+                  >
                     <app-preview-node [node]="node" [builderMode]="true" />
                   </div>
 

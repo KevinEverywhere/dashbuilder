@@ -87,6 +87,10 @@
   &--dirty {
     color: var(--db-accent);
   }
+
+  &--error {
+    color: #b42318;
+  }
 }
 
 .builder__error {

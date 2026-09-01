@@ -102,6 +102,11 @@ describe('canvas viewport helpers', () => {
     expect(bounds.height).toBeGreaterThan(1200);
   });
 
+  it('allocates enough height for a single-line text input with ports', () => {
+    const node = createNode({ layout: { x: 24, y: 24, width: 336, height: 72 } });
+    expect(estimateCanvasNodeHeight(node)).toBeGreaterThanOrEqual(120);
+  });
+
   it('lets content min height stay below an expanded layout height', () => {
     const node = createNode({
       type: 'visual.kpi',

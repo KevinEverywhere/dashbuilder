@@ -38,7 +38,11 @@ describe('AppSelectComponent', () => {
     fixture.nativeElement.querySelector('[data-testid="role-select-trigger"]').click();
     fixture.detectChanges();
     fixture.nativeElement.querySelector('[data-testid="role-select-option-admin"]').click();
+    fixture.detectChanges();
 
     expect(selected).toEqual(['admin']);
+    expect(fixture.nativeElement.querySelector('.app-select__value').textContent).toContain(
+      'Admin',
+    );
   });
 });

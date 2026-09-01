@@ -50,7 +50,7 @@ export class AppSelectComponent implements ControlValueAccessor {
   private readonly triggerRef = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   private readonly menuRef = viewChild<ElementRef<HTMLUListElement>>('menu');
 
-  private currentValue = '';
+  private readonly currentValue = signal('');
   private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
   private formDisabled = false;
@@ -74,7 +74,7 @@ export class AppSelectComponent implements ControlValueAccessor {
   }
 
   writeValue(value: string | null | undefined): void {
-    this.currentValue = value ?? '';
+    this.currentValue.set(value ?? '');
   }
 
   registerOnChange(fn: (value: string) => void): void {
@@ -94,20 +94,21 @@ export class AppSelectComponent implements ControlValueAccessor {
   }
 
   protected selectedLabel(): string {
-    if (this.currentValue === '' && this.emptyOptionLabel()) {
+    const current = this.currentValue();
+    if (current === '' && this.emptyOptionLabel()) {
       return this.emptyOptionLabel() as string;
     }
 
-    const match = this.options().find((option) => this.valuesEqual(option.value, this.currentValue));
+    const match = this.options().find((option) => this.valuesEqual(option.value, current));
     return match?.label ?? this.placeholder();
   }
 
   protected isSelected(value: string): boolean {
-    return this.valuesEqual(value, this.currentValue);
+    return this.valuesEqual(value, this.currentValue());
   }
 
   protected isEmptySelected(): boolean {
-    return this.currentValue === '';
+    return this.currentValue() === '';
   }
 
   protected optionTestId(value: string): string {
@@ -140,7 +141,7 @@ export class AppSelectComponent implements ControlValueAccessor {
       return;
     }
 
-    this.currentValue = value;
+    this.currentValue.set(value);
     this.onChange(value);
     this.onTouched();
     this.valueChange.emit(value);
@@ -148,7 +149,7 @@ export class AppSelectComponent implements ControlValueAccessor {
 
     if (this.resetAfterSelect()) {
       queueMicrotask(() => {
-        this.currentValue = '';
+        this.currentValue.set('');
         this.onChange('');
       });
     }
@@ -159,7 +160,7 @@ export class AppSelectComponent implements ControlValueAccessor {
       return;
     }
 
-    this.currentValue = '';
+    this.currentValue.set('');
     this.onChange('');
     this.onTouched();
     this.valueChange.emit('');

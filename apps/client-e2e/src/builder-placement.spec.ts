@@ -16,7 +16,7 @@ test.describe('Builder placement inspector', () => {
     await expect(page.getByTestId('inspector-layout-x')).toHaveValue('32');
     await expect(page.getByTestId('inspector-layout-y')).toHaveValue('32');
     await expect(page.getByTestId('inspector-layout-width')).toHaveValue('336');
-    await expect(page.getByTestId('inspector-layout-height')).toHaveValue('72');
+    await expect(page.getByTestId('inspector-layout-height')).toHaveValue('128');
   });
 
   test('updates canvas position when placement values change', async ({ page }) => {

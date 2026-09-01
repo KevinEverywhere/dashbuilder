@@ -29,6 +29,7 @@ describe('BuilderStateService', () => {
 
     expect(service.nodes()).toHaveLength(1);
     expect(service.selectedNode()?.id).toBe(node.id);
+    expect(node.layout?.height).toBeGreaterThanOrEqual(120);
     expect(service.dirty()).toBe(true);
   });
 
@@ -347,6 +348,67 @@ describe('BuilderStateService', () => {
       version: 1,
     });
     expect(service.canUndo()).toBe(false);
+  });
+
+  it('applies a page template onto an empty canvas without a composite', () => {
+    expect(service.composite()).toBeNull();
+
+    const applied = service.applyCompositeTemplate('onboarding', { skipConfirm: true });
+
+    expect(applied).toBe(true);
+    expect(service.composite()?.templateId).toBe('onboarding');
+    expect(service.nodes().length).toBeGreaterThan(0);
+    expect(service.nodes().some((node) => node.label === 'Invite person')).toBe(true);
+    expect(service.dirty()).toBe(true);
+  });
+
+  it('lays out settings-admin infra beside visual nodes instead of overlapping them', () => {
+    expect(service.applyCompositeTemplate('settings-admin', { skipConfirm: true })).toBe(true);
+
+    const postgres = service.nodes().find((node) => node.type === 'infra.postgresql');
+    const roleGate = service.nodes().find((node) => node.type === 'domain.role-gate');
+    const table = service.nodes().find((node) => node.id === 'settings-table');
+
+    expect(postgres?.layout?.x).toBeGreaterThan(roleGate?.layout?.x ?? 0);
+    expect(table?.layout?.y).toBeGreaterThan(roleGate?.layout?.y ?? 0);
+  });
+
+  it('replaces the canvas when applying a different template', () => {
+    service.setProjectContext(
+      {
+        id: 'p1',
+        name: 'Test',
+        composites: [],
+        createdAt: '',
+        updatedAt: '',
+      },
+      {
+        id: 'c1',
+        name: 'Main',
+        nodes: [],
+        bindings: [],
+        version: 1,
+      },
+    );
+
+    expect(service.applyCompositeTemplate('onboarding', { skipConfirm: true })).toBe(true);
+    expect(service.nodes().some((node) => node.label === 'Invite person')).toBe(true);
+
+    expect(service.applyCompositeTemplate('analytics-overview', { skipConfirm: true })).toBe(
+      true,
+    );
+    expect(service.composite()?.id).toBe('c1');
+    expect(service.composite()?.templateId).toBe('analytics-overview');
+    expect(service.nodes().some((node) => node.label === 'Invite person')).toBe(false);
+    expect(service.nodes().some((node) => node.label === 'Date range')).toBe(true);
+  });
+
+  it('returns false and keeps the canvas when the template id is unknown', () => {
+    const applied = service.applyCompositeTemplate('not-a-template', { skipConfirm: true });
+
+    expect(applied).toBe(false);
+    expect(service.nodes()).toEqual([]);
+    expect(service.errorMessage()).toMatch(/Unknown composite template/);
   });
 
   it('batch-updates multiple node layouts in one pass', () => {

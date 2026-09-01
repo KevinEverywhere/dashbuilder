@@ -38,11 +38,7 @@ function nodeHeight(node: ComponentNode): number {
   return estimateCanvasNodeHeight(node);
 }
 
-function maxHeight(nodes: ComponentNode[]): number {
-  return nodes.reduce((max, node) => Math.max(max, nodeHeight(node)), 72);
-}
-
-/** Dashboard-style grid: filters → KPIs → table|chart → media → infra. */
+/** Dashboard-style grid: domain → filters → KPIs → table|chart → media; infra on the right. */
 export function computeGuidedDashboardLayout(
   nodes: ComponentNode[],
 ): Map<string, GuidedLayoutPatch> {
@@ -61,6 +57,7 @@ export function computeGuidedDashboardLayout(
       return true;
     });
 
+  const domain = take((node) => node.type.startsWith('domain.'));
   const filters = take((node) => FILTER_TYPES.has(node.type));
   const kpis = take((node) => node.type === 'visual.kpi');
   const tables = take((node) => TABLE_TYPES.has(node.type));
@@ -70,19 +67,35 @@ export function computeGuidedDashboardLayout(
   const rest = take(() => true);
 
   let y = MARGIN;
+  let mainColumnRight = MARGIN + FILTER_WIDTH;
+
+  const placeColumn = (column: ComponentNode[], width: number): void => {
+    if (column.length === 0) {
+      return;
+    }
+    for (const node of column) {
+      layoutById.set(node.id, { x: MARGIN, y, width });
+      mainColumnRight = Math.max(mainColumnRight, MARGIN + width);
+      y += nodeHeight(node) + GAP;
+    }
+  };
 
   const placeRow = (row: ComponentNode[], width: number): void => {
     if (row.length === 0) {
       return;
     }
     let x = MARGIN;
+    let rowHeight = 0;
     for (const node of row) {
       layoutById.set(node.id, { x, y, width });
       x += width + GAP;
+      rowHeight = Math.max(rowHeight, nodeHeight(node));
+      mainColumnRight = Math.max(mainColumnRight, x - GAP);
     }
-    y += maxHeight(row) + GAP;
+    y += rowHeight + GAP;
   };
 
+  placeColumn(domain, FILTER_WIDTH);
   placeRow(filters, FILTER_WIDTH);
   placeRow(kpis, KPI_WIDTH);
 
@@ -96,10 +109,12 @@ export function computeGuidedDashboardLayout(
       y,
       width: CONTENT_WIDTH,
     });
+    mainColumnRight = Math.max(mainColumnRight, MARGIN + CONTENT_WIDTH * 2 + GAP);
     y += rowHeight + GAP;
 
     for (const node of tables.slice(1)) {
       layoutById.set(node.id, { x: MARGIN, y, width: CONTENT_WIDTH });
+      mainColumnRight = Math.max(mainColumnRight, MARGIN + CONTENT_WIDTH);
       y += nodeHeight(node) + GAP;
     }
     for (const node of charts.slice(1)) {
@@ -108,6 +123,7 @@ export function computeGuidedDashboardLayout(
         y,
         width: CONTENT_WIDTH,
       });
+      mainColumnRight = Math.max(mainColumnRight, MARGIN + CONTENT_WIDTH * 2 + GAP);
       y += nodeHeight(node) + GAP;
     }
   } else {
@@ -116,10 +132,44 @@ export function computeGuidedDashboardLayout(
   }
 
   placeRow(media, CONTENT_WIDTH);
-  placeRow(infra, INFRA_WIDTH);
-  placeRow(rest, FILTER_WIDTH);
+  placeColumn(rest, FILTER_WIDTH);
+
+  if (infra.length > 0) {
+    const infraX = mainColumnRight + GAP;
+    let infraY = MARGIN;
+    for (const node of infra) {
+      layoutById.set(node.id, { x: infraX, y: infraY, width: INFRA_WIDTH });
+      infraY += nodeHeight(node) + GAP;
+    }
+  }
 
   return layoutById;
+}
+
+/** Re-layout template nodes using canvas height estimates so previews do not overlap. */
+export function layoutTemplateNodes(nodes: ComponentNode[]): ComponentNode[] {
+  const layoutById = computeGuidedDashboardLayout(nodes);
+  return nodes.map((node) => {
+    const patch = layoutById.get(node.id);
+    if (!patch) {
+      return node;
+    }
+
+    const nextLayout = {
+      ...(node.layout ?? { x: MARGIN, y: MARGIN, width: FILTER_WIDTH, height: 72 }),
+      x: patch.x,
+      y: patch.y,
+      width: patch.width,
+    };
+    const withLayout: ComponentNode = { ...node, layout: nextLayout };
+    return {
+      ...withLayout,
+      layout: {
+        ...nextLayout,
+        height: nodeHeight(withLayout),
+      },
+    };
+  });
 }
 
 export interface GuidedBindingSpec {

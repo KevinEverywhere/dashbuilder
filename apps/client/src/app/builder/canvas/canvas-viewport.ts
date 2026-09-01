@@ -12,10 +12,34 @@ export const CANVAS_VIEWPORT_BUFFER_PX = 120;
 /** Modest empty-canvas floor — grow only with placed/off-screen node bounds. */
 export const CANVAS_MIN_CONTENT_HEIGHT_PX = 480;
 
-const PORT_ROW_HEIGHT = 22;
-const NODE_NAME_BAR_HEIGHT = 28;
-const NODE_SHELL_CHROME = 8;
+const CANVAS_NODE_FRAME_MARGIN = 8;
+const CANVAS_NODE_NAME_BAR_HEIGHT = 28;
+const CANVAS_PORTS_SECTION_PADDING = 12;
+const CANVAS_PORTS_SECTION_BORDER = 1;
+const CANVAS_PORT_ROW_HEIGHT = 28;
+/** Extra slack so flex layout does not clip fixed-height preview controls. */
+const CANVAS_NODE_BODY_BUFFER = 8;
 const DEFAULT_PREVIEW_HEIGHT = 128;
+
+export function canvasPortsSectionHeight(node: ComponentNode): number {
+  const inputCount = node.ports.inputs.length;
+  const outputCount = node.ports.outputs.length;
+  if (inputCount === 0 && outputCount === 0) {
+    return 0;
+  }
+  const rows = Math.max(inputCount, outputCount, 1);
+  return (
+    CANVAS_PORTS_SECTION_PADDING +
+    CANVAS_PORTS_SECTION_BORDER +
+    rows * CANVAS_PORT_ROW_HEIGHT
+  );
+}
+
+export function canvasNodeChromeHeight(node: ComponentNode): number {
+  return (
+    CANVAS_NODE_FRAME_MARGIN + CANVAS_NODE_NAME_BAR_HEIGHT + canvasPortsSectionHeight(node)
+  );
+}
 
 export interface CanvasViewport {
   left: number;
@@ -38,18 +62,14 @@ export function canvasNodePreviewHeight(node: ComponentNode): number {
 }
 
 export function canvasNodeHeaderHeight(_node: ComponentNode): number {
-  return NODE_NAME_BAR_HEIGHT;
+  return CANVAS_NODE_NAME_BAR_HEIGHT;
 }
 
 export function canvasNodeContentMinHeight(node: ComponentNode): number {
-  const portCount = Math.max(node.ports.inputs.length, node.ports.outputs.length, 1);
   const previewHeight = canvasNodePreviewHeight(node);
   return Math.max(
     CANVAS_MIN_NODE_HEIGHT,
-    canvasNodeHeaderHeight(node) +
-      previewHeight +
-      portCount * PORT_ROW_HEIGHT +
-      NODE_SHELL_CHROME,
+    canvasNodeChromeHeight(node) + previewHeight + CANVAS_NODE_BODY_BUFFER,
   );
 }
 

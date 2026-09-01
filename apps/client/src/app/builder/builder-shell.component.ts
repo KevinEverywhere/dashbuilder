@@ -1,9 +1,6 @@
 import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { listCompositeTemplates } from '@rosettadash/core';
 import { canEnterBuilder } from '../welcome/stack-profile-session';
-import { AppSelectComponent } from '../shared/app-select/app-select.component';
 import { AppNavComponent } from '../shared/app-nav/app-nav.component';
 import { BuilderAssistanceService } from './builder-assistance.service';
 import { BuilderAuthGateComponent } from './builder-auth-gate.component';
@@ -38,8 +35,6 @@ import { PreviewDataService } from './preview/preview-data.service';
     CreationWizardComponent,
     BuilderAuthGateComponent,
     BuilderViewportGateComponent,
-    AppSelectComponent,
-    FormsModule,
     AppNavComponent,
   ],
   templateUrl: './builder-shell.component.html',
@@ -61,12 +56,6 @@ export class BuilderShellComponent implements OnInit {
 
   protected readonly exportWizardOpen = signal(false);
   protected readonly aiDrawerOpen = signal(false);
-  protected readonly compositeTemplates = listCompositeTemplates();
-  protected readonly templateSelectOptions = this.compositeTemplates.map((template) => ({
-    value: template.id,
-    label: template.name,
-  }));
-  protected selectedTemplateId = '';
 
   protected stackSummary(): string {
     const profile = this.state.project()?.stackProfile;
@@ -121,14 +110,6 @@ export class BuilderShellComponent implements OnInit {
       composite,
       stackProfile: this.state.project()?.stackProfile ?? null,
     });
-  }
-
-  protected applySelectedTemplate(): void {
-    if (!this.selectedTemplateId) {
-      return;
-    }
-    this.state.applyCompositeTemplate(this.selectedTemplateId);
-    this.selectedTemplateId = '';
   }
 
   protected setWorkspaceMode(mode: WorkspaceMode): void {
@@ -258,6 +239,9 @@ export class BuilderShellComponent implements OnInit {
     }
     if (this.state.saveStatus() === 'saved') {
       return 'Saved';
+    }
+    if (this.state.saveStatus() === 'error') {
+      return this.state.errorMessage() ?? 'Save failed';
     }
     if (this.state.dirty()) {
       return 'Unsaved changes';

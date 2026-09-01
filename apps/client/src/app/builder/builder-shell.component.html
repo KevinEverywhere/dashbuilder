@@ -93,37 +93,14 @@
           Redo
         </button>
       </div>
-      @if (state.errorMessage()) {
-        <span class="builder__error">{{ state.errorMessage() }}</span>
-      }
       <span
         class="builder__status"
         data-testid="save-status"
         [class.builder__status--dirty]="state.dirty()"
+        [class.builder__status--error]="state.saveStatus() === 'error'"
       >
         {{ statusLabel() }}
       </span>
-      <div class="builder__templates">
-        <div class="builder__templates-label">
-          <span class="visually-hidden">Page template</span>
-        <app-select
-          testId="template-picker"
-          placeholder="Select template…"
-          [options]="templateSelectOptions"
-          [disabled]="state.loading()"
-          [(ngModel)]="selectedTemplateId"
-        />
-        </div>
-        <button
-          type="button"
-          class="builder__template"
-          data-testid="apply-template"
-          [disabled]="state.loading() || !selectedTemplateId"
-          (click)="applySelectedTemplate()"
-        >
-          Apply template
-        </button>
-      </div>
       <button
         type="button"
         class="builder__create"

@@ -29,6 +29,10 @@
     cursor: text;
   }
 
+  .preview-field:not(.preview-field--fill) .preview-input:not(.preview-textarea) {
+    flex-shrink: 0;
+  }
+
   app-select {
     cursor: pointer;
   }
