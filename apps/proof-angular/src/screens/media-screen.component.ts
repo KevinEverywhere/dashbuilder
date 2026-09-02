@@ -54,11 +54,6 @@ import { VideoMetadataPanelComponent } from '../components/video-metadata-panel.
               Choosing a 360° destination switches to the Authoring tab and loads its equirect source
               for sphere preview and ffmpeg.wasm extract.
             </p>
-          } @else {
-            <p class="da-note">
-              Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships in
-              the destination library.
-            </p>
           }
         </div>
         <div class="rd-media-tools">

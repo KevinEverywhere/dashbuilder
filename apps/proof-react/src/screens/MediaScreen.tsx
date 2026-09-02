@@ -100,12 +100,7 @@ export function MediaScreen({
                 Choosing a 360° destination switches to the Authoring tab.
               </p>
             </>
-          ) : (
-            <p className="da-note">
-              Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships
-              in the destination library.
-            </p>
-          )}
+          ) : null}
         </div>
         <div className="rd-media-tools">
           <VideoMetadataPanel items={metadataItems} />

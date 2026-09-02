@@ -119,11 +119,6 @@
         <p class="da-note">
           Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.
         </p>
-      {:else}
-        <p class="da-note">
-          Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships in
-          the destination library.
-        </p>
       {/if}
     </div>
     <div class="rd-media-tools">

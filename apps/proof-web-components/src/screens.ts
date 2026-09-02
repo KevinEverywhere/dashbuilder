@@ -366,7 +366,7 @@ export function renderMedia(atlas: AtlasState): string {
             EQUIRECT_VIDEO_DESTINATIONS.length > 0
               ? `<rd-select-input label="360° video (Authoring)" options='${jsonAttr(EQUIRECT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: `${localizedDestinationName(d, atlas.locale)} · 360°` })))}' value="${attr(equirectSelected?.id ?? '')}" data-ref="media-360"></rd-select-input>
                  <p class="da-note">Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.</p>`
-              : `<p class="da-note">Open <strong>Authoring</strong> to upload your own 360° or flat source. Nothing ships in the destination library.</p>`
+              : ''
           }
         </div>
         <div class="rd-media-tools">
