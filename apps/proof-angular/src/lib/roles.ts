@@ -9,7 +9,6 @@ export type AtlasUserRole = (typeof ATLAS_USER_ROLES)[number]['id'];
 /** Screens restricted to specific roles (omit = all roles). */
 export const SCREEN_ROLE_ACCESS: Partial<Record<string, AtlasUserRole[]>> = {
   plan: ['editor', 'admin'],
-  authoring: ['editor', 'admin'],
   stack: ['admin'],
 };
 

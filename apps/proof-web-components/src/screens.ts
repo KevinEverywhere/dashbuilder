@@ -20,7 +20,14 @@ import {
   isEquirectDestination,
   type DestinationAtlasRuntimeId,
 } from '@destination-atlas';
-import { CLIENT_ROUTER_MODE_OPTIONS, type ClientRouterMode } from '@rosettadash/core';
+import {
+  AUTHORING_OUTPUT_CUSTOM_ID,
+  AUTHORING_OUTPUT_PRESETS,
+  CLIENT_ROUTER_MODE_OPTIONS,
+  type ClientRouterMode,
+} from '@rosettadash/core';
+import { renderAuthoringCameraControlsMarkup } from './authoring-camera-controls.js';
+import { renderAuthoringPlaybackBarMarkup } from './authoring-playback-bar.js';
 import { sankeyChartMarkup, vennChartMarkup } from './charts.js';
 import { geoExplorerMarkup } from './geo-explorer.js';
 import {
@@ -377,47 +384,174 @@ export function renderMedia(atlas: AtlasState): string {
 }
 
 export function renderAuthoring(): string {
+  const presetOptions = [
+    ...AUTHORING_OUTPUT_PRESETS.map((entry) => ({ value: entry.id, label: entry.label })),
+    { value: AUTHORING_OUTPUT_CUSTOM_ID, label: 'Custom' },
+  ];
   return `
     <section class="da-panel da-panel--authoring">
       <h2>Authoring</h2>
-      <p class="da-note">Upload a source file. Framing and extract use native
-        <code>rd-video-source</code>, <code>rd-equirect-viewport</code>, and
-        <code>rd-wasm-media</code> — no framework guest mounts.</p>
-      <div class="da-authoring-ce-stack da-stack">
-        <rd-video-source
-          label="Source video"
-          presentation="authoring-source"
-          hint="Flat or 2:1 equirect MP4"
-          data-ref="auth-video-source"
-        ></rd-video-source>
-        <rd-equirect-viewport
-          label="Framing preview"
-          preview-mode="rectilinear"
-          yaw="25"
-          pitch="-8"
-          horizontal-fov="75"
-          output-width="1280"
-          output-height="720"
-          data-ref="auth-equirect"
-        ></rd-equirect-viewport>
-        <div class="da-authoring-ce-controls da-stack">
-          <rd-number-input label="Yaw (°)" value="25" min="-180" max="180" data-ref="auth-yaw"></rd-number-input>
-          <rd-number-input label="Pitch (°)" value="-8" min="-90" max="90" data-ref="auth-pitch"></rd-number-input>
-          <rd-number-input label="Horizontal FOV (°)" value="75" min="30" max="120" data-ref="auth-fov"></rd-number-input>
-          <rd-number-input label="Trim start (sec)" value="0" min="0" step="0.1" data-ref="auth-trim-start"></rd-number-input>
-          <rd-number-input label="Trim end (sec)" value="30" min="0.1" step="0.1" data-ref="auth-trim-end"></rd-number-input>
+      <div class="da-authoring-workspace">
+        <header class="da-authoring-workspace__headers">
+          <h3 class="da-authoring-pane__title">Source</h3>
+          <h3 class="da-authoring-pane__title">Output</h3>
+        </header>
+        <div class="da-authoring-workspace__videos">
+          <div class="da-authoring-workspace__video-col da-authoring-workspace__video-col--source">
+            <div class="da-authoring-source-toolbar" data-ref="auth-source-toolbar" hidden>
+              <label class="da-authoring-change-file">
+                <input
+                  type="file"
+                  class="da-authoring-choose-file__input"
+                  accept="video/*"
+                  data-ref="auth-file-input"
+                />
+                Change video file
+              </label>
+            </div>
+          <div class="da-authoring-viewport-stage">
+            <div class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder" data-ref="auth-pick-source">
+              <label class="da-authoring-choose-file">
+                <input
+                  type="file"
+                  class="da-authoring-choose-file__input"
+                  accept="video/*"
+                  data-ref="auth-file-input-initial"
+                />
+                Choose video file
+              </label>
+            </div>
+            <rd-flat-video-viewport
+              class="da-authoring-flat-viewport"
+              hidden
+              output-width="720"
+              output-height="480"
+              data-ref="auth-flat-viewport"
+            ></rd-flat-video-viewport>
+            <rd-equirect-sphere-viewport
+              class="da-authoring-sphere-viewport"
+              hidden
+              flip-interior
+              yaw="25"
+              pitch="-8"
+              horizontal-fov="75"
+              output-width="720"
+              output-height="480"
+              data-ref="auth-sphere-viewport"
+            ></rd-equirect-sphere-viewport>
+          </div>
+          </div>
+          <div class="da-authoring-workspace__video-col">
+            <div
+              class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder"
+              data-ref="auth-output-preview"
+            >
+              <p class="da-authoring-output-placeholder">Choose source file to create output</p>
+            </div>
+          </div>
         </div>
-        <rd-wasm-media
-          label="Extract"
-          operation="equirect-extract"
-          extraction-mode="rectilinear"
-          output-format="mp4"
-          show-progress="true"
-          trim-start-sec="0"
-          trim-end-sec="30"
-          data-ref="auth-wasm"
-        ></rd-wasm-media>
-        <div data-ref="auth-extract-result" class="da-note" hidden></div>
+        <div class="da-authoring-workspace__footers">
+          <div class="da-authoring-pane da-authoring-pane--source" aria-label="Authoring source controls">
+            <p class="da-note da-authoring-controls-placeholder" data-ref="auth-source-placeholder">
+              Choose a source video to show playback and framing controls.
+            </p>
+            <div data-ref="auth-source-controls" hidden>
+              <p class="da-note da-authoring-source-mode" data-ref="auth-mode-note"></p>
+              ${renderAuthoringPlaybackBarMarkup()}
+              ${renderAuthoringCameraControlsMarkup()}
+              <div class="da-authoring-crop-controls" data-ref="auth-flat-controls" hidden aria-label="Crop region controls">
+                <h4 class="da-authoring-crop-controls__title">Crop region</h4>
+                <p class="da-note da-authoring-crop-controls__hint">
+                  Drag corners for any output size (updates export dimensions live). Pick a preset to snap to
+                  320×240, 640×360, or 720×480.
+                </p>
+                <div class="da-authoring-crop-controls__grid">
+                  <rd-number-input label="Crop X" value="0" min="0" step="1" data-ref="auth-crop-x"></rd-number-input>
+                  <rd-number-input label="Crop Y" value="0" min="0" step="1" data-ref="auth-crop-y"></rd-number-input>
+                  <rd-number-input label="Crop width" value="640" min="2" step="2" data-ref="auth-crop-w"></rd-number-input>
+                  <rd-number-input label="Crop height" value="360" min="2" step="2" data-ref="auth-crop-h"></rd-number-input>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="da-authoring-pane da-authoring-pane--output" aria-label="Authoring output controls">
+            <p class="da-note da-authoring-controls-placeholder" data-ref="auth-output-placeholder">
+              Output and export settings appear after you load a source video.
+            </p>
+            <div data-ref="auth-output-controls" hidden>
+              <p class="da-note">Same view as source — live mirror scaled to export dimensions.</p>
+              <p class="da-note" data-ref="auth-source-dims" hidden></p>
+              <div class="da-media-extract-controls">
+                <div class="da-media-extract-size-row">
+                  <rd-select-input
+                    class="da-media-extract-size-row__preset"
+                    label="Export rectangle size"
+                    value="720x480"
+                    options='${jsonAttr(presetOptions)}'
+                    data-ref="auth-output-preset"
+                  ></rd-select-input>
+                  <rd-number-input
+                    class="da-media-extract-size-row__dim"
+                    label="W"
+                    value="720"
+                    min="160"
+                    max="3840"
+                    step="2"
+                    disabled
+                    data-ref="auth-output-width"
+                  ></rd-number-input>
+                  <span class="da-media-extract-size-row__sep" aria-hidden="true">×</span>
+                  <rd-number-input
+                    class="da-media-extract-size-row__dim"
+                    label="H"
+                    value="480"
+                    min="120"
+                    max="2160"
+                    step="2"
+                    disabled
+                    data-ref="auth-output-height"
+                  ></rd-number-input>
+                  <button
+                    type="button"
+                    class="da-media-extract-size-row__reverse"
+                    data-ref="auth-reverse"
+                    aria-label="Reverse playback"
+                    aria-pressed="false"
+                  >
+                    <svg class="da-authoring-playback__icon da-authoring-playback__icon--reverse" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 7v10M7 17l-4-4 4-4M17 7v10M17 7l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="da-media-extract-controls__camera" data-ref="auth-out-camera" hidden>
+                  <rd-number-input label="Yaw (°)" value="25" min="-180" max="180" step="0.5" data-ref="auth-out-yaw"></rd-number-input>
+                  <rd-number-input label="Pitch (°)" value="-8" min="-85" max="85" step="0.5" data-ref="auth-out-pitch"></rd-number-input>
+                  <rd-number-input label="Horizontal FOV (°)" value="75" min="30" max="360" step="1" data-ref="auth-out-fov"></rd-number-input>
+                </div>
+              </div>
+              <p class="da-note da-note--filter" data-ref="auth-filter-note" hidden></p>
+              <p class="da-note" data-ref="auth-record-hint">Record a segment on the playback bar, then extract that subsection.</p>
+              <rd-select-input
+                label="Extract format"
+                value="mp4"
+                options='[{"value":"mp4","label":"MP4 (H.264 transcode)"},{"value":"webm","label":"WebM (mirror copy)"}]'
+                data-ref="auth-extract-format"
+              ></rd-select-input>
+              <rd-wasm-media
+                label="Extract preview recording"
+                operation="equirect-extract"
+                extraction-mode="rectilinear"
+                output-format="mp4"
+                show-progress="true"
+                output-width="720"
+                output-height="480"
+                data-ref="auth-wasm"
+              ></rd-wasm-media>
+              <p class="da-note" data-ref="auth-extract-busy" hidden aria-live="polite"></p>
+              <div data-ref="auth-extract-result" class="da-note" hidden></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>`;
 }

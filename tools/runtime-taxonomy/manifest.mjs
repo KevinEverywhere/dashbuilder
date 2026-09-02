@@ -148,6 +148,22 @@ export const PALETTE_RUNTIME_ENTRIES = [
     wcImport: 'visual/media/equirect-viewport',
   },
   {
+    type: 'visual.media.equirect-sphere-viewport',
+    subpath: 'visual/media/equirect-sphere-viewport',
+    exportName: 'EquirectSphereViewport',
+    pattern: 'manual',
+    testId: 'rd-equirect-sphere-viewport',
+    wcImport: 'visual/media/equirect-sphere-viewport',
+  },
+  {
+    type: 'visual.media.flat-video-viewport',
+    subpath: 'visual/media/flat-video-viewport',
+    exportName: 'FlatVideoViewport',
+    pattern: 'manual',
+    testId: 'rd-flat-video-viewport',
+    wcImport: 'visual/media/flat-video-viewport',
+  },
+  {
     type: 'visual.media.youtube-embed',
     subpath: 'visual/media/youtube-embed',
     exportName: 'YoutubeEmbed',

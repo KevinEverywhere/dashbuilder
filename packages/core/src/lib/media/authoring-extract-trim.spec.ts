@@ -1,6 +1,8 @@
 import {
   buildAuthoringExtractFfmpegArgs,
+  buildPreviewRecordingTranscodeArgs,
   authoringExtractDownloadName,
+  authoringPreviewRecordingDownloadName,
   isValidAuthoringRecordRange,
   normalizeAuthoringRecordRange,
 } from './authoring-extract-trim';
@@ -58,6 +60,29 @@ describe('authoring-extract-trim', () => {
       'input.mp4',
       '-vf',
       'scale=720:480',
+      '-an',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'ultrafast',
+      '-pix_fmt',
+      'yuv420p',
+      'output.mp4',
+    ]);
+  });
+
+  it('builds preview recording transcode args', () => {
+    expect(
+      buildPreviewRecordingTranscodeArgs({
+        inputName: 'preview.webm',
+        outputName: 'output.mp4',
+        reverse: true,
+      }),
+    ).toEqual([
+      '-i',
+      'preview.webm',
+      '-vf',
+      'reverse',
       '-an',
       '-c:v',
       'libx264',

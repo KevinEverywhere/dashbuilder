@@ -57,6 +57,27 @@ describe('@rosettadash/web-components/wasm', () => {
     media.remove();
   });
 
+  it('enables extract when preview recording and record trim are set', async () => {
+    const media = document.createElement(DB_WASM_MEDIA_TAG) as RdWasmMediaElement;
+    document.body.appendChild(media);
+    await media.whenReady();
+
+    media.setAttribute('operation', 'equirect-extract');
+    media.setAttribute('output-format', 'mp4');
+    media.setProperty('previewRecording', new Blob(['webm'], { type: 'video/webm' }));
+    media.setProperty('recordRange', { startSec: 1, endSec: 3 });
+    await media.whenReady();
+
+    const button = media.shadowRoot?.querySelector('[data-role="extract"]') as HTMLButtonElement | null;
+    expect(button?.disabled).toBe(false);
+    expect(media.filterPreview).toContain('MP4');
+
+    media.setAttribute('output-format', 'webm');
+    expect(media.filterPreview).toContain('WebM');
+
+    media.remove();
+  });
+
   it('enables extract when input file and record trim are set', async () => {
     const media = document.createElement(DB_WASM_MEDIA_TAG) as RdWasmMediaElement;
     document.body.appendChild(media);

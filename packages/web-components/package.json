@@ -201,10 +201,20 @@
       "import": "./src/visual/link-list/index.js",
       "default": "./src/visual/link-list/index.js"
     },
+    "./visual/media/equirect-sphere-viewport": {
+      "types": "./src/visual/media/equirect-sphere-viewport/index.d.ts",
+      "import": "./src/visual/media/equirect-sphere-viewport/index.js",
+      "default": "./src/visual/media/equirect-sphere-viewport/index.js"
+    },
     "./visual/media/equirect-viewport": {
       "types": "./src/visual/media/equirect-viewport/index.d.ts",
       "import": "./src/visual/media/equirect-viewport/index.js",
       "default": "./src/visual/media/equirect-viewport/index.js"
+    },
+    "./visual/media/flat-video-viewport": {
+      "types": "./src/visual/media/flat-video-viewport/index.d.ts",
+      "import": "./src/visual/media/flat-video-viewport/index.js",
+      "default": "./src/visual/media/flat-video-viewport/index.js"
     },
     "./visual/media/live-capture": {
       "types": "./src/visual/media/live-capture/index.d.ts",
@@ -344,7 +354,7 @@
     }
   },
   "dependencies": {
-    "@rosettadash/core": "0.1.3",
+    "@rosettadash/core": "0.1.2",
     "tslib": "^2.3.0"
   },
   "publishConfig": {

@@ -1,6 +1,7 @@
 import {
   buildEquirectExtractFilter,
   buildAuthoringExtractFfmpegArgs,
+  buildPreviewRecordingTranscodeArgs,
   DEFAULT_EQUIRECT_FLAT_CROP,
   formatFfmpegError,
   isValidAuthoringRecordRange,
@@ -47,6 +48,7 @@ export class RdWasmMediaElement extends HTMLElement {
 
   private ffmpeg: FfmpegInstance | null = null;
   private inputFile: File | Blob | null = null;
+  private previewRecording: Blob | null = null;
   private cropRegion: DashRow | null = null;
   private busy = false;
   private progress = 0;
@@ -109,6 +111,11 @@ export class RdWasmMediaElement extends HTMLElement {
         this.inputFile = file instanceof Blob ? file : null;
       } else {
         this.inputFile = null;
+      }
+    } else if (name === 'previewRecording') {
+      this.previewRecording = value instanceof Blob ? value : null;
+      if (this.shadowRoot && this.resourcesReady) {
+        void this.resourcesReady.then(() => this.paint());
       }
     } else if (name === 'cropRegion' && value && typeof value === 'object') {
       this.cropRegion = value as DashRow;
@@ -191,6 +198,12 @@ export class RdWasmMediaElement extends HTMLElement {
     if (this.operation !== 'equirect-extract') {
       return '';
     }
+    if (this.previewRecording) {
+      if (this.outputFormat === 'webm') {
+        return 'Output mirror recording → WebM (same clip as playback download)';
+      }
+      return 'Output mirror recording → MP4 (ffmpeg.wasm libx264 transcode)';
+    }
     const crop = this.resolveCrop();
     return buildEquirectExtractFilter(this.extractionMode, {
       ...crop,
@@ -263,7 +276,11 @@ export class RdWasmMediaElement extends HTMLElement {
 
     const progressEl = root.querySelector('[data-ref="progress"]') as HTMLElement;
     const progressBar = root.querySelector('[data-ref="progress-bar"]') as HTMLElement;
-    if (this.showProgress && this.operation === 'equirect-extract') {
+    const showExtractProgress =
+      this.showProgress &&
+      this.operation === 'equirect-extract' &&
+      (!this.previewRecording || this.outputFormat !== 'webm');
+    if (showExtractProgress) {
       progressEl.hidden = false;
       progressEl.setAttribute('aria-valuenow', String(this.progress));
       progressBar.style.width = `${this.progress}%`;
@@ -271,11 +288,13 @@ export class RdWasmMediaElement extends HTMLElement {
       progressEl.hidden = true;
     }
 
+    const canExtract = this.canExtract();
+
     const actions = root.querySelector('[data-ref="actions"]');
     if (actions) {
       if (this.operation === 'equirect-extract') {
         actions.innerHTML = `<button type="button" data-role="extract" ${
-          this.busy || !this.inputFile || !this.hasValidTrim() ? 'disabled' : ''
+          this.busy || !canExtract ? 'disabled' : ''
         }>${this.busy ? 'Extracting…' : 'Extract subsection'}</button>`;
       } else {
         actions.innerHTML =
@@ -314,6 +333,132 @@ export class RdWasmMediaElement extends HTMLElement {
 
   private hasValidTrim(): boolean {
     return isValidAuthoringRecordRange(this.resolveTrim());
+  }
+
+  private canExtract(): boolean {
+    return this.hasValidTrim() && (this.previewRecording != null || this.inputFile != null);
+  }
+
+  private requireValidTrim(): AuthoringRecordRange | null {
+    const trim = this.resolveTrim();
+    if (!trim || !isValidAuthoringRecordRange(trim)) {
+      return null;
+    }
+    return trim;
+  }
+
+  private async runPreviewRecordingExtract(): Promise<void> {
+    const trim = this.requireValidTrim();
+    if (!trim) {
+      this.emitExtractError('Record a segment on the timeline before extracting.');
+      return;
+    }
+    const source = this.previewRecording;
+    if (!source || source.size <= 0) {
+      this.emitExtractError('Record a segment on the playback bar before extracting.');
+      return;
+    }
+
+    const crop = this.resolveCrop();
+    const trimMeta = normalizeAuthoringRecordRange(trim);
+    const baseMetadata: DashRow = {
+      source: 'preview-recording',
+      outputWidth: crop.outputWidth,
+      outputHeight: crop.outputHeight,
+      trimStartSec: trim.startSec,
+      trimEndSec: trim.endSec,
+      trimDurationSec: trimMeta?.durationSec ?? 0,
+      reverse: this.reverse,
+    };
+
+    if (this.outputFormat === 'webm') {
+      this.busy = true;
+      this.error = null;
+      this.paint();
+      const metadata: DashRow = {
+        ...baseMetadata,
+        format: 'webm',
+      };
+      this.dispatchEvent(
+        new CustomEvent('extract-complete', {
+          detail: { blob: source, metadata },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      this.dispatchEvent(
+        new CustomEvent('metadata', {
+          detail: metadata,
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      this.busy = false;
+      this.paint();
+      return;
+    }
+
+    this.busy = true;
+    this.error = null;
+    this.progress = 0;
+    this.paint();
+
+    let logTail: string[] = [];
+    try {
+      const ffmpeg = await this.ensureFfmpeg();
+      const logs = this.attachFfmpegLogs(ffmpeg);
+      try {
+        const utilModule = (await import('@ffmpeg/util')) as FfmpegUtilModule;
+        const inputName = 'preview-recording.webm';
+        const outputName = this.outputFileName();
+        await ffmpeg.writeFile(inputName, await utilModule.fetchFile(source));
+        const exitCode = await ffmpeg.exec(
+          buildPreviewRecordingTranscodeArgs({
+            inputName,
+            outputName,
+            reverse: this.reverse,
+          }),
+        );
+        if (exitCode !== 0) {
+          throw new Error(
+            logs.tail().length
+              ? logs.tail().join(' ')
+              : `ffmpeg exited with code ${exitCode}`,
+          );
+        }
+        const data = await ffmpeg.readFile(outputName, 'binary');
+        const blob = this.blobFromFfmpegOutput(data);
+        if (blob.size === 0) {
+          throw new Error('ffmpeg produced an empty output file');
+        }
+        const metadata: DashRow = {
+          ...baseMetadata,
+          format: this.outputFormat,
+        };
+        this.dispatchEvent(
+          new CustomEvent('extract-complete', {
+            detail: { blob, metadata },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+        this.dispatchEvent(
+          new CustomEvent('metadata', {
+            detail: metadata,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      } finally {
+        logTail = logs.tail();
+        logs.stop();
+      }
+    } catch (nextError) {
+      this.emitExtractError(formatFfmpegError(nextError, logTail));
+    } finally {
+      this.busy = false;
+      this.paint();
+    }
   }
 
   private inputFileName(): string {
@@ -408,12 +553,16 @@ export class RdWasmMediaElement extends HTMLElement {
   }
 
   async runEquirectExtract(): Promise<void> {
+    if (this.previewRecording) {
+      await this.runPreviewRecordingExtract();
+      return;
+    }
     if (!this.inputFile) {
       this.emitExtractError('Attach a video file before extracting.');
       return;
     }
-    const trim = this.resolveTrim();
-    if (!isValidAuthoringRecordRange(trim)) {
+    const trim = this.requireValidTrim();
+    if (!trim) {
       this.emitExtractError('Record a segment on the timeline before extracting.');
       return;
     }
@@ -461,15 +610,16 @@ export class RdWasmMediaElement extends HTMLElement {
         if (blob.size === 0) {
           throw new Error('ffmpeg produced an empty output file');
         }
+        const trimMeta = normalizeAuthoringRecordRange(trim);
         const metadata: DashRow = {
           filter,
           outputWidth: crop.outputWidth,
           outputHeight: crop.outputHeight,
           format: this.outputFormat,
           reverse: this.reverse,
-          trimStartSec: trim!.startSec,
-          trimEndSec: trim!.endSec,
-          trimDurationSec: normalizeAuthoringRecordRange(trim!)?.durationSec ?? 0,
+          trimStartSec: trim.startSec,
+          trimEndSec: trim.endSec,
+          trimDurationSec: trimMeta?.durationSec ?? 0,
         };
 
         this.dispatchEvent(

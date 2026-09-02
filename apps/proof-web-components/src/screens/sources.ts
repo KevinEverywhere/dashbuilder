@@ -31,8 +31,9 @@ export const SCREEN_SOURCES: Record<string, string> = {
   <rd-youtube-embed video-id={…} />
 </MediaScreen>`,
   authoring: `<AuthoringScreen>
-  <rd-video-source presentation="authoring-source" />
-  <rd-equirect-viewport preview-mode="rectilinear" />
+  <input type="file" accept="video/*" />
+  <rd-flat-video-viewport />
+  <rd-equirect-sphere-viewport flip-interior />
   <rd-wasm-media operation="equirect-extract" />
 </AuthoringScreen>`,
   intel: `<IntelScreen userRole={userRole} newsQuery={newsQuery}>

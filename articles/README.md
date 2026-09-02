@@ -3,8 +3,8 @@
 RosettaDash article series. Kevin writes the introduction; articles
 01–07 are draft-ready in their folders.
 
-**Current ticket:** [DAS-177](https://planetkevin.atlassian.net/browse/DAS-177)  
-**Branch:** `feature/DAS-177-wc-proof-pure-custom-elements`
+**Current ticket:** [DAS-178](https://planetkevin.atlassian.net/browse/DAS-178)  
+**Branch:** `feature/DAS-178-wc-authoring-ce-parity`
 
 Series planning notes stay in the workspace
 [`docs/00-series.md`](../../docs/00-series.md) until Kevin moves

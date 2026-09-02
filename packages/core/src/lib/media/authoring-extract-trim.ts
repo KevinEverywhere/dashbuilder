@@ -29,6 +29,39 @@ export function authoringExtractDownloadName(inputFile: File | Blob | null | und
   return 'authoring-extract.mp4';
 }
 
+/** Download filename for a preview-recording extract in WebM. */
+export function authoringPreviewRecordingDownloadName(inputFile: File | Blob | null | undefined): string {
+  if (inputFile instanceof File && inputFile.name) {
+    const stem = inputFile.name.replace(/\.[^.]+$/, '');
+    const safe = stem.replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '') || 'authoring';
+    return `${safe}-preview-recording.webm`;
+  }
+  return 'authoring-preview-recording.webm';
+}
+
+/** ffmpeg args to transcode a MediaRecorder WebM preview clip to MP4. */
+export function buildPreviewRecordingTranscodeArgs(options: {
+  inputName: string;
+  outputName: string;
+  reverse?: boolean;
+}): string[] {
+  const args = ['-i', options.inputName];
+  if (options.reverse) {
+    args.push('-vf', 'reverse');
+  }
+  args.push(
+    '-an',
+    '-c:v',
+    'libx264',
+    '-preset',
+    'ultrafast',
+    '-pix_fmt',
+    'yuv420p',
+    options.outputName,
+  );
+  return args;
+}
+
 /** ffmpeg args for crop/scale extract, optionally trimmed to a recorded timeline segment. */
 export function buildAuthoringExtractFfmpegArgs(options: {
   inputName: string;

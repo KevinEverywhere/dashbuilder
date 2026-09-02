@@ -708,6 +708,9 @@ function render(): void {
     if (mounted.screen === 'authoring' && atlas.screen !== 'authoring') {
       resetAuthoringWiring();
     }
+    if (atlas.screen === 'authoring' && mounted.screen !== 'authoring') {
+      resetAuthoringWiring();
+    }
     screenRoot.innerHTML = renderScreenHtml();
     mounted.screen = atlas.screen;
     mounted.mapsPanel = atlas.screen === 'maps' ? atlas.mapsPanel : '';
