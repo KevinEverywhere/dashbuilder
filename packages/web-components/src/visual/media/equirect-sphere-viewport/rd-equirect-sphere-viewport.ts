@@ -18,7 +18,7 @@ export interface EquirectSphereOutputSizeChange {
   outputHeight: number;
 }
 
-type ExportHandleMode = 'nw' | 'ne' | 'sw' | 'se';
+type ExportHandleMode = 'nw' | 'ne' | 'sw' | 'se' | 'move';
 
 const MIN_OUTPUT_EDGE = 160;
 const MIN_EXPORT_FRAME_SCALE = 0.2;
@@ -127,9 +127,16 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
   /** Reference overlay size (CSS px) when output equals referenceOutput at full scale. */
   private referenceDisplayW = 0;
   private referenceDisplayH = 0;
-  /** Screen-space export rectangle (CSS px, centered). Source of truth for canvas crop. */
+  /** Screen-space export rectangle (CSS px). Source of truth for canvas crop. */
   private exportDisplayW = 0;
   private exportDisplayH = 0;
+  /** Offset from centered position (CSS px). */
+  private exportDisplayOffsetX = 0;
+  private exportDisplayOffsetY = 0;
+  /** Live export pixels while corner-resize drag is in progress (before commit). */
+  private pendingOutputWidth: number | null = null;
+  private pendingOutputHeight: number | null = null;
+  private skipExportDisplaySyncOnce = false;
   private outputSizeLayoutQueued = false;
   private exportDrag: {
     mode: ExportHandleMode;
@@ -139,6 +146,8 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     originOutputH: number;
     originDisplayW: number;
     originDisplayH: number;
+    originOffsetX: number;
+    originOffsetY: number;
   } | null = null;
   private disposeRuntime: (() => void) | null = null;
   private mounted = false;
@@ -191,6 +200,9 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       return;
     }
     if (name === 'output-width' || name === 'output-height') {
+      if (this.exportDrag && this.exportDrag.mode !== 'move') {
+        return;
+      }
       this.queueOutputSizeLayout();
     }
   }
@@ -202,9 +214,10 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     this.outputSizeLayoutQueued = true;
     queueMicrotask(() => {
       this.outputSizeLayoutQueued = false;
-      if (!this.exportDrag) {
+      if (!this.exportDrag && !this.skipExportDisplaySyncOnce) {
         this.syncExportDisplayFromOutput();
       }
+      this.skipExportDisplaySyncOnce = false;
       this.resizeOutputMirror?.();
       this.layoutExportFrame?.();
     });
@@ -212,17 +225,26 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
 
   setProperty(name: string, value: unknown): void {
     if (name === 'outputPreviewHost') {
-      this.outputPreviewHost = value instanceof HTMLElement ? value : null;
+      const nextHost = value instanceof HTMLElement ? value : null;
+      if (nextHost === this.outputPreviewHost) {
+        return;
+      }
+      this.outputPreviewHost = nextHost;
       if (this.mounted) {
         this.remountScene();
       }
       return;
     }
     if (name === 'videoSrc') {
-      if (value == null || value === '') {
+      const next = value == null || value === '' ? null : String(value);
+      const current = this.getAttribute('video-src');
+      if (next === current || (next == null && current == null)) {
+        return;
+      }
+      if (next == null) {
         this.removeAttribute('video-src');
       } else {
-        this.setAttribute('video-src', String(value));
+        this.setAttribute('video-src', next);
       }
       return;
     }
@@ -234,6 +256,8 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
         this.captureReferenceDisplay(rect.width, rect.height);
         this.exportDisplayW = this.referenceDisplayW;
         this.exportDisplayH = this.referenceDisplayH;
+        this.exportDisplayOffsetX = 0;
+        this.exportDisplayOffsetY = 0;
       }
       this.layoutExportFrame?.();
       this.resizeOutputMirror?.();
@@ -258,10 +282,16 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
   }
 
   get outputWidth(): number {
+    if (this.pendingOutputWidth != null) {
+      return this.pendingOutputWidth;
+    }
     return readNumber(this.getAttribute('output-width'), 1280);
   }
 
   get outputHeight(): number {
+    if (this.pendingOutputHeight != null) {
+      return this.pendingOutputHeight;
+    }
     return readNumber(this.getAttribute('output-height'), 720);
   }
 
@@ -380,6 +410,18 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     this.appendChild(exportFrame);
     this.exportFrameEl = exportFrame;
     this.exportWindowEl = exportWindow;
+    exportWindow.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      const target = event.target;
+      if (target instanceof Element && target.closest('[data-handle]')) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      this.onExportHandlePointerDown(event as PointerEvent, 'move');
+    });
     exportWindow.querySelectorAll('[data-handle]').forEach((handle) => {
       handle.addEventListener('pointerdown', (event) => {
         event.stopPropagation();
@@ -695,8 +737,29 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       } else {
         applySphereCamera(aspect);
       }
+      const prevRefW = this.referenceDisplayW;
+      const prevRefH = this.referenceDisplayH;
+      const prevDisplayW = this.exportDisplayW;
+      const prevDisplayH = this.exportDisplayH;
+      const prevOffsetX = this.exportDisplayOffsetX;
+      const prevOffsetY = this.exportDisplayOffsetY;
       this.captureReferenceDisplay(width, height);
-      this.syncExportDisplayFromOutput();
+      if (
+        prevRefW > 0 &&
+        prevRefH > 0 &&
+        prevDisplayW > 0 &&
+        prevDisplayH > 0 &&
+        !this.exportDrag
+      ) {
+        const scaleX = this.referenceDisplayW / prevRefW;
+        const scaleY = this.referenceDisplayH / prevRefH;
+        this.exportDisplayW = prevDisplayW * scaleX;
+        this.exportDisplayH = prevDisplayH * scaleY;
+        this.exportDisplayOffsetX = prevOffsetX * scaleX;
+        this.exportDisplayOffsetY = prevOffsetY * scaleY;
+      } else if (!this.exportDrag) {
+        this.syncExportDisplayFromOutput();
+      }
       this.layoutExportFrame?.();
     };
 
@@ -785,6 +848,7 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     if (!windowEl) {
       return;
     }
+    this.userInteracting = true;
     this.exportDrag = {
       mode,
       startX: event.clientX,
@@ -793,9 +857,15 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       originOutputH: this.outputHeight,
       originDisplayW: this.exportDisplayW,
       originDisplayH: this.exportDisplayH,
+      originOffsetX: this.exportDisplayOffsetX,
+      originOffsetY: this.exportDisplayOffsetY,
     };
     const target =
-      event.target instanceof Element ? (event.target.closest('[data-handle]') as HTMLElement | null) : null;
+      mode === 'move'
+        ? windowEl
+        : event.target instanceof Element
+          ? (event.target.closest('[data-handle]') as HTMLElement | null)
+          : null;
     if (target?.setPointerCapture) {
       try {
         target.setPointerCapture(event.pointerId);
@@ -811,7 +881,12 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       if (target?.hasPointerCapture?.(upEvent.pointerId)) {
         target.releasePointerCapture(upEvent.pointerId);
       }
+      const drag = this.exportDrag;
       this.exportDrag = null;
+      this.userInteracting = false;
+      if (drag && drag.mode !== 'move') {
+        this.flushPendingOutputSize();
+      }
       window.removeEventListener('pointermove', onWindowMove);
       window.removeEventListener('pointerup', onWindowUp);
       window.removeEventListener('pointercancel', onWindowUp);
@@ -854,10 +929,14 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     hostHeight: number,
   ): { width: number; height: number } {
     this.ensureReferenceDisplay(hostWidth, hostHeight);
-    const { refW, refH } = this.referenceDimensions();
+    const { refW } = this.referenceDimensions();
+    const safeOutputH = Math.max(1, outputH);
+    const outputAspect = outputW / safeOutputH;
+    const scale = outputW / refW;
+    const width = this.referenceDisplayW * scale;
     return {
-      width: this.referenceDisplayW * (outputW / refW),
-      height: this.referenceDisplayH * (outputH / refH),
+      width,
+      height: width / outputAspect,
     };
   }
 
@@ -898,7 +977,21 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     this.exportDisplayH = display.height;
   }
 
-  /** Map centered export overlay (CSS px) to source canvas buffer coordinates. */
+  private exportWindowPosition(
+    hostWidth: number,
+    hostHeight: number,
+  ): { left: number; top: number } {
+    const halfGapX = Math.max(0, (hostWidth - this.exportDisplayW) / 2);
+    const halfGapY = Math.max(0, (hostHeight - this.exportDisplayH) / 2);
+    this.exportDisplayOffsetX = clamp(this.exportDisplayOffsetX, -halfGapX, halfGapX);
+    this.exportDisplayOffsetY = clamp(this.exportDisplayOffsetY, -halfGapY, halfGapY);
+    return {
+      left: halfGapX + this.exportDisplayOffsetX,
+      top: halfGapY + this.exportDisplayOffsetY,
+    };
+  }
+
+  /** Map export overlay (CSS px) to source canvas buffer coordinates. */
   private sourceCropFromExportDisplay(
     sourceCanvas: HTMLCanvasElement,
     hostWidth: number,
@@ -906,8 +999,7 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
   ): { x: number; y: number; width: number; height: number } {
     const cssToBufferX = sourceCanvas.width / Math.max(1, hostWidth);
     const cssToBufferY = sourceCanvas.height / Math.max(1, hostHeight);
-    const cropX = (hostWidth - this.exportDisplayW) / 2;
-    const cropY = (hostHeight - this.exportDisplayH) / 2;
+    const { left: cropX, top: cropY } = this.exportWindowPosition(hostWidth, hostHeight);
     return {
       x: cropX * cssToBufferX,
       y: cropY * cssToBufferY,
@@ -983,9 +1075,11 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     if (this.exportDisplayW <= 0 || this.exportDisplayH <= 0) {
       this.syncExportDisplayFromOutput();
     }
-    windowEl.style.flexShrink = '0';
+    const { left, top } = this.exportWindowPosition(rect.width, rect.height);
     windowEl.style.width = `${this.exportDisplayW}px`;
     windowEl.style.height = `${this.exportDisplayH}px`;
+    windowEl.style.left = `${left}px`;
+    windowEl.style.top = `${top}px`;
   }
 
   private applyExportDrag(clientX: number, clientY: number): void {
@@ -995,6 +1089,13 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     }
     const dx = clientX - drag.startX;
     const dy = clientY - drag.startY;
+
+    if (drag.mode === 'move') {
+      this.exportDisplayOffsetX = drag.originOffsetX + dx;
+      this.exportDisplayOffsetY = drag.originOffsetY + dy;
+      this.layoutExportFrameNow();
+      return;
+    }
 
     let nextDisplayW = drag.originDisplayW;
     let nextDisplayH = drag.originDisplayH;
@@ -1034,14 +1135,37 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
   }
 
   private emitOutputSize(outputWidth: number, outputHeight: number): void {
+    const resizeDragActive = this.exportDrag != null && this.exportDrag.mode !== 'move';
+    if (resizeDragActive) {
+      this.pendingOutputWidth = outputWidth;
+      this.pendingOutputHeight = outputHeight;
+      this.resizeOutputMirror?.();
+      return;
+    }
+    this.commitOutputSize(outputWidth, outputHeight);
+  }
+
+  private flushPendingOutputSize(): void {
+    if (this.pendingOutputWidth == null || this.pendingOutputHeight == null) {
+      return;
+    }
+    this.skipExportDisplaySyncOnce = true;
+    this.commitOutputSize(this.pendingOutputWidth, this.pendingOutputHeight);
+  }
+
+  private commitOutputSize(outputWidth: number, outputHeight: number): void {
     const nextW = String(outputWidth);
     const nextH = String(outputHeight);
     if (this.getAttribute('output-width') === nextW && this.getAttribute('output-height') === nextH) {
+      this.pendingOutputWidth = null;
+      this.pendingOutputHeight = null;
       this.resizeOutputMirror?.();
       return;
     }
     this.setAttribute('output-width', nextW);
     this.setAttribute('output-height', nextH);
+    this.pendingOutputWidth = null;
+    this.pendingOutputHeight = null;
     this.resizeOutputMirror?.();
     this.dispatchEvent(
       new CustomEvent('output-size-change', {

@@ -38,6 +38,7 @@ export interface WasmMediaProps {
   inputFile?: File | Blob | null;
   cropRegion?: Record<string, string | number | boolean | null | undefined> | null;
   recordRange?: AuthoringRecordRange | null;
+  previewRecording?: Blob | null;
   className?: string;
 }
 
@@ -72,6 +73,7 @@ export class WasmMedia implements OnInit, OnDestroy {
     Record<string, string | number | boolean | null | undefined> | null | undefined
   >(undefined);
   readonly recordRange = input<AuthoringRecordRange | null | undefined>(undefined);
+  readonly previewRecording = input<Blob | null | undefined>(undefined);
   readonly className = input<string | undefined>(undefined);
 
   readonly progress = output<{ progress: number }>();
@@ -104,6 +106,7 @@ export class WasmMedia implements OnInit, OnDestroy {
       this.inputFile();
       this.cropRegion();
       this.recordRange();
+      this.previewRecording();
       this.className();
       if (this.ready) {
         this.syncFromInputs();
@@ -158,6 +161,7 @@ export class WasmMedia implements OnInit, OnDestroy {
     setHostProperty(el, 'inputFile', this.inputFile() ?? null);
     setHostProperty(el, 'cropRegion', this.cropRegion() ?? null);
     setHostProperty(el, 'recordRange', this.recordRange() ?? null);
+    setHostProperty(el, 'previewRecording', this.previewRecording() ?? null);
     if (this.className()) {
       el.setAttribute('class', this.className()!);
     } else {

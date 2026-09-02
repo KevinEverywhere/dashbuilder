@@ -1,24 +1,462 @@
 <script module lang="ts">
-  export const AUTHORING_SOURCE = `<AuthoringScreen locale={locale} selectedId={selectedId}>
-  <!-- Cross-framework: Svelte shell mounts React Authoring via ReactMount -->
-  <ReactMount component={AuthoringScreenReact} componentProps={{ locale, selectedId }} />
-  <!-- React subtree: EquirectSphereViewport, FlatVideoViewport, WasmMedia (@rosettadash/react) -->
+  export const AUTHORING_SOURCE = `<AuthoringScreen {locale} {selectedId}>
+  <EquirectSphereViewport videoSrc={sourceUrl} yaw={…} pitch={…} />
+  <FlatVideoViewport videoSrc={sourceUrl} cropX={…} />
+  <WasmMedia operation="equirect-extract" inputFile={inputFile} />
 </AuthoringScreen>`;
 </script>
 
 <script lang="ts">
-  import ReactMount from '../components/ReactMount.svelte';
-  import { AuthoringScreen as AuthoringScreenReact } from '../authoring/AuthoringScreen';
+  import { EquirectSphereViewport } from '@rosettadash/svelte/visual/media/equirect-sphere-viewport';
+  import { FlatVideoViewport } from '@rosettadash/svelte/visual/media/flat-video-viewport';
+  import WasmMedia from '@rosettadash/svelte/visual/wasm/media';
+  import SelectInput from '@rosettadash/svelte/visual/input/select';
+  import AuthoringCameraControls from '../components/AuthoringCameraControls.svelte';
+  import AuthoringPlaybackBar from '../components/AuthoringPlaybackBar.svelte';
+  import BoundSelectInput from '../components/BoundSelectInput.svelte';
+  import { createAuthoringScreen } from '../lib/authoring-screen.svelte';
+  import type { AuthoringViewportHandle } from '../lib/authoring-viewport';
 
   let { locale, selectedId }: { locale: string; selectedId: string } = $props();
 
-  const componentProps = $derived({ locale, selectedId });
+  const screen = createAuthoringScreen(() => locale, () => selectedId);
+
+  let sphereViewport: AuthoringViewportHandle | undefined = $state();
+  let flatViewport: AuthoringViewportHandle | undefined = $state();
+  let outputPreviewHost: HTMLDivElement | undefined = $state();
+
+  const viewport = $derived<AuthoringViewportHandle | null>(
+    sphereViewport ?? flatViewport ?? null,
+  );
 </script>
 
-<div class="da-interop-callout" role="note">
-  <strong>Cross-framework showcase.</strong>
-  This screen is a Svelte wrapper around a React subtree (<code>ReactMount.svelte</code> →
-  <code>authoring/AuthoringScreen.tsx</code>) — the React example of four DAS-158
-  cross-framework hosts. See About → Cross-framework composition.
-</div>
-<ReactMount component={AuthoringScreenReact} {componentProps} />
+<section class="da-panel da-panel--authoring">
+  <h2>Authoring</h2>
+
+  <div class="da-authoring-workspace">
+    <header class="da-authoring-workspace__headers">
+      <h3 class="da-authoring-pane__title">Source</h3>
+      <h3 class="da-authoring-pane__title">Output</h3>
+    </header>
+
+    <div class="da-authoring-workspace__videos">
+      <div class="da-authoring-workspace__video-col da-authoring-workspace__video-col--source">
+        {#if screen.sourceUrl}
+          <div class="da-authoring-source-toolbar">
+            <label class="da-authoring-change-file">
+              <input
+                type="file"
+                class="da-authoring-choose-file__input"
+                accept="video/*"
+                onchange={screen.onAuthoringFileSelected}
+              />
+              Change video file
+            </label>
+          </div>
+        {/if}
+        <div class="da-authoring-viewport-stage">
+          {#if screen.sourceUrl}
+            {#if screen.isEquirectSource}
+              <EquirectSphereViewport
+                bind:this={sphereViewport}
+                className="da-authoring-sphere-viewport"
+                videoSrc={screen.sourceUrl}
+                flipInterior={true}
+                yaw={screen.yaw}
+                pitch={screen.pitch}
+                horizontalFov={screen.horizontalFov}
+                outputWidth={screen.outputWidth}
+                outputHeight={screen.outputHeight}
+                outputPreviewHost={outputPreviewHost ?? null}
+                resetExportReferenceToken={screen.exportReferenceToken}
+                outputSizeCommitToken={screen.outputSizeCommitToken}
+                onCameraChange={screen.onCameraChange}
+                onOutputSizeChange={screen.onOutputSizeChange}
+              />
+            {:else if screen.sourceWidth && screen.sourceHeight}
+              <FlatVideoViewport
+                bind:this={flatViewport}
+                className="da-authoring-flat-viewport"
+                videoSrc={screen.sourceUrl}
+                sourceWidth={screen.sourceWidth}
+                sourceHeight={screen.sourceHeight}
+                cropX={screen.cropX}
+                cropY={screen.cropY}
+                cropWidth={screen.cropWidth}
+                cropHeight={screen.cropHeight}
+                outputWidth={screen.outputWidth}
+                outputHeight={screen.outputHeight}
+                outputPreviewHost={outputPreviewHost ?? null}
+                onCropChange={screen.onCropChange}
+              />
+            {:else}
+              <div
+                class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder"
+                aria-busy="true"
+                aria-label="Reading source video"
+              ></div>
+            {/if}
+          {:else if screen.sourceLoadBusy}
+            <div
+              class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder"
+              aria-busy="true"
+              aria-label="Loading source video"
+            ></div>
+          {:else}
+            <div class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
+              <label class="da-authoring-choose-file">
+                <input
+                  type="file"
+                  class="da-authoring-choose-file__input"
+                  accept="video/*"
+                  onchange={screen.onAuthoringFileSelected}
+                />
+                Choose video file
+              </label>
+            </div>
+          {/if}
+        </div>
+      </div>
+
+      <div class="da-authoring-workspace__video-col">
+        {#if screen.sourceUrl}
+          <div bind:this={outputPreviewHost} class="da-authoring-program-preview-host"></div>
+        {:else}
+          <div class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
+            <p class="da-authoring-output-placeholder">Choose source file to create output</p>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <div class="da-authoring-workspace__footers">
+      <div class="da-authoring-pane da-authoring-pane--source" aria-label="Authoring source controls">
+        {#if !screen.sourceUrl && !screen.sourceLoadBusy}
+          <p class="da-note da-authoring-controls-placeholder">
+            Choose a source video to show playback and framing controls.
+          </p>
+        {:else if !screen.sourceReady}
+          <p class="da-note da-authoring-controls-placeholder" aria-busy="true">Loading source video…</p>
+        {:else}
+          <p class="da-note da-authoring-source-mode">{screen.sourceModeLabel}</p>
+          <AuthoringPlaybackBar
+            {viewport}
+            disabled={false}
+            hint={screen.playbackHint}
+            recordRange={screen.recordRange}
+            onRecordRangeChange={(range) => {
+              screen.recordRange = range;
+            }}
+            onPreviewRecordingChange={(blob) => {
+              screen.previewRecording = blob;
+            }}
+            onResetView={screen.resetView}
+            onPlaybackStop={screen.resetExportRectangle}
+          />
+          {#if screen.isEquirectSource}
+            <AuthoringCameraControls
+              yaw={screen.yaw}
+              pitch={screen.pitch}
+              horizontalFov={screen.horizontalFov}
+              disabled={false}
+              onYawChange={(value) => {
+                screen.yaw = screen.wrapSigned(value);
+              }}
+              onPitchChange={(value) => {
+                screen.pitch = value;
+              }}
+              onHorizontalFovChange={(value) => {
+                screen.horizontalFov = value;
+              }}
+              onReset={screen.resetView}
+              onLittlePlanetPreset={screen.applyLittlePlanetPreset}
+            />
+          {:else}
+            <div class="da-authoring-crop-controls" aria-label="Crop region controls">
+              <h4 class="da-authoring-crop-controls__title">Crop region</h4>
+              <p class="da-note da-authoring-crop-controls__hint">
+                Drag corners for any output size (updates export dimensions live). Pick a preset to snap to
+                320×240, 640×360, or 720×480.
+              </p>
+              <div class="da-authoring-crop-controls__grid">
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Crop X</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="1"
+                    min="0"
+                    value={screen.cropX}
+                    onchange={(event) =>
+                      screen.updateFlatCrop({
+                        cropX: +(event.currentTarget as HTMLInputElement).value,
+                      })}
+                  />
+                </section>
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Crop Y</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="1"
+                    min="0"
+                    value={screen.cropY}
+                    onchange={(event) =>
+                      screen.updateFlatCrop({
+                        cropY: +(event.currentTarget as HTMLInputElement).value,
+                      })}
+                  />
+                </section>
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Crop width</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="2"
+                    min="2"
+                    value={screen.cropWidth}
+                    onchange={(event) =>
+                      screen.updateFlatCrop({
+                        cropWidth: +(event.currentTarget as HTMLInputElement).value,
+                      })}
+                  />
+                </section>
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Crop height</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="2"
+                    min="2"
+                    value={screen.cropHeight}
+                    onchange={(event) =>
+                      screen.updateFlatCrop({
+                        cropHeight: +(event.currentTarget as HTMLInputElement).value,
+                      })}
+                  />
+                </section>
+              </div>
+            </div>
+          {/if}
+        {/if}
+      </div>
+
+      <div class="da-authoring-pane da-authoring-pane--output" aria-label="Authoring output controls">
+        {#if !screen.sourceReady}
+          <p class="da-note da-authoring-controls-placeholder">
+            Output and export settings appear after you load a source video.
+          </p>
+        {:else}
+          <p class="da-note">Same view as source — live mirror scaled to export dimensions.</p>
+
+          {#if screen.sourceWidth && screen.sourceHeight}
+            <p class="da-note" class:da-note--warn={screen.equirectAspectWarning}>
+              Source dimensions: {screen.sourceWidth}×{screen.sourceHeight} ({screen.sourceAspect?.toFixed(
+                2,
+              )}:1)
+              {#if screen.isEquirectSource}
+                — interior view flips texture for inside-out viewing
+              {/if}
+              {#if screen.equirectAspectWarning}
+                · aspect ratio differs from 2:1; extract may look wrong
+              {/if}
+            </p>
+          {/if}
+
+          <div class="da-media-extract-controls">
+            <div class="da-media-extract-size-row">
+              <div class="da-media-extract-size-row__preset">
+                <BoundSelectInput
+                  fieldLabel="Export rectangle size"
+                  options={screen.outputPresetOptions}
+                  value={screen.outputPresetId}
+                  onValueChange={screen.handleOutputPresetChange}
+                />
+              </div>
+              <section class="rd-input-number da-media-extract-size-row__dim">
+                <span class="rd-field__label">W</span>
+                <input
+                  type="number"
+                  class="rd-input"
+                  step="2"
+                  min="160"
+                  max="3840"
+                  value={screen.outputWidth}
+                  disabled={!screen.isCustomOutput}
+                  onchange={(event) =>
+                    screen.handleCustomDimensionChange(
+                      +(event.currentTarget as HTMLInputElement).value,
+                      screen.outputHeight,
+                    )}
+                />
+              </section>
+              <span class="da-media-extract-size-row__sep" aria-hidden="true">×</span>
+              <section class="rd-input-number da-media-extract-size-row__dim">
+                <span class="rd-field__label">H</span>
+                <input
+                  type="number"
+                  class="rd-input"
+                  step="2"
+                  min="120"
+                  max="2160"
+                  value={screen.outputHeight}
+                  disabled={!screen.isCustomOutput}
+                  onchange={(event) =>
+                    screen.handleCustomDimensionChange(
+                      screen.outputWidth,
+                      +(event.currentTarget as HTMLInputElement).value,
+                    )}
+                />
+              </section>
+              <button
+                type="button"
+                class="da-media-extract-size-row__reverse"
+                class:is-active={screen.reverse}
+                aria-label="Reverse playback"
+                aria-pressed={screen.reverse}
+                onclick={() => {
+                  screen.reverse = !screen.reverse;
+                }}
+              >
+                <svg
+                  class="da-authoring-playback__icon da-authoring-playback__icon--reverse"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M7 7v10M7 17l-4-4 4-4M17 7v10M17 7l4 4-4 4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            {#if screen.isEquirectSource}
+              <div class="da-media-extract-controls__camera">
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Yaw (°)</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="0.5"
+                    min="-180"
+                    max="180"
+                    value={screen.formatDegree(screen.yaw)}
+                    onchange={(event) => {
+                      screen.yaw = screen.wrapSigned(+(event.currentTarget as HTMLInputElement).value);
+                    }}
+                  />
+                </section>
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Pitch (°)</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="0.5"
+                    min="-85"
+                    max="85"
+                    value={screen.formatDegree(screen.pitch)}
+                    onchange={(event) => {
+                      screen.pitch = +(event.currentTarget as HTMLInputElement).value;
+                    }}
+                  />
+                </section>
+                <section class="rd-input-number">
+                  <span class="rd-field__label">Horizontal FOV (°)</span>
+                  <input
+                    type="number"
+                    class="rd-input"
+                    step="1"
+                    min="30"
+                    max="360"
+                    value={screen.horizontalFov}
+                    onchange={(event) => {
+                      screen.horizontalFov = +(event.currentTarget as HTMLInputElement).value;
+                    }}
+                  />
+                </section>
+              </div>
+            {/if}
+          </div>
+
+          {#if screen.extractFilter}
+            <p class="da-note" class:da-note--filter={!screen.extractFilter.startsWith('Extract ')}>
+              {#if screen.extractFilter.startsWith('Extract ')}
+                {screen.extractFilter}
+              {:else}
+                Filter:
+                <code class="da-value-ellipsis" tabindex="0">{screen.extractFilter}</code>
+              {/if}
+            </p>
+          {/if}
+
+          {#if screen.inputFile}
+            {#if !screen.recordRange}
+              <p class="da-note">Record a segment on the playback bar, then extract that subsection.</p>
+            {/if}
+            <SelectInput
+              label="Extract format"
+              value={screen.extractFormat}
+              options={[...screen.extractFormatOptions]}
+              onChange={(value) => {
+                screen.extractFormat = value === 'webm' ? 'webm' : 'mp4';
+              }}
+            />
+            <WasmMedia
+              label="ffmpeg.wasm extract"
+              operation="equirect-extract"
+              extractionMode={screen.isEquirectSource ? 'rectilinear' : 'flat-crop'}
+              outputFormat={screen.extractFormat}
+              showProgress={true}
+              yaw={screen.yaw}
+              pitch={screen.pitch}
+              horizontalFov={screen.horizontalFov}
+              outputWidth={screen.outputWidth}
+              outputHeight={screen.outputHeight}
+              reverse={screen.reverse}
+              inputFile={screen.inputFile}
+              cropRegion={screen.cropRegion}
+              recordRange={screen.recordRange}
+              previewRecording={screen.previewRecording}
+              onProgress={screen.onExtractProgress}
+              onExtractComplete={screen.onExtractComplete}
+              onExtractError={screen.onExtractError}
+            />
+          {:else}
+            <p class="da-note">Attach a video file to enable ffmpeg.wasm extract.</p>
+          {/if}
+
+          {#if screen.extractBusy}
+            <p class="da-note" aria-live="polite">
+              Extracting…
+              {#if screen.extractProgress > 0}
+                {screen.extractProgress}%
+              {:else}
+                loading ffmpeg.wasm (~31 MB first run)
+              {/if}
+            </p>
+          {/if}
+          {#if screen.extractError}
+            <p class="da-note da-note--warn" role="alert">Extract failed: {screen.extractError}</p>
+          {/if}
+          {#if screen.extractUrl}
+            <p class="da-note">
+              {#if screen.extractResultKind === 'preview-recording'}
+                Extracted preview recording ({screen.extractResultFormat === 'webm' ? 'WebM' : 'MP4'}):
+              {:else}
+                Extracted MP4 (ffmpeg.wasm):
+              {/if}
+            </p>
+            <video class="da-authoring-pane__video" src={screen.extractUrl} controls playsinline autoplay muted></video>
+            <a class="da-media-extract-output__download" href={screen.extractUrl} download={screen.downloadName}>
+              Download extracted video
+            </a>
+          {/if}
+        {/if}
+      </div>
+    </div>
+  </div>
+</section>

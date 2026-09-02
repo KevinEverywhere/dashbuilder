@@ -6,7 +6,12 @@ import {
   output,
   signal,
 } from '@angular/core';
-import type { AuthoringRecordRange } from '@rosettadash/core';
+import {
+  AUTHORING_RECORDING_INTERRUPT_COPY,
+  authoringRecordingInterruptConfirmLabel,
+  type AuthoringRecordRange,
+  type AuthoringRecordingInterruptPrompt,
+} from '@rosettadash/core';
 
 /** Minimal playback API used by the authoring bar (matches EquirectSphereViewport). */
 export interface AuthoringViewportHandle {
@@ -17,7 +22,7 @@ export interface AuthoringViewportHandle {
   getCurrentTime(): number;
   getDuration(): number;
   isPaused(): boolean;
-  startRecording(): void;
+  startRecording(): boolean;
   stopRecording(): Promise<Blob | null>;
 }
 
@@ -70,7 +75,7 @@ function rangeStyle(startSec: number, endSec: number, duration: number) {
           class="da-authoring-playback__btn da-authoring-playback__btn--icon"
           [disabled]="disabled()"
           aria-label="Stop"
-          (click)="stop()"
+          (click)="handleStopClick()"
         >
           <svg class="da-authoring-playback__icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M7 7h10v10H7V7Z" />
@@ -111,11 +116,38 @@ function rangeStyle(startSec: number, endSec: number, duration: number) {
           class="da-authoring-playback__btn da-authoring-playback__btn--reset"
           [disabled]="disabled()"
           aria-label="Reset view"
-          (click)="resetView.emit()"
+          (click)="handleResetClick()"
         >
           RESET
         </button>
       </div>
+      @if (interrupt()) {
+        <div
+          class="da-authoring-playback__interrupt"
+          role="alertdialog"
+          aria-labelledby="auth-playback-interrupt-msg"
+        >
+          <p id="auth-playback-interrupt-msg" class="da-authoring-playback__interrupt-message">
+            {{ interruptCopy.message }}
+          </p>
+          <div class="da-authoring-playback__interrupt-actions">
+            <button
+              type="button"
+              class="da-authoring-playback__btn da-authoring-playback__btn--interrupt-cancel"
+              (click)="cancelInterrupt()"
+            >
+              {{ interruptCopy.cancel }}
+            </button>
+            <button
+              type="button"
+              class="da-authoring-playback__btn da-authoring-playback__btn--interrupt-confirm"
+              (click)="confirmInterrupt()"
+            >
+              {{ interruptConfirmLabel() }}
+            </button>
+          </div>
+        </div>
+      }
       <label class="da-authoring-playback__scrub">
         <span class="da-authoring-playback__time">{{ leftTimeLabel() }}</span>
         <div class="da-authoring-playback__track-wrap">
@@ -145,8 +177,10 @@ function rangeStyle(startSec: number, endSec: number, duration: number) {
       </label>
       @if (recordRange()) {
         <p class="da-note da-authoring-playback__segment-note">
-          Extract uses {{ formatTime(recordRange()!.startSec) }}–{{ formatTime(recordRange()!.endSec) }} from your
-          source ({{ formatTime(recordRange()!.endSec - recordRange()!.startSec) }} recorded).
+          Extract uses {{ formatTime(recordRange()!.startSec) }}–{{ formatTime(recordRange()!.endSec) }} ({{
+            formatTime(recordRange()!.endSec - recordRange()!.startSec)
+          }}
+          recorded). Output mirror recording (same clip as playback download).
         </p>
       }
       <p class="da-note da-authoring-playback__hint">
@@ -162,7 +196,12 @@ export class AuthoringPlaybackBarComponent {
   readonly recordRange = input<AuthoringRecordRange | null>(null);
 
   readonly resetView = output<void>();
+  readonly playbackStop = output<void>();
   readonly recordRangeChange = output<AuthoringRecordRange | null>();
+  readonly previewRecordingChange = output<Blob | null>();
+
+  readonly interruptCopy = AUTHORING_RECORDING_INTERRUPT_COPY;
+  readonly interrupt = signal<AuthoringRecordingInterruptPrompt | null>(null);
 
   readonly formatTime = formatTime;
   readonly currentTime = signal(0);
@@ -241,6 +280,84 @@ export class AuthoringPlaybackBarComponent {
     this.syncFromViewport();
   }
 
+  handleStopClick(): void {
+    const viewport = this.viewport();
+    if (!viewport || this.disabled()) {
+      return;
+    }
+    if (this.recording()) {
+      this.interrupt.set(this.beginRecordingInterrupt(viewport, 'stop'));
+      this.syncFromViewport();
+      return;
+    }
+    this.stop();
+  }
+
+  handleResetClick(): void {
+    const viewport = this.viewport();
+    if (!viewport || this.disabled()) {
+      return;
+    }
+    if (this.recording()) {
+      this.interrupt.set(this.beginRecordingInterrupt(viewport, 'reset'));
+      this.syncFromViewport();
+      return;
+    }
+    this.resetView.emit();
+  }
+
+  interruptConfirmLabel(): string {
+    const pending = this.interrupt();
+    return pending ? authoringRecordingInterruptConfirmLabel(pending.action) : '';
+  }
+
+  async cancelInterrupt(): Promise<void> {
+    const pending = this.interrupt();
+    this.interrupt.set(null);
+    if (pending?.resumePlayback) {
+      await this.viewport()?.play();
+    }
+    this.syncFromViewport();
+  }
+
+  async confirmInterrupt(): Promise<void> {
+    const pending = this.interrupt();
+    const viewport = this.viewport();
+    if (!pending || !viewport) {
+      return;
+    }
+    this.interrupt.set(null);
+    await viewport.stopRecording();
+    this.recording.set(false);
+    this.recordingStartSec.set(null);
+    this.clearRecordingArtifacts();
+    viewport.stop();
+    if (pending.action === 'reset') {
+      this.resetView.emit();
+    }
+    this.playbackStop.emit();
+    this.syncFromViewport();
+  }
+
+  private beginRecordingInterrupt(
+    viewport: AuthoringViewportHandle,
+    action: AuthoringRecordingInterruptPrompt['action'],
+  ): AuthoringRecordingInterruptPrompt {
+    const resumePlayback = !viewport.isPaused();
+    viewport.pause();
+    return { action, resumePlayback };
+  }
+
+  private clearRecordingArtifacts(): void {
+    this.recordRangeChange.emit(null);
+    this.previewRecordingChange.emit(null);
+    const previous = this.saveUrl();
+    if (previous) {
+      URL.revokeObjectURL(previous);
+    }
+    this.saveUrl.set(null);
+  }
+
   seek(value: string): void {
     this.viewport()?.seek(Number(value));
     this.currentTime.set(Number(value));
@@ -252,9 +369,12 @@ export class AuthoringPlaybackBarComponent {
       return;
     }
     if (!this.recording()) {
+      this.previewRecordingChange.emit(null);
       const startSec = viewport.getCurrentTime();
       this.recordingStartSec.set(startSec);
-      viewport.startRecording();
+      if (!viewport.startRecording()) {
+        return;
+      }
       this.recording.set(true);
       if (viewport.isPaused()) {
         await viewport.play();
@@ -272,8 +392,10 @@ export class AuthoringPlaybackBarComponent {
       this.recordRangeChange.emit(null);
     }
     if (!blob) {
+      this.previewRecordingChange.emit(null);
       return;
     }
+    this.previewRecordingChange.emit(blob);
     const previous = this.saveUrl();
     if (previous) {
       URL.revokeObjectURL(previous);

@@ -25,6 +25,7 @@ export interface WasmMediaProps {
   inputFile?: File | Blob | null;
   cropRegion?: Record<string, string | number | boolean | null | undefined> | null;
   recordRange?: AuthoringRecordRange | null;
+  previewRecording?: Blob | null;
   className?: string;
   style?: CSSProperties;
   onProgress?: (detail: { progress: number }) => void;
@@ -59,6 +60,7 @@ export const WasmMedia = forwardRef<HTMLElement, WasmMediaProps>(function WasmMe
     inputFile,
     cropRegion,
     recordRange,
+    previewRecording,
     className,
     style,
     onProgress,
@@ -71,7 +73,7 @@ export const WasmMedia = forwardRef<HTMLElement, WasmMediaProps>(function WasmMe
   const hostRef = useCustomElementHost(
     {
       register: registerRdWasmMedia,
-      properties: ['inputFile', 'cropRegion', 'recordRange'],
+      properties: ['inputFile', 'cropRegion', 'recordRange', 'previewRecording'],
       attrs: {
         extractionMode: 'extraction-mode',
         outputFormat: 'output-format',
@@ -118,7 +120,7 @@ export const WasmMedia = forwardRef<HTMLElement, WasmMediaProps>(function WasmMe
       onMetadata: onMetadata as ((detail: unknown) => void) | undefined,
     },
     ref,
-    { inputFile, cropRegion, recordRange },
+    { inputFile, cropRegion, recordRange, previewRecording },
   );
 
   return createElement(DB_WASM_MEDIA_TAG, {

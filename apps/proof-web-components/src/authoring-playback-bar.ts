@@ -1,4 +1,9 @@
-import type { AuthoringRecordRange } from '@rosettadash/core';
+import {
+  AUTHORING_RECORDING_INTERRUPT_COPY,
+  authoringRecordingInterruptConfirmLabel,
+  type AuthoringRecordRange,
+  type AuthoringRecordingInterruptPrompt,
+} from '@rosettadash/core';
 
 export interface AuthoringViewportHandle {
   play(): Promise<void>;
@@ -50,6 +55,13 @@ export function renderAuthoringPlaybackBarMarkup(): string {
         </button>
         <button type="button" class="da-authoring-playback__btn da-authoring-playback__btn--reset" data-ref="auth-playback-reset" aria-label="Reset view">RESET</button>
       </div>
+      <div class="da-authoring-playback__interrupt" data-ref="auth-playback-interrupt" hidden role="alertdialog" aria-labelledby="auth-playback-interrupt-msg">
+        <p id="auth-playback-interrupt-msg" class="da-authoring-playback__interrupt-message" data-ref="auth-playback-interrupt-msg">${AUTHORING_RECORDING_INTERRUPT_COPY.message}</p>
+        <div class="da-authoring-playback__interrupt-actions">
+          <button type="button" class="da-authoring-playback__btn da-authoring-playback__btn--interrupt-cancel" data-ref="auth-playback-interrupt-cancel">${AUTHORING_RECORDING_INTERRUPT_COPY.cancel}</button>
+          <button type="button" class="da-authoring-playback__btn da-authoring-playback__btn--interrupt-confirm" data-ref="auth-playback-interrupt-confirm"></button>
+        </div>
+      </div>
       <label class="da-authoring-playback__scrub">
         <span class="da-authoring-playback__time" data-ref="auth-playback-time-left">0:00</span>
         <div class="da-authoring-playback__track-wrap">
@@ -72,6 +84,7 @@ type PlaybackWireOptions = {
   onRecordRangeChange: (range: AuthoringRecordRange | null) => void;
   onPreviewRecording?: (blob: Blob | null) => void;
   onResetView: () => void;
+  onPlaybackStop: () => void;
 };
 
 let playbackInterval: number | null = null;
@@ -87,6 +100,11 @@ export function wireAuthoringPlaybackBar(root: HTMLElement, options: PlaybackWir
   const recordBtn = root.querySelector('[data-ref="auth-playback-record"]');
   const saveBtn = root.querySelector('[data-ref="auth-playback-save"]');
   const resetBtn = root.querySelector('[data-ref="auth-playback-reset"]');
+  const interruptEl = root.querySelector<HTMLElement>('[data-ref="auth-playback-interrupt"]');
+  const interruptConfirmBtn = root.querySelector<HTMLButtonElement>(
+    '[data-ref="auth-playback-interrupt-confirm"]',
+  );
+  const interruptCancelBtn = root.querySelector('[data-ref="auth-playback-interrupt-cancel"]');
   const scrub = root.querySelector<HTMLInputElement>('[data-ref="auth-playback-scrub"]');
   const timeLeft = root.querySelector('[data-ref="auth-playback-time-left"]');
   const timeRight = root.querySelector('[data-ref="auth-playback-time-right"]');
@@ -101,6 +119,45 @@ export function wireAuthoringPlaybackBar(root: HTMLElement, options: PlaybackWir
   let recording = false;
   let recordingStartSec: number | null = null;
   let saveUrl: string | null = null;
+  let interrupt: AuthoringRecordingInterruptPrompt | null = null;
+
+  const clearRecordingArtifacts = (): void => {
+    options.onRecordRangeChange(null);
+    options.onPreviewRecording?.(null);
+    if (saveUrl) {
+      URL.revokeObjectURL(saveUrl);
+      saveUrl = null;
+    }
+    if (saveBtn instanceof HTMLButtonElement) {
+      saveBtn.disabled = true;
+    }
+  };
+
+  const showInterrupt = (pending: AuthoringRecordingInterruptPrompt): void => {
+    interrupt = pending;
+    if (interruptEl) {
+      interruptEl.hidden = false;
+    }
+    if (interruptConfirmBtn) {
+      interruptConfirmBtn.textContent = authoringRecordingInterruptConfirmLabel(pending.action);
+    }
+  };
+
+  const hideInterrupt = (): void => {
+    interrupt = null;
+    if (interruptEl) {
+      interruptEl.hidden = true;
+    }
+  };
+
+  const beginRecordingInterrupt = (
+    viewport: AuthoringViewportHandle,
+    action: AuthoringRecordingInterruptPrompt['action'],
+  ): AuthoringRecordingInterruptPrompt => {
+    const resumePlayback = !viewport.isPaused();
+    viewport.pause();
+    return { action, resumePlayback };
+  };
 
   const syncUi = (): void => {
     const viewport = options.getViewport();
@@ -185,8 +242,52 @@ export function wireAuthoringPlaybackBar(root: HTMLElement, options: PlaybackWir
   });
 
   stopBtn?.addEventListener('click', () => {
-    options.getViewport()?.stop();
+    const viewport = options.getViewport();
+    if (!viewport) {
+      return;
+    }
+    if (recording) {
+      showInterrupt(beginRecordingInterrupt(viewport, 'stop'));
+      syncUi();
+      return;
+    }
+    viewport.stop();
     syncUi();
+  });
+
+  interruptCancelBtn?.addEventListener('click', () => {
+    void (async () => {
+      const pending = interrupt;
+      hideInterrupt();
+      if (pending?.resumePlayback) {
+        await options.getViewport()?.play();
+      }
+      syncUi();
+    })();
+  });
+
+  interruptConfirmBtn?.addEventListener('click', () => {
+    void (async () => {
+      const pending = interrupt;
+      const viewport = options.getViewport();
+      if (!pending || !viewport) {
+        return;
+      }
+      hideInterrupt();
+      await viewport.stopRecording();
+      recording = false;
+      recordingStartSec = null;
+      recordBtn?.classList.remove('is-recording');
+      recordBtn?.setAttribute('aria-label', 'Record');
+      recordBtn?.removeAttribute('aria-pressed');
+      clearRecordingArtifacts();
+      viewport.stop();
+      if (pending.action === 'reset') {
+        options.onResetView();
+      }
+      options.onPlaybackStop();
+      syncUi();
+    })();
   });
 
   recordBtn?.addEventListener('click', () => {
@@ -252,6 +353,15 @@ export function wireAuthoringPlaybackBar(root: HTMLElement, options: PlaybackWir
   });
 
   resetBtn?.addEventListener('click', () => {
+    const viewport = options.getViewport();
+    if (!viewport) {
+      return;
+    }
+    if (recording) {
+      showInterrupt(beginRecordingInterrupt(viewport, 'reset'));
+      syncUi();
+      return;
+    }
     options.onResetView();
   });
 

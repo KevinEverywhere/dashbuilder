@@ -91,6 +91,9 @@ export class RdFlatVideoViewportElement extends HTMLElement {
       this.syncVideoSrc();
     }
     if (name.startsWith('crop-') || name === 'source-width' || name === 'source-height') {
+      if (this.drag) {
+        return;
+      }
       this.paintCrop();
       this.resizeOutputCanvas();
     }
@@ -101,7 +104,11 @@ export class RdFlatVideoViewportElement extends HTMLElement {
 
   setProperty(name: string, value: unknown): void {
     if (name === 'outputPreviewHost') {
-      this.outputPreviewHost = value instanceof HTMLElement ? value : null;
+      const nextHost = value instanceof HTMLElement ? value : null;
+      if (nextHost === this.outputPreviewHost) {
+        return;
+      }
+      this.outputPreviewHost = nextHost;
       if (!this.outputPreviewHost) {
         this.teardownOutputMirror();
       } else {
@@ -277,12 +284,17 @@ export class RdFlatVideoViewportElement extends HTMLElement {
     }
   }
 
-  private emitCrop(next: FlatCropRect): void {
+  private emitCrop(next: FlatCropRect, silent = false): void {
     const clamped = clampCropToSource(next, this.sourceWidth, this.sourceHeight);
     this.setAttribute('crop-x', String(clamped.cropX));
     this.setAttribute('crop-y', String(clamped.cropY));
     this.setAttribute('crop-width', String(clamped.cropWidth));
     this.setAttribute('crop-height', String(clamped.cropHeight));
+    if (silent) {
+      this.paintCrop();
+      this.resizeOutputCanvas();
+      return;
+    }
     this.dispatchEvent(
       new CustomEvent('crop-change', {
         detail: clamped,
@@ -330,7 +342,19 @@ export class RdFlatVideoViewportElement extends HTMLElement {
       this.applyDrag(moveEvent.clientX, moveEvent.clientY);
     };
     const onWindowUp = () => {
+      const hadDrag = this.drag != null;
       this.drag = null;
+      if (hadDrag) {
+        this.emitCrop(
+          {
+            cropX: this.cropX,
+            cropY: this.cropY,
+            cropWidth: this.cropWidth,
+            cropHeight: this.cropHeight,
+          },
+          false,
+        );
+      }
       window.removeEventListener('pointermove', onWindowMove);
       window.removeEventListener('pointerup', onWindowUp);
       window.removeEventListener('pointercancel', onWindowUp);
@@ -352,12 +376,15 @@ export class RdFlatVideoViewportElement extends HTMLElement {
     const outputAspect = this.outputWidth / this.outputHeight;
 
     if (drag.mode === 'move') {
-      this.emitCrop({
-        cropX: origin.cropX + dx,
-        cropY: origin.cropY + dy,
-        cropWidth: origin.cropWidth,
-        cropHeight: origin.cropHeight,
-      });
+      this.emitCrop(
+        {
+          cropX: origin.cropX + dx,
+          cropY: origin.cropY + dy,
+          cropWidth: origin.cropWidth,
+          cropHeight: origin.cropHeight,
+        },
+        true,
+      );
       return;
     }
 
@@ -391,12 +418,15 @@ export class RdFlatVideoViewportElement extends HTMLElement {
       }
     }
 
-    this.emitCrop({
-      cropX: nextX,
-      cropY: nextY,
-      cropWidth: Math.max(2, nextW),
-      cropHeight: Math.max(2, nextH),
-    });
+    this.emitCrop(
+      {
+        cropX: nextX,
+        cropY: nextY,
+        cropWidth: Math.max(2, nextW),
+        cropHeight: Math.max(2, nextH),
+      },
+      true,
+    );
   }
 
   private ensureOutputMirror(): void {

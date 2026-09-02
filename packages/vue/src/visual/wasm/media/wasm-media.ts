@@ -25,6 +25,7 @@ export interface WasmMediaProps {
   inputFile?: File | Blob | null;
   cropRegion?: Record<string, string | number | boolean | null | undefined> | null;
   recordRange?: AuthoringRecordRange | null;
+  previewRecording?: Blob | null;
   className?: string;
 }
 
@@ -34,7 +35,7 @@ export const WasmMedia = defineCustomElementHost(
     name: 'RdWasmMedia',
     tagName: DB_WASM_MEDIA_TAG,
     register: registerRdWasmMedia,
-    properties: ['inputFile', 'cropRegion', 'recordRange'],
+    properties: ['inputFile', 'cropRegion', 'recordRange', 'previewRecording'],
     attrs: {
       extractionMode: 'extraction-mode',
       outputFormat: 'output-format',
@@ -82,6 +83,10 @@ export const WasmMedia = defineCustomElementHost(
     },
     recordRange: {
       type: Object as PropType<AuthoringRecordRange | null | undefined>,
+      default: undefined,
+    },
+    previewRecording: {
+      type: Object as PropType<Blob | null | undefined>,
       default: undefined,
     },
   },

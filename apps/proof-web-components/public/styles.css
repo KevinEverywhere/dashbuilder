@@ -1292,19 +1292,17 @@ rd-wasm-media {
   position: absolute;
   inset: 0;
   z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   pointer-events: none;
 }
 
 .rd-equirect-sphere-viewport__export-window {
-  position: relative;
+  position: absolute;
   box-sizing: border-box;
-  flex-shrink: 0;
   border: 2px solid var(--da-accent, #38bdf8);
   box-shadow: 0 0 0 9999px rgb(0 0 0 / 45%);
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: move;
+  touch-action: none;
 }
 
 .rd-equirect-sphere-viewport__handle {
@@ -2180,4 +2178,29 @@ rd-wasm-media {
     --rd-color-chart-line: var(--da-chart-line);
     --rd-color-chart-bar: var(--da-chart-bar);
   }
+}
+
+
+.da-authoring-playback__interrupt {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in srgb, #c0392b 40%, var(--da-border));
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, #c0392b 10%, var(--da-panel-bg));
+}
+
+.da-authoring-playback__interrupt-message {
+  margin: 0 0 0.65rem;
+  font-size: 0.875rem;
+}
+
+.da-authoring-playback__interrupt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.da-authoring-playback__btn--interrupt-confirm {
+  border-color: color-mix(in srgb, #c0392b 55%, var(--da-border));
+  color: #ffb4a8;
 }

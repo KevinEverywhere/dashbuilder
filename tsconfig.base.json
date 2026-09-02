@@ -75,6 +75,12 @@
       "@rosettadash/web-components/visual/media/equirect-viewport": [
         "./packages/web-components/src/visual/media/equirect-viewport/index.ts"
       ],
+      "@rosettadash/web-components/visual/media/equirect-sphere-viewport": [
+        "./packages/web-components/src/visual/media/equirect-sphere-viewport/index.ts"
+      ],
+      "@rosettadash/web-components/visual/media/flat-video-viewport": [
+        "./packages/web-components/src/visual/media/flat-video-viewport/index.ts"
+      ],
       "@rosettadash/web-components/visual/media/youtube-embed": [
         "./packages/web-components/src/visual/media/youtube-embed/index.ts"
       ],

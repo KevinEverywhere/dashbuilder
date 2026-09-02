@@ -12,7 +12,7 @@ export default defineConfig({
       projects: [resolve(__dirname, '../../tsconfig.base.json')],
     }),
     vue(),
-    react({ include: /\/src\/(authoring|globe)\/.*\.tsx$/ }),
+    react({ include: /\/src\/globe\/.*\.tsx$/ }),
     ffmpegCoreVitePlugin(),
   ],
   resolve: {
@@ -33,6 +33,20 @@ export default defineConfig({
         replacement: resolve(
           __dirname,
           '../../packages/react/src/visual/media/flat-video-viewport/index.ts',
+        ),
+      },
+      {
+        find: '@rosettadash/vue/visual/media/equirect-sphere-viewport',
+        replacement: resolve(
+          __dirname,
+          '../../packages/vue/src/visual/media/equirect-sphere-viewport/index.ts',
+        ),
+      },
+      {
+        find: '@rosettadash/vue/visual/media/flat-video-viewport',
+        replacement: resolve(
+          __dirname,
+          '../../packages/vue/src/visual/media/flat-video-viewport/index.ts',
         ),
       },
       {

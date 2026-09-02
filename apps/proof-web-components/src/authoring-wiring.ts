@@ -372,6 +372,25 @@ function revokeSourceUrl(): void {
   }
 }
 
+function resetExportRectangle(root: HTMLElement): void {
+  if (state.mode === 'equirect') {
+    asSphereViewport(root.querySelector('[data-ref="auth-sphere-viewport"]'))?.setProperty(
+      'resetExportReference',
+      true,
+    );
+    return;
+  }
+  if (state.sourceWidth > 0 && state.sourceHeight > 0) {
+    const centered = centerCropForOutput(
+      state.sourceWidth,
+      state.sourceHeight,
+      state.outputWidth,
+      state.outputHeight,
+    );
+    applyFlatCrop(root, centered);
+  }
+}
+
 function resetView(root: HTMLElement): void {
   if (state.mode === 'equirect') {
     state.yaw = state.defaultYaw;
@@ -516,6 +535,7 @@ export function wireAuthoringPipeline(root: HTMLElement): void {
       syncWasm(root);
     },
     onResetView: () => resetView(root),
+    onPlaybackStop: () => resetExportRectangle(root),
   });
 
   wireAuthoringCameraControls(root, {

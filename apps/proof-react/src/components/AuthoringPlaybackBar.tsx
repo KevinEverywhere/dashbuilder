@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
+import {
+  AUTHORING_RECORDING_INTERRUPT_COPY,
+  authoringRecordingInterruptConfirmLabel,
+  type AuthoringRecordingInterruptPrompt,
+} from '@rosettadash/core';
 import type { AuthoringRecordRange } from '@rosettadash/core';
 import type { AuthoringViewportHandle } from '../lib/authoring-viewport';
+import {
+  beginRecordingInterrupt,
+  discardInProgressRecording,
+} from '../lib/authoring-playback-interrupt';
 import {
   PlaybackPauseIcon,
   PlaybackPlayIcon,
@@ -35,7 +44,9 @@ type Props = {
   hint?: string;
   recordRange?: AuthoringRecordRange | null;
   onRecordRangeChange?: (range: AuthoringRecordRange | null) => void;
+  onPreviewRecording?: (blob: Blob | null) => void;
   onResetView?: () => void;
+  onPlaybackStop?: () => void;
 };
 
 export function AuthoringPlaybackBar({
@@ -44,7 +55,9 @@ export function AuthoringPlaybackBar({
   hint,
   recordRange = null,
   onRecordRangeChange,
+  onPreviewRecording,
   onResetView,
+  onPlaybackStop,
 }: Props) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -52,6 +65,7 @@ export function AuthoringPlaybackBar({
   const [recording, setRecording] = useState(false);
   const [recordingStartSec, setRecordingStartSec] = useState<number | null>(null);
   const [saveUrl, setSaveUrl] = useState<string | null>(null);
+  const [interrupt, setInterrupt] = useState<AuthoringRecordingInterruptPrompt | null>(null);
 
   useEffect(
     () => () => {
@@ -90,8 +104,76 @@ export function AuthoringPlaybackBar({
     syncFromViewport();
   };
 
+  const clearRecordingArtifacts = () => {
+    onRecordRangeChange?.(null);
+    onPreviewRecording?.(null);
+    setSaveUrl((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous);
+      }
+      return null;
+    });
+  };
+
   const handleStop = () => {
     viewportRef.current?.stop();
+    syncFromViewport();
+  };
+
+  const handleStopClick = () => {
+    const viewport = viewportRef.current;
+    if (!viewport || disabled) {
+      return;
+    }
+    if (recording) {
+      setInterrupt(beginRecordingInterrupt(viewport, 'stop'));
+      syncFromViewport();
+      return;
+    }
+    handleStop();
+  };
+
+  const handleResetClick = () => {
+    const viewport = viewportRef.current;
+    if (!viewport || disabled || !onResetView) {
+      return;
+    }
+    if (recording) {
+      setInterrupt(beginRecordingInterrupt(viewport, 'reset'));
+      syncFromViewport();
+      return;
+    }
+    onResetView();
+  };
+
+  const handleCancelInterrupt = async () => {
+    const pending = interrupt;
+    if (!pending) {
+      return;
+    }
+    setInterrupt(null);
+    if (pending.resumePlayback) {
+      await viewportRef.current?.play();
+    }
+    syncFromViewport();
+  };
+
+  const handleConfirmInterrupt = async () => {
+    const pending = interrupt;
+    const viewport = viewportRef.current;
+    if (!pending || !viewport) {
+      return;
+    }
+    setInterrupt(null);
+    await discardInProgressRecording(viewport);
+    setRecording(false);
+    setRecordingStartSec(null);
+    clearRecordingArtifacts();
+    viewport.stop();
+    if (pending.action === 'reset') {
+      onResetView?.();
+    }
+    onPlaybackStop?.();
     syncFromViewport();
   };
 
@@ -106,9 +188,12 @@ export function AuthoringPlaybackBar({
       return;
     }
     if (!recording) {
+      onPreviewRecording?.(null);
       const startSec = viewport.getCurrentTime();
       setRecordingStartSec(startSec);
-      viewport.startRecording();
+      if (!viewport.startRecording()) {
+        return;
+      }
       setRecording(true);
       if (viewport.isPaused()) {
         await viewport.play();
@@ -126,8 +211,10 @@ export function AuthoringPlaybackBar({
       onRecordRangeChange?.(null);
     }
     if (!blob) {
+      onPreviewRecording?.(null);
       return;
     }
+    onPreviewRecording?.(blob);
     setSaveUrl((previous) => {
       if (previous) {
         URL.revokeObjectURL(previous);
@@ -169,7 +256,7 @@ export function AuthoringPlaybackBar({
           className="da-authoring-playback__btn da-authoring-playback__btn--icon"
           disabled={disabled}
           aria-label="Stop"
-          onClick={handleStop}
+          onClick={handleStopClick}
         >
           <PlaybackStopIcon />
         </button>
@@ -197,11 +284,38 @@ export function AuthoringPlaybackBar({
           className="da-authoring-playback__btn da-authoring-playback__btn--reset"
           disabled={disabled || !onResetView}
           aria-label="Reset view"
-          onClick={onResetView}
+          onClick={handleResetClick}
         >
           RESET
         </button>
       </div>
+      {interrupt ? (
+        <div
+          className="da-authoring-playback__interrupt"
+          role="alertdialog"
+          aria-labelledby="auth-playback-interrupt-msg"
+        >
+          <p id="auth-playback-interrupt-msg" className="da-authoring-playback__interrupt-message">
+            {AUTHORING_RECORDING_INTERRUPT_COPY.message}
+          </p>
+          <div className="da-authoring-playback__interrupt-actions">
+            <button
+              type="button"
+              className="da-authoring-playback__btn da-authoring-playback__btn--interrupt-cancel"
+              onClick={() => void handleCancelInterrupt()}
+            >
+              {AUTHORING_RECORDING_INTERRUPT_COPY.cancel}
+            </button>
+            <button
+              type="button"
+              className="da-authoring-playback__btn da-authoring-playback__btn--interrupt-confirm"
+              onClick={() => void handleConfirmInterrupt()}
+            >
+              {authoringRecordingInterruptConfirmLabel(interrupt.action)}
+            </button>
+          </div>
+        </div>
+      ) : null}
       <label className="da-authoring-playback__scrub">
         <span className="da-authoring-playback__time">
           {displayRange ? formatTime(displayRange.startSec) : formatTime(currentTime)}
@@ -232,8 +346,9 @@ export function AuthoringPlaybackBar({
       </label>
       {recordRange ? (
         <p className="da-note da-authoring-playback__segment-note">
-          Extract uses {formatTime(recordRange.startSec)}–{formatTime(recordRange.endSec)} from your source (
-          {formatTime(recordRange.endSec - recordRange.startSec)} recorded).
+          Extract uses {formatTime(recordRange.startSec)}–{formatTime(recordRange.endSec)} (
+          {formatTime(recordRange.endSec - recordRange.startSec)} recorded). Output mirror recording
+          (same clip as playback download).
         </p>
       ) : null}
       <p className="da-note da-authoring-playback__hint">

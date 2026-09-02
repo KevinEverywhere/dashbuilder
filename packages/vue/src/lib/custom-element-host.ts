@@ -36,8 +36,16 @@ function syncAttributes(
     const attr = attrMap[key] ?? toKebab(key);
     const value = props[key];
     if (value === undefined || value === null || value === false) {
-      el.removeAttribute(attr);
-    } else if (value === true) {
+      if (el.hasAttribute(attr)) {
+        el.removeAttribute(attr);
+      }
+      continue;
+    }
+    const next = value === true ? '' : String(value);
+    if (el.getAttribute(attr) === next) {
+      continue;
+    }
+    if (value === true) {
       el.setAttribute(attr, '');
     } else {
       el.setAttribute(attr, String(value));

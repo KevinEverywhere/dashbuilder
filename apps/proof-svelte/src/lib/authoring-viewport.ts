@@ -8,6 +8,6 @@ export interface AuthoringViewportHandle {
   getDuration: () => number;
   isPaused: () => boolean;
   getOutputCanvas: () => HTMLCanvasElement | null;
-  startRecording: () => void;
+  startRecording: () => boolean;
   stopRecording: () => Promise<Blob | null>;
 }

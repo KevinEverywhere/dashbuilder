@@ -7,6 +7,7 @@ import {
   getAuthoringOutputPreset,
   isEquirectSourceDimensions,
   authoringExtractDownloadName,
+  authoringPreviewRecordingDownloadName,
   type AuthoringRecordRange,
   virtualCameraToCropRegion,
   wrapSignedDegrees,
@@ -82,6 +83,8 @@ export function AuthoringScreen({
   const [sourceLoadError, setSourceLoadError] = useState<string | null>(null);
   const [cropRegion, setCropRegion] = useState<CropRegion | null>(null);
   const [extractUrl, setExtractUrl] = useState<string | null>(null);
+  const [extractResultKind, setExtractResultKind] = useState<'preview-recording' | 'ffmpeg' | null>(null);
+  const [extractResultFormat, setExtractResultFormat] = useState<'mp4' | 'webm' | null>(null);
   const [extractFilter, setExtractFilter] = useState('');
   const [extractProgress, setExtractProgress] = useState(0);
   const [extractError, setExtractError] = useState<string | null>(null);
@@ -104,8 +107,12 @@ export function AuthoringScreen({
   const [cropWidth, setCropWidth] = useState(640);
   const [cropHeight, setCropHeight] = useState(360);
   const [recordRange, setRecordRange] = useState<AuthoringRecordRange | null>(null);
+  const [previewRecording, setPreviewRecording] = useState<Blob | null>(null);
+  const [extractFormat, setExtractFormat] = useState<'mp4' | 'webm'>('mp4');
+  const [exportReferenceToken, setExportReferenceToken] = useState(0);
+  const [outputSizeCommitToken, setOutputSizeCommitToken] = useState(1);
+  const [outputPreviewHost, setOutputPreviewHost] = useState<HTMLElement | null>(null);
 
-  const outputPreviewHostRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<AuthoringViewportHandle>(null);
   const userPickedFileRef = useRef(false);
 
@@ -164,11 +171,15 @@ export function AuthoringScreen({
     setOutputPresetId('720x480');
     setOutputWidth(preset?.width ?? 720);
     setOutputHeight(preset?.height ?? 480);
+    setOutputSizeCommitToken((token) => token + 1);
     setSourceWidth(undefined);
     setSourceHeight(undefined);
     setRecordRange(null);
+    setPreviewRecording(null);
     setCropRegion(null);
     setExtractFilter('');
+    setExtractResultKind(null);
+    setExtractResultFormat(null);
     setExtractProgress(0);
     setExtractError(null);
     setExtractBusy(false);
@@ -217,25 +228,25 @@ export function AuthoringScreen({
 
   useEffect(() => {
     if (isEquirectSource) {
-      setCropRegion(
-        virtualCameraToCropRegion({
-          camera: { yaw, pitch, roll: 0, fov: horizontalFov },
-          sourceWidth,
-          sourceHeight,
-          outputWidth,
-          outputHeight,
-          reverse,
-        }),
-      );
-      const filter = virtualCameraToCropRegion({
+      const region = virtualCameraToCropRegion({
         camera: { yaw, pitch, roll: 0, fov: horizontalFov },
         sourceWidth,
         sourceHeight,
         outputWidth,
         outputHeight,
         reverse,
-      }).filter;
-      setExtractFilter(typeof filter === 'string' ? filter : '');
+      });
+      setCropRegion(region);
+      if (previewRecording) {
+        setExtractFilter(
+          extractFormat === 'webm'
+            ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
+            : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).',
+        );
+      } else {
+        const filter = region.filter;
+        setExtractFilter(typeof filter === 'string' ? filter : '');
+      }
       return;
     }
     if (!sourceWidth || !sourceHeight) {
@@ -255,7 +266,15 @@ export function AuthoringScreen({
       reverse,
     });
     setCropRegion(region);
-    setExtractFilter(region.filter);
+    if (previewRecording) {
+      setExtractFilter(
+        extractFormat === 'webm'
+          ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
+          : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).',
+      );
+    } else {
+      setExtractFilter(region.filter);
+    }
   }, [
     isEquirectSource,
     yaw,
@@ -270,6 +289,8 @@ export function AuthoringScreen({
     sourceWidth,
     sourceHeight,
     reverse,
+    previewRecording,
+    extractFormat,
   ]);
 
   const exampleLabel = useMemo(() => {
@@ -288,6 +309,10 @@ export function AuthoringScreen({
     if (preset) {
       setOutputWidth(preset.width);
       setOutputHeight(preset.height);
+      setOutputSizeCommitToken((token) => token + 1);
+      if (isEquirectSource) {
+        setExportReferenceToken((token) => token + 1);
+      }
     }
   };
 
@@ -295,6 +320,7 @@ export function AuthoringScreen({
     setOutputWidth(width);
     setOutputHeight(height);
     setOutputPresetId(matchOutputPreset(width, height));
+    setOutputSizeCommitToken((token) => token + 1);
   };
 
   const handleVideoFile = (detail: {
@@ -305,6 +331,7 @@ export function AuthoringScreen({
     setSourceLoadBusy(false);
     setSourceLoadError(null);
     setRecordRange(null);
+    setPreviewRecording(null);
     setInputFile(detail.file);
     if (example) {
       setYaw(example.defaultYaw);
@@ -344,6 +371,20 @@ export function AuthoringScreen({
     setOutputWidth(evenDimension(detail.cropWidth));
     setOutputHeight(evenDimension(detail.cropHeight));
     setOutputPresetId(AUTHORING_OUTPUT_CUSTOM_ID);
+  };
+
+  const resetExportRectangle = () => {
+    if (isEquirectSource) {
+      setExportReferenceToken((token) => token + 1);
+      return;
+    }
+    if (sourceWidth && sourceHeight) {
+      const centered = centerCropForOutput(sourceWidth, sourceHeight, outputWidth, outputHeight);
+      setCropX(centered.cropX);
+      setCropY(centered.cropY);
+      setCropWidth(centered.cropWidth);
+      setCropHeight(centered.cropHeight);
+    }
   };
 
   const updateFlatCrop = (partial: Partial<{ cropX: number; cropY: number; cropWidth: number; cropHeight: number }>) => {
@@ -399,6 +440,7 @@ export function AuthoringScreen({
                 </label>
               </div>
             ) : null}
+            <div className="da-authoring-viewport-stage">
             {sourceUrl && isEquirectSource ? (
               <EquirectSphereViewport
                 ref={viewportRef}
@@ -410,11 +452,18 @@ export function AuthoringScreen({
                 horizontalFov={horizontalFov}
                 outputWidth={outputWidth}
                 outputHeight={outputHeight}
-                outputPreviewHostRef={outputPreviewHostRef}
+                outputPreviewHost={outputPreviewHost}
+                resetExportReferenceToken={exportReferenceToken}
+                outputSizeCommitToken={outputSizeCommitToken}
                 onCameraChange={({ yaw: nextYaw, pitch: nextPitch, horizontalFov: nextFov }) => {
                   setYaw(wrapSignedDegrees(nextYaw));
                   setPitch(nextPitch);
                   setHorizontalFov(nextFov);
+                }}
+                onOutputSizeChange={({ outputWidth: nextW, outputHeight: nextH }) => {
+                  setOutputWidth(evenDimension(nextW));
+                  setOutputHeight(evenDimension(nextH));
+                  setOutputPresetId(AUTHORING_OUTPUT_CUSTOM_ID);
                 }}
               />
             ) : sourceUrl && sourceWidth && sourceHeight ? (
@@ -430,7 +479,7 @@ export function AuthoringScreen({
                 cropHeight={cropHeight}
                 outputWidth={outputWidth}
                 outputHeight={outputHeight}
-                outputPreviewHostRef={outputPreviewHostRef}
+                outputPreviewHost={outputPreviewHost}
                 onCropChange={handleFlatCropChange}
               />
             ) : sourceUrl && !sourceReady ? (
@@ -458,11 +507,15 @@ export function AuthoringScreen({
                 </label>
               </div>
             )}
+            </div>
           </div>
 
           <div className="da-authoring-workspace__video-col">
             {sourceUrl ? (
-              <div ref={outputPreviewHostRef} className="da-authoring-program-preview-host" />
+              <div
+                ref={setOutputPreviewHost}
+                className="da-authoring-program-preview-host"
+              />
             ) : (
               <div className="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
                 <p className="da-authoring-output-placeholder">Choose source file to create output</p>
@@ -489,6 +542,7 @@ export function AuthoringScreen({
                   disabled={false}
                   recordRange={recordRange}
                   onRecordRangeChange={setRecordRange}
+                  onPreviewRecording={setPreviewRecording}
                   hint={
                     isEquirectSource
                       ? 'Drag on the sphere or use Camera framing sliders · FOV above 130° enters little-planet'
@@ -512,6 +566,7 @@ export function AuthoringScreen({
                       setCropHeight(centered.cropHeight);
                     }
                   }}
+                  onPlaybackStop={resetExportRectangle}
                 />
                 {isEquirectSource ? (
                   <AuthoringCameraControls
@@ -654,11 +709,17 @@ export function AuthoringScreen({
             </div>
 
             {extractFilter ? (
-              <p className="da-note da-note--filter">
-                Filter:{' '}
-                <code className="da-value-ellipsis" tabIndex={0}>
-                  {extractFilter}
-                </code>
+              <p className={`da-note${extractFilter.startsWith('Extract ') ? '' : ' da-note--filter'}`}>
+                {extractFilter.startsWith('Extract ') ? (
+                  extractFilter
+                ) : (
+                  <>
+                    Filter:{' '}
+                    <code className="da-value-ellipsis" tabIndex={0}>
+                      {extractFilter}
+                    </code>
+                  </>
+                )}
               </p>
             ) : null}
 
@@ -667,11 +728,20 @@ export function AuthoringScreen({
                 {!recordRange ? (
                   <p className="da-note">Record a segment on the playback bar, then extract that subsection.</p>
                 ) : null}
+                <SelectInput
+                  label="Extract format"
+                  value={extractFormat}
+                  options={[
+                    { value: 'mp4', label: 'MP4 (transcode mirror recording)' },
+                    { value: 'webm', label: 'WebM (mirror recording copy)' },
+                  ]}
+                  onChange={(value) => setExtractFormat(value === 'webm' ? 'webm' : 'mp4')}
+                />
                 <WasmMedia
                   label="ffmpeg.wasm extract"
                   operation="equirect-extract"
                   extractionMode={isEquirectSource ? 'rectilinear' : 'flat-crop'}
-                  outputFormat="mp4"
+                  outputFormat={extractFormat}
                   showProgress
                   yaw={yaw}
                   pitch={pitch}
@@ -682,6 +752,7 @@ export function AuthoringScreen({
                   inputFile={inputFile}
                   cropRegion={cropRegion}
                   recordRange={recordRange}
+                  previewRecording={previewRecording}
                 onProgress={({ progress }) => {
                   setExtractBusy(true);
                   setExtractProgress(progress);
@@ -696,8 +767,19 @@ export function AuthoringScreen({
                     }
                     return URL.createObjectURL(blob);
                   });
+                  const isPreviewRecording = metadata.source === 'preview-recording';
+                  setExtractResultKind(isPreviewRecording ? 'preview-recording' : 'ffmpeg');
+                  setExtractResultFormat(metadata.format === 'webm' ? 'webm' : 'mp4');
                   const filter = metadata.filter;
-                  setExtractFilter(typeof filter === 'string' ? filter : '');
+                  if (isPreviewRecording) {
+                    setExtractFilter(
+                      metadata.format === 'webm'
+                        ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
+                        : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).',
+                    );
+                  } else if (typeof filter === 'string') {
+                    setExtractFilter(filter);
+                  }
                 }}
                 onExtractError={({ message }) => {
                   setExtractBusy(false);
@@ -721,12 +803,20 @@ export function AuthoringScreen({
             ) : null}
             {extractUrl ? (
               <>
-                <p className="da-note">Extracted MP4 (ffmpeg.wasm):</p>
+                <p className="da-note">
+                  {extractResultKind === 'preview-recording'
+                    ? `Extracted preview recording (${extractResultFormat === 'webm' ? 'WebM' : 'MP4'}):`
+                    : 'Extracted MP4 (ffmpeg.wasm):'}
+                </p>
                 <video className="da-authoring-pane__video" src={extractUrl} controls playsInline autoPlay muted />
                 <a
                   className="da-media-extract-output__download"
                   href={extractUrl}
-                  download={authoringExtractDownloadName(inputFile)}
+                  download={
+                    extractResultKind === 'preview-recording' && extractResultFormat === 'webm'
+                      ? authoringPreviewRecordingDownloadName(inputFile)
+                      : authoringExtractDownloadName(inputFile)
+                  }
                 >
                   Download extracted video
                 </a>

@@ -30,8 +30,16 @@ function syncAttributes(
   for (const [key, value] of Object.entries(values)) {
     const attr = attrMap[key] ?? toKebab(key);
     if (value === undefined || value === null || value === false) {
-      el.removeAttribute(attr);
-    } else if (value === true) {
+      if (el.hasAttribute(attr)) {
+        el.removeAttribute(attr);
+      }
+      continue;
+    }
+    const next = value === true ? '' : String(value);
+    if (el.getAttribute(attr) === next) {
+      continue;
+    }
+    if (value === true) {
       el.setAttribute(attr, '');
     } else {
       el.setAttribute(attr, String(value));
@@ -66,8 +74,11 @@ export function useCustomElementHost(
   propertyValues: Record<string, unknown> = {},
 ): RefCallback<HTMLElement | null> {
   const host = useRef<HTMLElement | null>(null);
+  const handlersRef = useRef(handlers);
+  handlersRef.current = handlers;
+  const eventMapRef = useRef(options.events ?? {});
+  eventMapRef.current = options.events ?? {};
   const attrMap = options.attrs ?? {};
-  const eventMap = options.events ?? {};
   const registerRef = useRef(options.register);
   registerRef.current = options.register;
 
@@ -92,13 +103,10 @@ export function useCustomElementHost(
       return;
     }
     const listeners: Array<[string, EventListener]> = [];
-    for (const [domEvent, handlerKey] of Object.entries(eventMap)) {
-      const handler = handlers[handlerKey];
-      if (!handler) {
-        continue;
-      }
+    for (const [domEvent, handlerKey] of Object.entries(eventMapRef.current)) {
       const listener: EventListener = (event) => {
-        handler((event as CustomEvent).detail);
+        const handler = handlersRef.current[handlerKey];
+        handler?.((event as CustomEvent).detail);
       };
       el.addEventListener(domEvent, listener);
       listeners.push([domEvent, listener]);
@@ -108,7 +116,7 @@ export function useCustomElementHost(
         el.removeEventListener(domEvent, listener);
       }
     };
-  });
+  }, []);
 
   return useCallback(mergeRef(host, forwardedRef), [forwardedRef]);
 }

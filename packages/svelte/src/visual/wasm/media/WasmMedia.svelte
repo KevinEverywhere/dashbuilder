@@ -30,6 +30,7 @@
 		inputFile,
 		cropRegion,
 		recordRange,
+		previewRecording,
 		className,
 		onProgress,
 		onExtractComplete,
@@ -82,6 +83,7 @@
 		setHostProperty(host, 'inputFile', inputFile);
 		setHostProperty(host, 'cropRegion', cropRegion);
 		setHostProperty(host, 'recordRange', recordRange);
+		setHostProperty(host, 'previewRecording', previewRecording);
 	});
 </script>
 

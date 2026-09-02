@@ -1,0 +1,182 @@
+{
+  "fields": {
+    "project": { "key": "DAS" },
+    "issuetype": { "name": "Story" },
+    "summary": "Authoring parity: mirror extract and equirect export across all runtimes",
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Bring React, Vue, Svelte, and Angular Authoring to parity with the Web Components proof app (DAS-178 reference). Prefer native @rosettadash/* packages in each framework rather than React guest screens in Vue/Svelte proof apps."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 3 },
+          "content": [{ "type": "text", "text": "Reference (WC)" }]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Equirect: single Three.js source render + export overlay; output mirror via bitmap drawImage crop (blitOutputMirrorFromSource), not a second WebGL renderer."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Extract: previewRecording WebM from output mirror; MP4 transcode or WebM passthrough via WasmMedia; v360-on-source-file only as fallback when no recording."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Extract format selector (MP4 vs WebM), filter/result copy, playback download and extract share the same mirror recording."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 3 },
+          "content": [{ "type": "text", "text": "Acceptance criteria" }]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "All five proof apps (WC, React, Vue, Svelte, Angular) behave the same for flat and equirect Authoring: export overlay, custom output size, mirror WYSIWYG, record, download, extract."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "React, Vue, Angular, Svelte packages expose previewRecording on WasmMedia and updated EquirectSphereViewport / FlatVideoViewport APIs matching WC."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Vue and Svelte proof Authoring screens use native framework packages (no @rosettadash/react guest Authoring screen)."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Svelte package gains EquirectSphereViewport and FlatVideoViewport if missing; port from WC reference implementation."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Shared logic stays in @rosettadash/core (transcode args, download names, crop helpers); no duplicate ffmpeg arg builders per runtime."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "npm run verify:all passes."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 3 },
+          "content": [{ "type": "text", "text": "Branch" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "feature/DAS-179-authoring-parity-all-runtimes"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

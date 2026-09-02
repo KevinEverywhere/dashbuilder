@@ -7,8 +7,16 @@ export function setHostAttribute(
   value: AttrValue,
 ): void {
   if (value === undefined || value === null || value === false) {
-    host.removeAttribute(name);
-  } else if (value === true) {
+    if (host.hasAttribute(name)) {
+      host.removeAttribute(name);
+    }
+    return;
+  }
+  const next = value === true ? '' : String(value);
+  if (host.getAttribute(name) === next) {
+    return;
+  }
+  if (value === true) {
     host.setAttribute(name, '');
   } else {
     host.setAttribute(name, String(value));

@@ -14,6 +14,7 @@ import {
   centerCropForOutput,
   flatCropToCropRegion,
   authoringExtractDownloadName,
+  authoringPreviewRecordingDownloadName,
   getAuthoringOutputPreset,
   isEquirectSourceDimensions,
   type AuthoringRecordRange,
@@ -105,6 +106,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 </label>
               </div>
             }
+            <div class="da-authoring-viewport-stage">
             @if (sourceUrl()) {
               @if (isEquirectSource()) {
                 <rd-equirect-sphere-viewport
@@ -118,7 +120,10 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                   [outputWidth]="outputWidth()"
                   [outputHeight]="outputHeight()"
                   [outputPreviewElement]="outputPreviewElement()"
+                  [resetExportReferenceToken]="exportReferenceToken()"
+                  [outputSizeCommitToken]="outputSizeCommitToken()"
                   (cameraChange)="onCameraChange($event)"
+                  (outputSizeChange)="onOutputSizeChange($event)"
                 />
               } @else if (sourceWidth() && sourceHeight()) {
                 <rd-flat-video-viewport
@@ -162,6 +167,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 </label>
               </div>
             }
+            </div>
           </div>
 
           <div class="da-authoring-workspace__video-col">
@@ -191,7 +197,9 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 [hint]="playbackHint()"
                 [recordRange]="recordRange()"
                 (recordRangeChange)="recordRange.set($event)"
+                (previewRecordingChange)="previewRecording.set($event)"
                 (resetView)="resetView()"
+                (playbackStop)="resetExportRectangle()"
               />
               @if (isEquirectSource()) {
                 <da-authoring-camera-controls
@@ -331,9 +339,13 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
             </div>
 
             @if (extractFilter()) {
-              <p class="da-note da-note--filter">
-                Filter:
-                <code class="da-value-ellipsis" tabindex="0">{{ extractFilter() }}</code>
+              <p class="da-note" [class.da-note--filter]="!extractFilter().startsWith('Extract ')">
+                @if (extractFilter().startsWith('Extract ')) {
+                  {{ extractFilter() }}
+                } @else {
+                  Filter:
+                  <code class="da-value-ellipsis" tabindex="0">{{ extractFilter() }}</code>
+                }
               </p>
             }
 
@@ -341,11 +353,17 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
               @if (!recordRange()) {
                 <p class="da-note">Record a segment on the playback bar, then extract that subsection.</p>
               }
+              <da-bound-select-input
+                label="Extract format"
+                [value]="extractFormat()"
+                [options]="extractFormatOptions"
+                (valueChange)="extractFormat.set($event === 'webm' ? 'webm' : 'mp4')"
+              />
               <rd-wasm-media
                 label="ffmpeg.wasm extract"
                 operation="equirect-extract"
                 [extractionMode]="isEquirectSource() ? 'rectilinear' : 'flat-crop'"
-                outputFormat="mp4"
+                [outputFormat]="extractFormat()"
                 [showProgress]="true"
                 [yaw]="yaw()"
                 [pitch]="pitch()"
@@ -356,6 +374,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 [inputFile]="inputFile()"
                 [cropRegion]="cropRegion()"
                 [recordRange]="recordRange()"
+                [previewRecording]="previewRecording()"
                 (progress)="onExtractProgress($event)"
                 (extractComplete)="onExtractComplete($event)"
                 (extractError)="onExtractError($event)"
@@ -378,7 +397,13 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
               <p class="da-note da-note--warn" role="alert">Extract failed: {{ error }}</p>
             }
             @if (extractUrl(); as url) {
-              <p class="da-note">Extracted MP4 (ffmpeg.wasm):</p>
+              <p class="da-note">
+                @if (extractResultKind() === 'preview-recording') {
+                  Extracted preview recording ({{ extractResultFormat() === 'webm' ? 'WebM' : 'MP4' }}):
+                } @else {
+                  Extracted MP4 (ffmpeg.wasm):
+                }
+              </p>
               <video class="da-authoring-pane__video" [src]="url" controls playsinline autoplay muted></video>
               <a class="da-media-extract-output__download" [href]="url" [download]="downloadName()">
                 Download extracted video
@@ -420,6 +445,17 @@ export class AuthoringScreenComponent {
   readonly cropWidth = signal(640);
   readonly cropHeight = signal(360);
   readonly recordRange = signal<AuthoringRecordRange | null>(null);
+  readonly previewRecording = signal<Blob | null>(null);
+  readonly extractFormat = signal<'mp4' | 'webm'>('mp4');
+  readonly exportReferenceToken = signal(0);
+  readonly outputSizeCommitToken = signal(1);
+  readonly extractResultKind = signal<'preview-recording' | 'ffmpeg' | null>(null);
+  readonly extractResultFormat = signal<'mp4' | 'webm' | null>(null);
+
+  readonly extractFormatOptions = [
+    { value: 'mp4', label: 'MP4 (transcode mirror recording)' },
+    { value: 'webm', label: 'WebM (mirror recording copy)' },
+  ];
 
   private userPickedFile = false;
 
@@ -492,7 +528,12 @@ export class AuthoringScreenComponent {
     { value: AUTHORING_OUTPUT_CUSTOM_ID, label: 'Custom' },
   ]);
 
-  readonly downloadName = computed(() => authoringExtractDownloadName(this.inputFile()));
+  readonly downloadName = computed(() => {
+    if (this.extractResultKind() === 'preview-recording' && this.extractResultFormat() === 'webm') {
+      return authoringPreviewRecordingDownloadName(this.inputFile());
+    }
+    return authoringExtractDownloadName(this.inputFile());
+  });
 
   constructor() {
     effect(() => {
@@ -526,11 +567,15 @@ export class AuthoringScreenComponent {
         this.outputPresetId.set('720x480');
         this.outputWidth.set(preset?.width ?? 720);
         this.outputHeight.set(preset?.height ?? 480);
+        this.outputSizeCommitToken.update((token) => token + 1);
         this.sourceWidth.set(undefined);
         this.sourceHeight.set(undefined);
         this.recordRange.set(null);
+        this.previewRecording.set(null);
         this.cropRegion.set(null);
         this.extractFilter.set('');
+        this.extractResultKind.set(null);
+        this.extractResultFormat.set(null);
         this.extractProgress.set(0);
         this.extractError.set(null);
         this.extractBusy.set(false);
@@ -587,6 +632,10 @@ export class AuthoringScreenComponent {
     });
 
     effect(() => {
+      const previewMirrorNote =
+        this.extractFormat() === 'webm'
+          ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
+          : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).';
       if (this.isEquirectSource()) {
         const region = virtualCameraToCropRegion({
           camera: { yaw: this.yaw(), pitch: this.pitch(), roll: 0, fov: this.horizontalFov() },
@@ -597,7 +646,9 @@ export class AuthoringScreenComponent {
           reverse: this.reverse(),
         });
         this.cropRegion.set(region);
-        this.extractFilter.set(typeof region.filter === 'string' ? region.filter : '');
+        this.extractFilter.set(
+          this.previewRecording() ? previewMirrorNote : typeof region.filter === 'string' ? region.filter : '',
+        );
         return;
       }
       const width = this.sourceWidth();
@@ -619,7 +670,7 @@ export class AuthoringScreenComponent {
         reverse: this.reverse(),
       });
       this.cropRegion.set(region);
-      this.extractFilter.set(region.filter);
+      this.extractFilter.set(this.previewRecording() ? previewMirrorNote : region.filter);
     });
   }
 
@@ -637,6 +688,12 @@ export class AuthoringScreenComponent {
 
   wrapSigned(value: number): number {
     return wrapSignedDegrees(value);
+  }
+
+  onOutputSizeChange(detail: { outputWidth: number; outputHeight: number }): void {
+    this.outputWidth.set(evenDimension(detail.outputWidth));
+    this.outputHeight.set(evenDimension(detail.outputHeight));
+    this.outputPresetId.set(AUTHORING_OUTPUT_CUSTOM_ID);
   }
 
   onCameraChange(detail: { yaw: number; pitch: number; horizontalFov: number }): void {
@@ -677,6 +734,10 @@ export class AuthoringScreenComponent {
     if (preset) {
       this.outputWidth.set(preset.width);
       this.outputHeight.set(preset.height);
+      this.outputSizeCommitToken.update((token) => token + 1);
+      if (this.isEquirectSource()) {
+        this.exportReferenceToken.update((token) => token + 1);
+      }
     }
   }
 
@@ -687,6 +748,7 @@ export class AuthoringScreenComponent {
     this.outputWidth.set(width);
     this.outputHeight.set(height);
     this.outputPresetId.set(matchOutputPreset(width, height));
+    this.outputSizeCommitToken.update((token) => token + 1);
   }
 
   handleVideoFile(detail: VideoFileDetail): void {
@@ -694,6 +756,7 @@ export class AuthoringScreenComponent {
     this.sourceLoadBusy.set(false);
     this.sourceLoadError.set(null);
     this.recordRange.set(null);
+    this.previewRecording.set(null);
     this.inputFile.set(detail.file);
     const example = this.example();
     if (example) {
@@ -759,6 +822,23 @@ export class AuthoringScreenComponent {
     this.cropHeight.set(centered.cropHeight);
   }
 
+  resetExportRectangle(): void {
+    if (this.isEquirectSource()) {
+      this.exportReferenceToken.update((token) => token + 1);
+      return;
+    }
+    const width = this.sourceWidth();
+    const height = this.sourceHeight();
+    if (!width || !height) {
+      return;
+    }
+    const centered = centerCropForOutput(width, height, this.outputWidth(), this.outputHeight());
+    this.cropX.set(centered.cropX);
+    this.cropY.set(centered.cropY);
+    this.cropWidth.set(centered.cropWidth);
+    this.cropHeight.set(centered.cropHeight);
+  }
+
   applyLittlePlanetPreset(): void {
     this.horizontalFov.set(360);
     this.pitch.set(-85);
@@ -780,6 +860,17 @@ export class AuthoringScreenComponent {
     const url = URL.createObjectURL(detail.blob);
     this.extractObjectUrl = url;
     this.extractUrl.set(url);
+    const isPreviewRecording = detail.metadata.source === 'preview-recording';
+    this.extractResultKind.set(isPreviewRecording ? 'preview-recording' : 'ffmpeg');
+    this.extractResultFormat.set(detail.metadata.format === 'webm' ? 'webm' : 'mp4');
+    if (isPreviewRecording) {
+      this.extractFilter.set(
+        detail.metadata.format === 'webm'
+          ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
+          : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).',
+      );
+      return;
+    }
     const filter = detail.metadata.filter;
     this.extractFilter.set(typeof filter === 'string' ? filter : '');
   }

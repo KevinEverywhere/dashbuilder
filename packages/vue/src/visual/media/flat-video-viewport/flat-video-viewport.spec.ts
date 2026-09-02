@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import { FlatVideoViewport } from './index';
 
 describe('@rosettadash/vue/visual/media/flat-video-viewport', () => {
-  it('renders the authoring host', () => {
+  it('renders the WC authoring host element', () => {
     const wrapper = mount(FlatVideoViewport, {
       props: {
         sourceWidth: 1280,
@@ -13,6 +13,6 @@ describe('@rosettadash/vue/visual/media/flat-video-viewport', () => {
         cropHeight: 360,
       },
     });
-    expect(wrapper.find('[data-testid="rd-flat-video-viewport"]').exists()).toBe(true);
+    expect(wrapper.element.tagName.toLowerCase()).toBe('rd-flat-video-viewport');
   });
 });

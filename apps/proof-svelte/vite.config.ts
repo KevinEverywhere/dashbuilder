@@ -52,7 +52,7 @@ export default defineConfig({
         (id.includes('youtube-embed') || id.includes(`${sep}lib${sep}custom-element-host`)),
     }),
     svelte(),
-    react({ include: /\/src\/(authoring|globe|charts)\/.*\.tsx$/ }),
+    react({ include: /\/src\/(globe|charts)\/.*\.tsx$/ }),
     ffmpegCoreVitePlugin(),
   ],
   resolve: {
@@ -74,6 +74,20 @@ export default defineConfig({
         replacement: resolve(
           __dirname,
           '../../packages/react/src/visual/media/flat-video-viewport/index.ts',
+        ),
+      },
+      {
+        find: '@rosettadash/svelte/visual/media/equirect-sphere-viewport',
+        replacement: resolve(
+          __dirname,
+          '../../packages/svelte/src/visual/media/equirect-sphere-viewport/index.ts',
+        ),
+      },
+      {
+        find: '@rosettadash/svelte/visual/media/flat-video-viewport',
+        replacement: resolve(
+          __dirname,
+          '../../packages/svelte/src/visual/media/flat-video-viewport/index.ts',
         ),
       },
       {

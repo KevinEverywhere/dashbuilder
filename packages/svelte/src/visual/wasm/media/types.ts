@@ -19,6 +19,7 @@ export interface WasmMediaProps {
   inputFile?: File | Blob | null;
   cropRegion?: Record<string, string | number | boolean | null | undefined> | null;
   recordRange?: AuthoringRecordRange | null;
+  previewRecording?: Blob | null;
   className?: string;
   onProgress?: (detail: { progress: number }) => void;
   onExtractComplete?: (detail: {
