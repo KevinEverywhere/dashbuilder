@@ -3,8 +3,8 @@
 RosettaDash article series. Kevin writes the introduction; articles
 01–07 are draft-ready in their folders.
 
-**Current ticket:** [DAS-176](https://planetkevin.atlassian.net/browse/DAS-176)  
-**Branch:** `feature/DAS-176-move-docs-articles-into-repo`
+**Current ticket:** [DAS-177](https://planetkevin.atlassian.net/browse/DAS-177)  
+**Branch:** `feature/DAS-177-wc-proof-pure-custom-elements`
 
 Series planning notes stay in the workspace
 [`docs/00-series.md`](../../docs/00-series.md) until Kevin moves
@@ -22,7 +22,12 @@ that file.
 | [07-one-canvas-five-runtimes](./07-one-canvas-five-runtimes/) | One Canvas: Five Runtimes |
 
 Each article folder has `README.md` (the draft) and `graphics/` (PNG
-stills). Re-capture with:
+stills).
+
+**SEO:** [keyword-clusters.md](./keyword-clusters.md) — primary
+search cluster per article.
+
+Re-capture with:
 
 ```bash
 node scripts/capture-article-graphics.mjs [01–07]

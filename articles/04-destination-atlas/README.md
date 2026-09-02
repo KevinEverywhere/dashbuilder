@@ -43,7 +43,7 @@ side by side.
 About is the only page-level scroller. The shell locks the body. The
 other tabs are meant to fit the viewport.
 
-The workbench chrome appears again in the Maps and Settings articles.
+The workbench layout appears again in the Maps and Settings articles.
 
 ![Workbench — preview on the left, component source on the right.](graphics/01-workbench.png)
 

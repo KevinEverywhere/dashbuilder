@@ -28,7 +28,10 @@ There are four entry points into the project, and this series walks through them
 
 ![The four doors — builder, Storybook, Destination Atlas, npm — named, not toured.](graphics/03-doors.png)
 
-Demos are included in the repo to present a thin view of composed elements created using Rosetta Dash components. There are 11 page-embed widgets live under `demos/`: a React weather card, a Vue flight board, an Angular stock ticker, a Svelte transit list, a custom-element 360 tour. They use the same atoms as the factory, without Atlas chrome or the builder canvas. To preview a composite on a host page before opening a proof app, `npm run demo:weather` on port 4320 is enough. The package.json file contains all of the demo scripts.
+Demos are included in the repo to present a thin view of composed elements created using Rosetta Dash components. There are 11 page-embed widgets live under `demos/`: a React weather card, a Vue flight board, an Angular stock ticker, a Svelte transit list, a custom-element 360 tour. They use the same components as the builder, without the Destination
+Atlas shell or the builder canvas. To preview a composed widget on a
+host page before opening a proof app, `npm run demo:weather` on port
+4320 is enough. The package.json file lists all demo scripts.
 
 ![One demo widget on a host page — weather, or the 360 tour. Proof that a composite can leave without Atlas.](graphics/04-demo-widget.png)
 

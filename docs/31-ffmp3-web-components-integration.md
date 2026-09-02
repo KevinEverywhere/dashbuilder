@@ -84,16 +84,18 @@ npm install @ffmpeg/ffmpeg @ffmpeg/util
 </script>
 ```
 
-## Authoring viewports (framework hosts)
+## Authoring viewports (framework hosts vs custom elements)
 
-Destination Atlas Authoring uses **framework** viewports (React/Angular), not the legacy 2:1 canvas CE:
+Destination Atlas Authoring in **React, Angular, Vue, and Svelte** proofs uses **framework** viewports — not the legacy 2:1 canvas CE:
 
 | Component | Import | Use |
 |-----------|--------|-----|
 | `EquirectSphereViewport` | `@rosettadash/react/visual/media/equirect-sphere-viewport` | 360° interior sphere + program output |
 | `FlatVideoViewport` | `@rosettadash/react/visual/media/flat-video-viewport` | Flat 2D crop rectangle + output mirror |
 
-Legacy `<rd-equirect-viewport>` remains for 2:1 flat-crop on the equirect **frame** (builder palette / FFMP3).
+The **Web Components proof** (`proof-web-components`) wires the same pipeline with native hosts: `<rd-video-source>`, `<rd-equirect-viewport>`, `<rd-wasm-media>` — no foreign mount.
+
+Legacy `<rd-equirect-viewport>` also supports 2:1 flat-crop on the equirect **frame** (builder palette / FFMP3).
 
 ## Record trim + reverse on WasmMedia
 

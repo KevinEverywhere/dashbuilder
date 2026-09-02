@@ -30,9 +30,10 @@ export const SCREEN_SOURCES: Record<string, string> = {
   <SelectInput label="Flat video (YouTube)" />
   <rd-youtube-embed video-id={…} />
 </MediaScreen>`,
-  authoring: `<AuthoringScreen locale={locale} selectedId={selectedId}>
-  createRoot(AuthoringScreen.tsx)
-  EquirectSphereViewport, FlatVideoViewport, WasmMedia (@rosettadash/react)
+  authoring: `<AuthoringScreen>
+  <rd-video-source presentation="authoring-source" />
+  <rd-equirect-viewport preview-mode="rectilinear" />
+  <rd-wasm-media operation="equirect-extract" />
 </AuthoringScreen>`,
   intel: `<IntelScreen userRole={userRole} newsQuery={newsQuery}>
   <NewsSearchBox />

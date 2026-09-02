@@ -118,7 +118,7 @@ export function renderAbout(): string {
           <h3>Cross-framework composition</h3>
           <p>Proof apps are mostly native to their runtime. When a feature is ahead in another package — or you are migrating incrementally — you can embed a subtree from another framework instead of rewriting it.</p>
           <ul class="da-about__interop-list">${showcases}</ul>
-          <p class="da-about__note">This custom-elements app is the <code>rd-*</code> host. Map and Globe stay native. Authoring mounts the React subtree. Open those tabs and the Component source panel for the live demo.</p>
+          <p class="da-about__note">This custom-elements app is the <code>rd-*</code> host. Map, Globe, Media, and Authoring stay on native custom elements. Cross-framework mixing is demonstrated on the Svelte proof — see About → Cross-framework composition.</p>
         </section>
         <section class="da-about__section">
           <h3>${escapeHtml(DESTINATION_ATLAS_ABOUT_INTRO.componentSourceTitle)}</h3>
@@ -128,7 +128,7 @@ export function renderAbout(): string {
           <h3>How to work with components</h3>
           <ol class="da-about__steps">
             <li>Open <strong>Storybook</strong> for your runtime — browse palette groups, preview bindings, and copy import paths from the catalog.</li>
-            <li>Run the matching <strong>proof app</strong> — see components composed into real screens (this custom-elements app is the DAS-159 host).</li>
+            <li>Run the matching <strong>proof app</strong> — see components composed into real screens (this custom-elements app is the DAS-121 host).</li>
             <li>On any other tab, read the <strong>Component source</strong> panel — inspect markup, prop names, and how RosettaDash custom elements nest together.</li>
             <li>Install packages in your app via npm; wire developer-owned i18n, data, and providers (map tiles, API keys) at the component prop level.</li>
           </ol>
@@ -379,13 +379,46 @@ export function renderMedia(atlas: AtlasState): string {
 export function renderAuthoring(): string {
   return `
     <section class="da-panel da-panel--authoring">
-      <div class="da-interop-callout" role="note">
-        <strong>Cross-framework showcase.</strong>
-        This custom-elements shell mounts a React subtree (<code>createRoot</code> →
-        <code>authoring/AuthoringScreen.tsx</code>) so viewports and WasmMedia stay on
-        <code>@rosettadash/react</code>. See About → Cross-framework composition.
+      <h2>Authoring</h2>
+      <p class="da-note">Upload a source file. Framing and extract use native
+        <code>rd-video-source</code>, <code>rd-equirect-viewport</code>, and
+        <code>rd-wasm-media</code> — no framework guest mounts.</p>
+      <div class="da-authoring-ce-stack da-stack">
+        <rd-video-source
+          label="Source video"
+          presentation="authoring-source"
+          hint="Flat or 2:1 equirect MP4"
+          data-ref="auth-video-source"
+        ></rd-video-source>
+        <rd-equirect-viewport
+          label="Framing preview"
+          preview-mode="rectilinear"
+          yaw="25"
+          pitch="-8"
+          horizontal-fov="75"
+          output-width="1280"
+          output-height="720"
+          data-ref="auth-equirect"
+        ></rd-equirect-viewport>
+        <div class="da-authoring-ce-controls da-stack">
+          <rd-number-input label="Yaw (°)" value="25" min="-180" max="180" data-ref="auth-yaw"></rd-number-input>
+          <rd-number-input label="Pitch (°)" value="-8" min="-90" max="90" data-ref="auth-pitch"></rd-number-input>
+          <rd-number-input label="Horizontal FOV (°)" value="75" min="30" max="120" data-ref="auth-fov"></rd-number-input>
+          <rd-number-input label="Trim start (sec)" value="0" min="0" step="0.1" data-ref="auth-trim-start"></rd-number-input>
+          <rd-number-input label="Trim end (sec)" value="30" min="0.1" step="0.1" data-ref="auth-trim-end"></rd-number-input>
+        </div>
+        <rd-wasm-media
+          label="Extract"
+          operation="equirect-extract"
+          extraction-mode="rectilinear"
+          output-format="mp4"
+          show-progress="true"
+          trim-start-sec="0"
+          trim-end-sec="30"
+          data-ref="auth-wasm"
+        ></rd-wasm-media>
+        <div data-ref="auth-extract-result" class="da-note" hidden></div>
       </div>
-      <div data-ref="react-authoring-host"></div>
     </section>`;
 }
 

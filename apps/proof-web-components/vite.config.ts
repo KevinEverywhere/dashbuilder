@@ -1,4 +1,3 @@
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { resolve } from 'node:path';
@@ -10,7 +9,6 @@ export default defineConfig({
     tsconfigPaths({
       projects: [resolve(__dirname, '../../tsconfig.base.json')],
     }),
-    react({ include: /\/src\/authoring\/.*\.tsx$/ }),
     ffmpegCoreVitePlugin(),
   ],
   root: __dirname,
@@ -38,20 +36,6 @@ export default defineConfig({
         replacement: resolve(__dirname, '../../libs/destination-atlas/src/index.ts'),
       },
       {
-        find: '@rosettadash/react/visual/media/equirect-sphere-viewport',
-        replacement: resolve(
-          __dirname,
-          '../../packages/react/src/visual/media/equirect-sphere-viewport/index.ts',
-        ),
-      },
-      {
-        find: '@rosettadash/react/visual/media/flat-video-viewport',
-        replacement: resolve(
-          __dirname,
-          '../../packages/react/src/visual/media/flat-video-viewport/index.ts',
-        ),
-      },
-      {
         find: '@rosettadash/web-components/styles.css',
         replacement: resolve(__dirname, '../../packages/web-components/src/styles/styles.css'),
       },
@@ -59,7 +43,7 @@ export default defineConfig({
     ],
   },
   optimizeDeps: {
-    include: ['leaflet', '@googlemaps/js-api-loader', 'three', 'react', 'react-dom'],
+    include: ['leaflet', '@googlemaps/js-api-loader', 'three'],
     exclude: ['maplibre-gl', '@ffmpeg/ffmpeg', '@ffmpeg/util'],
   },
   worker: {

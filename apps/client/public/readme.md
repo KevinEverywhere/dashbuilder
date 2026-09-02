@@ -77,7 +77,7 @@ Five Nx apps share mock data from `libs/destination-atlas/` and the same screens
 
 **Screens:** About (`/` — only page-level scroller) · Overview · Destinations · Maps · Media · Authoring · Plan · Stack · Settings.
 
-Most screens are native to that runtime. Intentional mixes: **Svelte** hosts React Authoring, Vue Globe, Angular Media, and `<rd-geo-map>` on Map ([DAS-158](https://planetkevin.atlassian.net/browse/DAS-158)); **web-components** keeps Map/Globe on `rd-*` and mounts React Authoring ([DAS-159](https://planetkevin.atlassian.net/browse/DAS-159)). Vue proof is Vue-only ([DAS-157](https://planetkevin.atlassian.net/browse/DAS-157)).
+Most screens are native to that runtime. Intentional mixes live on **Svelte** only: React Authoring, Vue Globe, Angular Media, and `<rd-geo-map>` on Map ([DAS-158](https://planetkevin.atlassian.net/browse/DAS-158)). **Web Components** and **Vue** proofs stay native end to end ([DAS-121](https://planetkevin.atlassian.net/browse/DAS-121), [DAS-157](https://planetkevin.atlassian.net/browse/DAS-157)).
 
 Full guide: [docs/43-destination-atlas-proof-apps.md](docs/43-destination-atlas-proof-apps.md).
 
@@ -398,7 +398,7 @@ See [docs/README.md](docs/README.md) for the full index.
 
 **[DAS-160](https://planetkevin.atlassian.net/browse/DAS-160)** — this README + npm/GitHub publish docs (`feature/DAS-160-readme-truth-and-npm-release`).
 
-Destination Atlas proofs through custom-elements parity: [DAS-159](https://planetkevin.atlassian.net/browse/DAS-159). Full ticket list: [Planned Tickets](docs/11-planned-tickets.md).
+Web Components proof ([DAS-121](https://planetkevin.atlassian.net/browse/DAS-121)): [docs/43-destination-atlas-proof-apps.md](docs/43-destination-atlas-proof-apps.md). Full ticket list: [Planned Tickets](docs/11-planned-tickets.md).
 
 ## License
 

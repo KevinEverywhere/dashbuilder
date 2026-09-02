@@ -4,7 +4,7 @@
   "projectType": "application",
   "sourceRoot": "apps/proof-web-components/src",
   "tags": ["scope:destination-atlas", "type:proof-app"],
-  "implicitDependencies": ["web-components", "runtime-react", "destination-atlas"],
+  "implicitDependencies": ["web-components", "destination-atlas"],
   "targets": {
     "serve": {
       "executor": "nx:run-commands",

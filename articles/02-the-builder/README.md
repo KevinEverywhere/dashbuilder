@@ -23,7 +23,8 @@ The sections of the interface are: the components are grouped on the left side o
 
 ![Welcome — stack picker. UI model chosen, server and database still None.](graphics/01-welcome.png)
 
-**Components.** On the left side, the components are arranged in groups. You will recognize many: a KPI, a table, a date range, a grid, a chart. There are many more that you will not need for the first composite. Clicking the components header collapses it to the left side.
+**Components.** On the left side, the components are arranged in groups. You will recognize many: a KPI (key performance indicator), a table,
+a date range, a grid, a chart. There are many more that you will not need for the first composite. Clicking the components header collapses it to the left side.
 
 **Canvas.** In the center of the app, you can place, snap, resize, and multi-select in the canvas. The canvas is for the positioning and sizing of the component elements for your exported component.
 

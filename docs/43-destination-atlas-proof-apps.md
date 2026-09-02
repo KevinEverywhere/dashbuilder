@@ -43,7 +43,7 @@ Shared mock data and screen definitions: **`libs/destination-atlas/`**.
 
 ### WC vs framework parity
 
-The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-map, media, wasm, i18n) and catalog meta elements. `proof-web-components` uses `<rd-*>` custom elements across Destination Atlas screens except Stack (infra out of scope) and Authoring (React subtree via `createRoot`, DAS-159). Regenerate atoms: `npm run generate:web-components-runtime`.
+The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-map, media, wasm, i18n) and catalog meta elements. `proof-web-components` uses `<rd-*>` custom elements across Destination Atlas screens except Stack (infra out of scope). Authoring wires `<rd-video-source>`, `<rd-equirect-viewport>`, and `<rd-wasm-media>` natively — no foreign mount ([DAS-121](https://planetkevin.atlassian.net/browse/DAS-121), [DAS-177](https://planetkevin.atlassian.net/browse/DAS-177)). Regenerate atoms: `npm run generate:web-components-runtime`.
 
 ## Screens
 
@@ -55,7 +55,7 @@ The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-
 | **Map** | 2D exploration | GeoMap (provider prop), LinkList, TabsLayout |
 | **Globe** | 3D markers | ThreeGeoGlobe |
 | **Media** | Flat YouTube + 360° routing | YoutubeEmbed, VideoMetadataPanel — 360° destinations open Authoring |
-| **Authoring** | Upload + WASM extract | FlatVideoViewport or EquirectSphereViewport, AuthoringPlaybackBar, WasmMedia ([DAS-131](https://planetkevin.atlassian.net/browse/DAS-131), [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141)) |
+| **Authoring** | Upload + WASM extract | Framework proofs: `FlatVideoViewport` or `EquirectSphereViewport`, AuthoringPlaybackBar, WasmMedia. WC proof: `<rd-video-source>`, `<rd-equirect-viewport>`, `<rd-wasm-media>` ([DAS-131](https://planetkevin.atlassian.net/browse/DAS-131), [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141)) |
 | **Plan** | Trip + access | RoleGate, PersonInvite, RoleAssign, Timer, form inputs |
 | **Stack** | Infra demo | infra/* read-only panel; live BYOK key status — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
 | **Settings** | App locale + integrations | AppLanguageSelect; consumer BYOK vault — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
@@ -83,15 +83,15 @@ Implemented in React proof: [DAS-130](https://planetkevin.atlassian.net/browse/D
 
 Default camera framing for Cusco and other destinations comes from `libs/destination-atlas/src/data/authoring-examples.ts` (presets only — **no autoload**).
 
-**Dev setup (proof-react / proof-angular):** from repo root run `npm install` (includes `@ffmpeg/ffmpeg`, `@ffmpeg/util`, and `@ffmpeg/core` as devDependencies). Proof and Storybook Vite configs serve `@ffmpeg/core` from same-origin `/ffmpeg-core/*` (see `tools/vite/ffmpeg-core-vite-plugin.mjs`) and set COOP + `Cross-Origin-Embedder-Policy: credentialless` so ffmpeg.wasm can use SharedArrayBuffer while YouTube embeds still load. `<rd-wasm-media>` accepts `inputFile`, `cropRegion`, `recordRange`, and `reverse` — loads core via `@rosettadash/core` helpers (no unpkg CDN fetch).
+**Dev setup (all proof apps):** from repo root run `npm install` (includes `@ffmpeg/ffmpeg`, `@ffmpeg/util`, and `@ffmpeg/core` as devDependencies). Proof and Storybook Vite configs serve `@ffmpeg/core` from same-origin `/ffmpeg-core/*` (see `tools/vite/ffmpeg-core-vite-plugin.mjs`) and set COOP + `Cross-Origin-Embedder-Policy: credentialless` so ffmpeg.wasm can use SharedArrayBuffer while YouTube embeds still load. `<rd-wasm-media>` accepts `inputFile`, `cropRegion`, `recordRange`, and `reverse` — loads core via `@rosettadash/core` helpers (no unpkg CDN fetch).
 
-Implemented in React + Angular + Vue proof apps: [DAS-131](https://planetkevin.atlassian.net/browse/DAS-131) (tab shell); [DAS-132](https://planetkevin.atlassian.net/browse/DAS-132) (sphere + WASM); [DAS-140](https://planetkevin.atlassian.net/browse/DAS-140) / [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141) (playback bar, flat crop, record trim). Editor/Admin roles only.
+Implemented in React, Angular, and Vue proof apps (framework viewports + playback bar): [DAS-131](https://planetkevin.atlassian.net/browse/DAS-131) (tab shell); [DAS-132](https://planetkevin.atlassian.net/browse/DAS-132) (sphere + WASM); [DAS-140](https://planetkevin.atlassian.net/browse/DAS-140) / [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141) (playback bar, flat crop, record trim). **proof-web-components** uses `<rd-video-source>`, `<rd-equirect-viewport>`, and `<rd-wasm-media>` natively ([DAS-177](https://planetkevin.atlassian.net/browse/DAS-177)). Editor/Admin roles only.
 
 **proof-vue (DAS-124 / DAS-157):** Not a Vue → React showcase. Globe uses `@rosettadash/vue` wrapping `<rd-three-geo-globe>`.
 
 ### Cross-framework composition showcases
 
-Proof apps are native to their runtime by default. These screens **deliberately embed another runtime** when reusing an ahead-of-parity feature is more practical than rewriting it — a pattern teams use during migration or when mixing npm packages.
+Proof apps are native to their runtime by default. The **Svelte proof** deliberately embeds other runtimes on four screens when reusing an ahead-of-parity feature is more practical than rewriting it — a pattern teams use during migration or when mixing npm packages.
 
 | Host | Embedded | Screen | Feature | Bridge | Ticket |
 |------|----------|--------|---------|--------|--------|
@@ -99,13 +99,12 @@ Proof apps are native to their runtime by default. These screens **deliberately 
 | Svelte | Vue | Globe | Three.js geo globe + markers | `VueMount.svelte` → `@rosettadash/vue` ThreeGeoGlobe | DAS-158 |
 | Svelte | Angular | Media | YouTube destination embed | `AngularMount.svelte` → `YoutubeEmbed` on `rd-youtube-embed` | DAS-158 |
 | Svelte | Custom element | Map | Geo map + destination selection | `svelte:element` → `<rd-geo-map>` | DAS-158 |
-| Web Components | React | Authoring | Viewports + WasmMedia extract | `createRoot` → `authoring/AuthoringScreen.tsx` | DAS-159 |
 
-Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`). Vue proof is Vue-only (DAS-157). **proof-svelte (DAS-158)** shows one React, one Vue, one Angular, and one WC custom element. **proof-web-components (DAS-159)** is the custom-element host: Map/Globe stay native `rd-*`; Authoring mounts React.
+Shared copy: `libs/destination-atlas/src/data/about-guides.ts` (`DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES`). **Vue proof is Vue-only** ([DAS-157](https://planetkevin.atlassian.net/browse/DAS-157)) — no foreign mounts. **proof-svelte (DAS-158)** shows one React, one Vue, one Angular, and one WC custom element. **proof-web-components (DAS-121)** is the custom-element host: Map, Globe, Media, and Authoring stay native `rd-*` end to end.
 
 **proof-svelte (DAS-125 / DAS-158):** Native Svelte 5 for most screens. Authoring keeps React; Globe hosts Vue; Media hosts Angular; Map hosts `<rd-geo-map>`.
 
-**proof-web-components (DAS-121 / DAS-159):** Native custom elements for most screens, including geo-explorer Map/Globe with destination-list lockstep. Authoring hosts the React subtree.
+**proof-web-components (DAS-121):** Native custom elements for all in-scope screens, including geo-explorer Map/Globe with destination-list lockstep and Authoring via `<rd-video-source>`, `<rd-equirect-viewport>`, `<rd-wasm-media>`.
 
 ### Consumer BYOK (integrations)
 

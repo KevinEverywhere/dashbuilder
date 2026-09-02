@@ -42,7 +42,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
     storybookCommand: 'npm run storybook:web-components',
     storybookPort: 6006,
     summary:
-      'Shadow-DOM hosts and catalog elements. Map and Globe stay native rd-* custom elements; Authoring hosts the React subtree (DAS-159). Use when exporting CE-first dashboards or embedding rd-* tags in any stack.',
+      'Shadow-DOM hosts and catalog elements. Map, Globe, Media, and Authoring stay native rd-* custom elements — no foreign mount. Use when exporting CE-first dashboards or embedding rd-* tags in any stack.',
   },
   {
     id: 'react',
@@ -170,16 +170,5 @@ export const DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES: DestinationAtlasCrossF
     bridge: 'svelte:element → <rd-geo-map> (registerRdGeoMap)',
     summary:
       'Map uses the web-components GeoMap custom element directly. selected-id and marker-select stay in lockstep with the destination list and Settings Selected.',
-  },
-  {
-    id: 'wc-authoring-react',
-    hostRuntime: 'Web Components',
-    hostTicket: 'DAS-159',
-    embeddedRuntime: 'React',
-    screen: 'Authoring',
-    feature: '360° / flat viewport + WasmMedia extract',
-    bridge: 'createRoot → authoring/AuthoringScreen.tsx',
-    summary:
-      'The custom-elements proof keeps Map and Globe on rd-* hosts and mounts the React Authoring subtree so viewports and WasmMedia stay on @rosettadash/react. Props (locale, selectedId) pass from the CE shell.',
   },
 ];

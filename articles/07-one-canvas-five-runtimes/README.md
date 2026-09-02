@@ -1,91 +1,110 @@
 # One Canvas: Five Runtimes and Purposeful Mixing
 
-Articles 4 through 6 each picked a runtime as the camera angle:
-Angular, Vue, and Svelte. The product spans all five.
+Articles 4 through 6 each used one framework as the camera angle:
+Angular, Vue, and Svelte. The product itself spans all five.
 
-The builder is Angular. The canvas is one graph. The pieces leave as
-React, Angular, Vue, Svelte, or a W3C custom element. Change the
-export target; the canvas stays the same. Article 1 said that. This
-piece is the mechanism, the five proofs, and the places a host
-embeds another stack on purpose.
+The builder is Angular. You compose on one canvas. When you export,
+the same layout can leave as React, Angular, Vue, Svelte, or W3C
+custom elements — you choose the target at export time; the canvas
+does not change. Article 1 introduced that idea. This article
+shows how it works in the repo: the five Destination Atlas proofs,
+and the one proof that deliberately embeds another framework on
+some screens.
 
 Overview, Destinations, Maps, and Authoring already have their
 articles.
 
-## One IR, five generators
+## One foundation, five implementations
 
-Compose, validate, then **ExportIR**. That document is the only input
-the code generators see. Adding a framework reuses the same builder
-UI.
+Compose on the canvas, fix validation errors, then export. Before
+any framework-specific files are written, the builder turns your
+graph into one validated description: which components you placed,
+how they connect, which env vars and server choices apply, and
+which UI target you picked. Every exporter reads that same
+description. Adding another framework does not mean rebuilding the
+builder — it means adding another exporter that understands the
+same input.
 
-The default zip is standalone source. Drop it in, set env, run — no
-`@rosettadash/*` install required to ship what you just made. npm is
-the second door — import a typed `KpiCard` into an app you already
-have:
+The default download is standalone source. Drop the zip into a
+project, set environment variables, and run. You do not need to
+install `@rosettadash/*` to ship what you just exported. If you
+prefer npm instead, install the packages for the framework you
+already use and import a typed component — for example a key
+performance indicator (KPI) card:
 
 ```bash
 npm install @rosettadash/core @rosettadash/vue
-# or: @rosettadash/react | 
-#     @rosettadash/angular | 
-#     @rosettadash/svelte | 
+# or: @rosettadash/react |
+#     @rosettadash/angular |
+#     @rosettadash/svelte |
 #     @rosettadash/web-components
 ```
 
-The factory is local. The files are yours.
+Everything runs on your machine. The generated files live in your
+tree.
 
-![One IR, five generators — or the export target picker.](graphics/01-ir.png)
+![Export target picker — same canvas, choice of framework at export time.](graphics/01-ir.png)
 
 ## Five proofs, one library
 
-Destination Atlas exists five times. Same thirty cities. Same screen
-names. `libs/destination-atlas`.
+Destination Atlas ships five times — same thirty cities, same screen
+names, one shared library at `libs/destination-atlas`.
 
 | Runtime | Command | Port |
 | --------- | --------- | ------ |
 | Web Components | `npm run proof:web-components` | 4310 |
-| React (UX reference) | `npm run proof:react` | 4311 |
+| React (reference UX) | `npm run proof:react` | 4311 |
 | Angular | `npm run proof:angular` | 4312 |
 | Vue | `npm run proof:vue` | 4313 |
 | Svelte | `npm run proof:svelte` | 4314 |
 
-Open About. The matrix is Package, Proof app, Storybook. The current
-row says “You are here.” Article 4 introduced the matrix; sameness
-across runtimes is the story here.
+Open **About** in any proof. The matrix lists Package, Proof app, and
+Storybook; the current row is marked “You are here.” Article 4
+introduced the matrix. Here the point is sameness: switch runtimes
+and the product should feel like the same app.
 
 ![About runtime matrix — Package, Proof app, Storybook. You are here.](graphics/02-matrix.png)
 
-**Vue is Vue-only.** Native SFCs, same tabs, no foreign mount. The
-next section is the exception.
+**Vue** is Vue throughout — native single-file components, same tabs,
+no embedded React or Angular on its screens.
+
+**Web Components** stays on custom elements throughout — Map, Globe,
+Media, and Authoring use `rd-*` tags, not a nested React or Vue
+tree.
 
 ## Mixing on purpose
 
-Teams already do this during a migration: keep an element on the stack that already has it.
+During a migration, teams often keep one screen on the stack that
+already implements it instead of rewriting immediately.
 
-The Svelte proof is a shell that hosts four guests. Authoring stays
-React: viewports and ffmpeg.wasm were already there
-(`ReactMount.svelte` → `createRoot`). The globe stays the Vue
-Three.js wrapper. Media’s YouTube embed is Angular. The 2D map is
-the custom element, `<rd-geo-map>`, via `svelte:element`.
+Only the **Svelte** proof does that on purpose. Its shell hosts
+four guests:
 
-The Web Components proof does the same for Authoring: Map and Globe
-stay `rd-*`; extract mounts the React subtree.
+- **Authoring** — React viewports and ffmpeg.wasm were already
+  built; Svelte mounts that screen with a small React helper.
+- **Globe** — the Vue Three.js wrapper around the geo globe.
+- **Media** — the Angular YouTube embed component.
+- **Map** — the `<rd-geo-map>` custom element via `svelte:element`.
 
-The Svelte proof reuses ahead-of-parity work rather than rewriting
-it. Storybook isolated one piece. This is those pieces in one
-chrome, including foreign ones. If you screenshot it, keep the
-subject on the host and the bridge.
+That is a realistic pattern: reuse what already works, wire it in
+one app frame, and document the bridge. Storybook showed each piece
+alone; Destination Atlas shows them together. If you capture a
+screenshot for documentation, show both the Svelte host and what it
+is embedding.
 
-![Purposeful mix — Svelte chrome with a guest mount. Subject is the host and the bridge.](graphics/03-mix.png)
+![Purposeful mix — Svelte shell with an embedded React Authoring screen.](graphics/03-mix.png)
 
-The demos mix on purpose too, at card scale: a React host, a Vue
-host, a custom-element tour. Same bet. Smaller frame.
+The smaller demos under `demos/` do the same at card scale: a React
+host page, a Vue host page, a custom-element 360° tour. Same idea,
+smaller frame.
 
-![A demo on a host page — the npm door at card scale.](graphics/04-demo.png)
+![A demo widget on a host page — npm import at card scale.](graphics/04-demo.png)
 
 ## Close
 
-Clone the repo. Run the proof you live in, or `npm start` and export
-a single KPI into a project you already have. Storybook is still
-there if you want a component alone again.
+Clone the repo. Run the proof for the framework you use day to day,
+or run `npm start` and export a single KPI into a project you
+already have. Storybook is still there when you want one component
+in isolation.
 
-The pieces travel. You keep the source.
+You compose once. You choose where the source lands.

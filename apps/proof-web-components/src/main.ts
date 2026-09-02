@@ -15,7 +15,7 @@ import {
   getDestinationById,
   type DestinationAtlasScreenId,
 } from '@destination-atlas';
-import { AuthoringScreen as AuthoringScreenReact } from './authoring/AuthoringScreen';
+import { resetAuthoringWiring, wireAuthoringPipeline } from './authoring-wiring.js';
 import { destinationListMarkup, scrollDestinationListToSelection } from './geo-explorer.js';
 import { createDestinationAtlasState } from './lib/atlas-state.js';
 import { getConsumerSecrets, subscribeSecrets } from './lib/consumer-secrets.js';
@@ -25,7 +25,6 @@ import { screenAllowedForRole } from './lib/roles.js';
 import { subscribeRouter } from './lib/router.js';
 import { createThemePreference, type ThemePreference } from './lib/theme.js';
 import { fetchLiveNewsArticles, type LiveNewsArticle } from './lib/news-api.js';
-import { mountReactComponent, unmountReactComponent } from './react-host.js';
 import {
   contextSummaryMarkup,
   globeFooterMarkup,
@@ -499,14 +498,7 @@ function wireSettings(root: HTMLElement): void {
 }
 
 function wireAuthoring(root: HTMLElement): void {
-  const host = root.querySelector<HTMLElement>('[data-ref="react-authoring-host"]');
-  if (!host) {
-    return;
-  }
-  mountReactComponent(host, AuthoringScreenReact as never, {
-    locale: atlas.locale,
-    selectedId: atlas.selectedId,
-  });
+  wireAuthoringPipeline(root);
 }
 
 function renderScreenHtml(): string {
@@ -656,7 +648,7 @@ function ensureShell(root: HTMLElement): void {
     <div class="da-shell">
       <header class="da-header">
         <h1>Destination Atlas</h1>
-        <p>Current and historic information about world locations — Web Components proof (DAS-159)</p>
+        <p>Current and historic information about world locations — Web Components proof (DAS-121)</p>
       </header>
       <div class="da-body-row">
         <div class="da-preview-column">
@@ -714,7 +706,7 @@ function render(): void {
   const screenChanged = mounted.screen !== atlas.screen;
   if (screenChanged) {
     if (mounted.screen === 'authoring' && atlas.screen !== 'authoring') {
-      unmountReactComponent();
+      resetAuthoringWiring();
     }
     screenRoot.innerHTML = renderScreenHtml();
     mounted.screen = atlas.screen;
