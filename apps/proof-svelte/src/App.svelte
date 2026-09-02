@@ -129,10 +129,11 @@
       </nav>
 
       <div class="da-workbench-host">
-        <ErrorBoundary label={activeScreen?.label ?? atlas.screen}>
-          <ScreenWorkbenchMobileToggle {mobileView} onChange={(view) => (mobileView = view)} />
-          <ScreenWorkbenchPreview {mobileView}>
-            {#if atlas.screen === 'about'}
+        {#key atlas.screen}
+          <ErrorBoundary label={activeScreen?.label ?? atlas.screen}>
+            <ScreenWorkbenchMobileToggle {mobileView} onChange={(view) => (mobileView = view)} />
+            <ScreenWorkbenchPreview {mobileView}>
+              {#if atlas.screen === 'about'}
               <AboutScreen />
             {:else if atlas.screen === 'overview'}
               <OverviewScreen locale={atlas.locale} userRole={atlas.userRole} />
@@ -214,9 +215,10 @@
                 onHighlightTargetChange={atlas.setHighlightTarget}
                 onThemeChange={themeStore.setTheme}
               />
-            {/if}
-          </ScreenWorkbenchPreview>
-        </ErrorBoundary>
+              {/if}
+            </ScreenWorkbenchPreview>
+          </ErrorBoundary>
+        {/key}
       </div>
     </div>
     <ComponentSourcePanel source={SCREEN_SOURCES[atlas.screen] ?? ''} hidden={mobileView === 'preview'} />

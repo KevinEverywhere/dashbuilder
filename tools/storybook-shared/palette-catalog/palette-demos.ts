@@ -236,6 +236,12 @@ export function renderPaletteDemo(
     case 'visual.media.equirect-viewport':
       return `<rd-equirect-viewport label="${esc(String(overrides.label ?? 'Crop metadata'))}" preview-mode="rectilinear" yaw="${Number(overrides.yaw ?? 25)}" pitch="${Number(overrides.pitch ?? -8)}" horizontal-fov="${Number(overrides.horizontalFov ?? 75)}" output-width="1280" output-height="720" style="display:block;max-width:100%"></rd-equirect-viewport>`;
 
+    case 'visual.media.equirect-sphere-viewport':
+      return `<rd-equirect-sphere-viewport flip-interior yaw="${Number(overrides.yaw ?? 25)}" pitch="${Number(overrides.pitch ?? -8)}" horizontal-fov="${Number(overrides.horizontalFov ?? 75)}" output-width="1280" output-height="720" style="display:block;max-width:100%"></rd-equirect-sphere-viewport>`;
+
+    case 'visual.media.flat-video-viewport':
+      return `<rd-flat-video-viewport source-width="1920" source-height="1080" crop-x="${Number(overrides.cropX ?? 320)}" crop-y="${Number(overrides.cropY ?? 180)}" crop-width="${Number(overrides.cropWidth ?? 1280)}" crop-height="${Number(overrides.cropHeight ?? 720)}" output-width="1280" output-height="720" style="display:block;max-width:100%"></rd-flat-video-viewport>`;
+
     case 'visual.media.live-capture':
       return `<div class="preview-media preview-media--capture"><span class="preview-media__label">Live capture</span><button type="button" class="preview-media__capture-btn">Start camera</button><span class="preview-media__meta">Authoring only</span></div>`;
 

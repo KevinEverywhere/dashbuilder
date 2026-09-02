@@ -18,6 +18,7 @@ import {
   getAuthoringExampleForDestinationId,
   getDestinationById,
 } from '@destination-atlas';
+import { untrack } from 'svelte';
 import type { VideoFileDetail } from '@rosettadash/svelte/visual/media/video-source';
 import { localizedDestinationName } from './atlas-utils';
 import { evenDimension, matchOutputPreset, probeVideoFile } from './authoring-helpers';
@@ -81,7 +82,8 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
     { value: 'webm', label: 'WebM (mirror recording copy)' },
   ] as const;
 
-  let userPickedFile = false;
+  /** Non-reactive flag — mirrors React `userPickedFileRef` (avoid $effect feedback loops). */
+  const userPickedFileRef = { current: false };
   let objectUrl: string | null = null;
   let extractObjectUrl: string | null = null;
 
@@ -243,7 +245,7 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
   }
 
   function handleVideoFile(detail: VideoFileDetail): void {
-    userPickedFile = true;
+    userPickedFileRef.current = true;
     sourceLoadBusy = false;
     sourceLoadError = null;
     recordRange = null;
@@ -376,7 +378,7 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
       return;
     }
     const linkedExample = getAuthoringExampleForDestinationId(selectedId);
-    if (linkedExample) {
+    if (linkedExample && linkedExample.id !== exampleId) {
       exampleId = linkedExample.id;
     }
   });
@@ -384,16 +386,17 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
   $effect(() => {
     void getSelectedId();
     void exampleId;
-    userPickedFile = false;
+    userPickedFileRef.current = false;
   });
 
   $effect(() => {
+    void exampleId;
     const current = example;
-    if (!current) {
+    if (!current || userPickedFileRef.current) {
       return;
     }
 
-    if (!userPickedFile) {
+    untrack(() => {
       yaw = current.defaultYaw;
       pitch = current.defaultPitch;
       horizontalFov = current.defaultHorizontalFov;
@@ -418,7 +421,7 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
       sourceLoadBusy = false;
       sourceLoadError = null;
       revokeExtractUrl();
-    }
+    });
   });
 
   $effect(() => {
@@ -466,47 +469,65 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
   });
 
   $effect(() => {
-    const previewMirrorNote =
-      extractFormat === 'webm'
-        ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
-        : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).';
-    if (isEquirectSource) {
-      const region = virtualCameraToCropRegion({
-        camera: { yaw, pitch, roll: 0, fov: horizontalFov },
-        sourceWidth,
-        sourceHeight,
+    void extractFormat;
+    void isEquirectSource;
+    void yaw;
+    void pitch;
+    void horizontalFov;
+    void sourceWidth;
+    void sourceHeight;
+    void outputWidth;
+    void outputHeight;
+    void reverse;
+    void cropX;
+    void cropY;
+    void cropWidth;
+    void cropHeight;
+    void previewRecording;
+
+    untrack(() => {
+      const previewMirrorNote =
+        extractFormat === 'webm'
+          ? 'Extract copies the output mirror recording as WebM (same clip as playback download).'
+          : 'Extract transcodes the output mirror recording to MP4 via ffmpeg.wasm (playback download stays WebM).';
+      if (isEquirectSource) {
+        const region = virtualCameraToCropRegion({
+          camera: { yaw, pitch, roll: 0, fov: horizontalFov },
+          sourceWidth,
+          sourceHeight,
+          outputWidth,
+          outputHeight,
+          reverse,
+        });
+        cropRegion = region;
+        extractFilter = previewRecording
+          ? previewMirrorNote
+          : typeof region.filter === 'string'
+            ? region.filter
+            : '';
+        return;
+      }
+      const width = sourceWidth;
+      const height = sourceHeight;
+      if (!width || !height) {
+        cropRegion = null;
+        extractFilter = '';
+        return;
+      }
+      const region = flatCropToCropRegion({
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        sourceWidth: width,
+        sourceHeight: height,
         outputWidth,
         outputHeight,
         reverse,
       });
       cropRegion = region;
-      extractFilter = previewRecording
-        ? previewMirrorNote
-        : typeof region.filter === 'string'
-          ? region.filter
-          : '';
-      return;
-    }
-    const width = sourceWidth;
-    const height = sourceHeight;
-    if (!width || !height) {
-      cropRegion = null;
-      extractFilter = '';
-      return;
-    }
-    const region = flatCropToCropRegion({
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      sourceWidth: width,
-      sourceHeight: height,
-      outputWidth,
-      outputHeight,
-      reverse,
+      extractFilter = previewRecording ? previewMirrorNote : region.filter;
     });
-    cropRegion = region;
-    extractFilter = previewRecording ? previewMirrorNote : region.filter;
   });
 
   return {

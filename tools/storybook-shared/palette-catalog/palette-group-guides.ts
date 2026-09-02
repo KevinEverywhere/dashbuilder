@@ -194,11 +194,11 @@ export const PALETTE_GROUP_GUIDES: Record<string, PaletteGroupGuide> = {
     id: 'media-authoring',
     fit: 'specialized',
     summary:
-      'Media Authoring supports 360° / equirect workflows — ingest video, define crop/framing metadata, and optionally capture live camera input. Built for immersive production tools (e.g. ffmp3Console), not generic BI dashboards.',
+      'Media Authoring supports 360° / equirect and flat video workflows — ingest video, frame with sphere or flat viewports, define crop metadata, and optionally capture live camera input. Built for immersive production tools (e.g. ffmp3Console), not generic BI dashboards.',
     relationships:
-      'Video Source ingests files and emits metadata. Equirect Viewport owns crop/filter strings (not a 3D renderer). Live Capture previews camera input for authoring. Shipped npm elements `<rd-video-source>` and `<rd-equirect-viewport>` implement the first two.',
+      'Video Source ingests files and emits metadata. Equirect Sphere Viewport renders interior Three.js sphere framing; Flat Video Viewport owns draggable 2D crop. Equirect Viewport (legacy) emits crop/filter strings without WebGL. Live Capture previews camera input. Shipped npm elements `<rd-video-source>`, `<rd-equirect-sphere-viewport>`, `<rd-flat-video-viewport>`, and `<rd-equirect-viewport>`.',
     learnMore:
-      'See **Meta components → Media authoring pipeline** and **Wasm compute lab** for end-to-end flows. Shipped npm elements `<rd-video-source>` and `<rd-equirect-viewport>` are on **NPM layout atoms**.',
+      'See **Meta components → Media authoring pipeline** and **Wasm compute lab** for end-to-end flows. Shipped npm viewport elements are on **NPM layout atoms**.',
     relatedGroupIds: ['wasm-compute', 'vr-visuals'],
   },
   'wasm-compute': {
@@ -228,7 +228,9 @@ export const COMPONENT_LEARN_MORE: Partial<Record<string, string>> = {
   'domain.role-assign': 'Confirms access after Person Invite; pair with Role Gate on sensitive pages.',
   'visual.news.results-table': 'Click a headline, then see **Article Detail** in this group.',
   'visual.media.video-source': 'Shipped npm `<rd-video-source>` — see **NPM layout atoms** and **Media Authoring** group.',
-  'visual.media.equirect-viewport': 'Shipped npm `<rd-equirect-viewport>` — see **NPM layout atoms** · emits crop-region events.',
+  'visual.media.equirect-viewport': 'Shipped npm `<rd-equirect-viewport>` — metadata/crop strings only · see **NPM layout atoms**.',
+  'visual.media.equirect-sphere-viewport': 'Shipped npm `<rd-equirect-sphere-viewport>` — Three.js interior sphere + export rectangle · Destination Atlas Authoring.',
+  'visual.media.flat-video-viewport': 'Shipped npm `<rd-flat-video-viewport>` — draggable flat crop + output mirror · Destination Atlas Authoring.',
   'visual.wasm.media': 'Live demo on **WASM Compute** group + **Meta components → WASM compute lab** · optional @ffmpeg peers.',
   'layout.collapsible': 'Similar UX to npm `<rd-accordion>` — see **NPM layout atoms**.',
 };

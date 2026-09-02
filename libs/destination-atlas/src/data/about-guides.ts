@@ -42,7 +42,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
     storybookCommand: 'npm run storybook:web-components',
     storybookPort: 6006,
     summary:
-      'Shadow-DOM hosts and catalog elements. Map, Globe, Media, and Authoring stay native rd-* custom elements — no foreign mount. Use when exporting CE-first dashboards or embedding rd-* tags in any stack.',
+      'Shadow-DOM hosts and catalog elements. Map, Globe, Media, and Authoring stay native rd-* custom elements — `<rd-equirect-sphere-viewport>`, `<rd-flat-video-viewport>`, and `<rd-wasm-media>` on Authoring. No foreign mount. Use when exporting CE-first dashboards or embedding rd-* tags in any stack.',
   },
   {
     id: 'react',
@@ -81,7 +81,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
     storybookCommand: 'npm run storybook:vue',
     storybookPort: 6008,
     summary:
-      'Vue 3 SFC wrappers with the same Destination Atlas navigation and mock data as the React reference app.',
+      'Vue 3 SFC wrappers with the same Destination Atlas navigation and mock data as the React reference app — native Authoring with EquirectSphereViewport and FlatVideoViewport (DAS-157, DAS-179).',
   },
   {
     id: 'svelte',
@@ -94,7 +94,7 @@ export const DESTINATION_ATLAS_RUNTIME_GUIDES: DestinationAtlasRuntimeGuide[] = 
     storybookCommand: 'npm run storybook:svelte',
     storybookPort: 6010,
     summary:
-      'Svelte 5 Destination Atlas with four live cross-framework hosts: React Authoring, Vue globe, Angular YouTube embed, and rd-geo-map custom element.',
+      'Svelte 5 Destination Atlas — native Authoring (DAS-179) plus three cross-framework hosts: Vue globe, Angular YouTube embed, and rd-geo-map custom element (DAS-158).',
   },
 ];
 
@@ -127,17 +127,6 @@ export interface DestinationAtlasCrossFrameworkShowcase {
 }
 
 export const DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES: DestinationAtlasCrossFrameworkShowcase[] = [
-  {
-    id: 'svelte-authoring-react',
-    hostRuntime: 'Svelte',
-    hostTicket: 'DAS-158',
-    embeddedRuntime: 'React',
-    screen: 'Authoring',
-    feature: '360° / flat viewport + WasmMedia extract',
-    bridge: 'ReactMount.svelte → createRoot(AuthoringScreen.tsx)',
-    summary:
-      'Kept the React Authoring subtree — viewports and WasmMedia stay on @rosettadash/react. Props (locale, selectedId) pass from Svelte into React.',
-  },
   {
     id: 'svelte-globe-vue',
     hostRuntime: 'Svelte',

@@ -73,6 +73,8 @@ export const ALL_PALETTE_TYPES = [
   'visual.svg.icon',
   'visual.media.video-source',
   'visual.media.equirect-viewport',
+  'visual.media.equirect-sphere-viewport',
+  'visual.media.flat-video-viewport',
   'visual.media.live-capture',
   'infra.wasm.asset',
   'visual.wasm.worker-host',
@@ -235,9 +237,11 @@ export const META_COMPOSITIONS: MetaCompositionDefinition[] = [
     id: 'media-authoring',
     title: 'Media authoring pipeline',
     summary:
-      '360° authoring — program source, crop viewport, live capture stub, and browser WASM extract.',
+      '360° authoring — program source, sphere/flat viewports, live capture stub, and browser WASM extract.',
     componentTypes: [
       'visual.media.video-source',
+      'visual.media.equirect-sphere-viewport',
+      'visual.media.flat-video-viewport',
       'visual.media.equirect-viewport',
       'visual.media.live-capture',
       'visual.wasm.media',
@@ -246,12 +250,17 @@ export const META_COMPOSITIONS: MetaCompositionDefinition[] = [
       {
         title: 'Capture & crop',
         layout: 'grid',
-        items: ['visual.media.video-source', 'visual.media.equirect-viewport', 'visual.media.live-capture'],
+        items: [
+          'visual.media.video-source',
+          'visual.media.equirect-sphere-viewport',
+          'visual.media.flat-video-viewport',
+          'visual.media.live-capture',
+        ],
       },
       {
-        title: 'Extract',
+        title: 'Metadata & extract',
         layout: 'stack',
-        items: ['visual.wasm.media'],
+        items: ['visual.media.equirect-viewport', 'visual.wasm.media'],
       },
     ],
   },

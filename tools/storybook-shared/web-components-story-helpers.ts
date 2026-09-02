@@ -28,7 +28,7 @@ export function mountWithEventLog(html: string, options: EventLogOptions): HTMLE
   log.textContent = options.hint ?? 'Interact with the component — events appear here.';
 
   const target =
-    (options.selector ? wrap.querySelector(options.selector) : wrap.querySelector('[class^="rd-"], rd-accordion, rd-link-list, rd-accordion-link-list, rd-video-source, rd-equirect-viewport, rd-wasm-media')) ??
+    (options.selector ? wrap.querySelector(options.selector) : wrap.querySelector('[class^="rd-"], rd-accordion, rd-link-list, rd-accordion-link-list, rd-video-source, rd-equirect-viewport, rd-equirect-sphere-viewport, rd-flat-video-viewport, rd-wasm-media')) ??
     wrap.firstElementChild;
 
   for (const name of options.events) {

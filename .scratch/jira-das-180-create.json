@@ -1,0 +1,111 @@
+{
+  "fields": {
+    "project": { "key": "DAS" },
+    "issuetype": { "name": "Story" },
+    "summary": "Sync docs, demos, and Storybook after native Authoring parity",
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Follow-on to DAS-179: proof apps now use native Vue/Svelte Authoring, recording-interrupt UX, and rd-equirect-sphere-viewport / rd-flat-video-viewport. Builder palette already registers the new types; docs, About/demo copy, and Storybook catalog still describe the old Svelte ReactMount Authoring path and legacy rd-equirect-viewport WC pipeline."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 3 },
+          "content": [{ "type": "text", "text": "Acceptance criteria" }]
+        },
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Update DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES and About-related copy: remove stale Svelte React Authoring row; reflect native Vue/Svelte Authoring and WC sphere/flat viewports."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Sync docs/43-destination-atlas-proof-apps.md, README.md, apps/client/public/readme.md, and article references that mention React Authoring on Svelte."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Storybook (optional but in scope): add palette demos and media-authoring meta composition entries for visual.media.equirect-sphere-viewport and visual.media.flat-video-viewport; refresh catalog spec/group guide text."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Consider @rosettadash/vue and @rosettadash/svelte package.json exports for sphere/flat viewport wrappers (npm consumers)."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "npm run verify passes."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Branch: feature/DAS-180-authoring-docs-storybook-parity"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

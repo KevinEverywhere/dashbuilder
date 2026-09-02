@@ -180,23 +180,35 @@ export const MEDIA_AUTHORING_STORY: MetaCompositionStoryConfig = {
     equirectPitch: -8,
     equirectFov: 75,
     videoLabel: 'Program source',
+    flatCropX: 320,
+    flatCropY: 180,
   },
   argTypes: {
     videoLabel: { control: 'text', name: 'Video source label', table: { category: 'Capture' } },
-    equirectLabel: { control: 'text', name: 'Viewport label', table: { category: 'Capture' } },
+    equirectLabel: { control: 'text', name: 'Metadata viewport label', table: { category: 'Capture' } },
     equirectYaw: {
       control: { type: 'number', min: -180, max: 180, step: 1 },
-      name: 'Yaw (°)',
+      name: 'Sphere yaw (°)',
       table: { category: 'Capture' },
     },
     equirectPitch: {
       control: { type: 'number', min: -90, max: 90, step: 1 },
-      name: 'Pitch (°)',
+      name: 'Sphere pitch (°)',
       table: { category: 'Capture' },
     },
     equirectFov: {
       control: { type: 'number', min: 30, max: 120, step: 1 },
-      name: 'Horizontal FOV (°)',
+      name: 'Sphere horizontal FOV (°)',
+      table: { category: 'Capture' },
+    },
+    flatCropX: {
+      control: { type: 'number', min: 0, max: 960, step: 8 },
+      name: 'Flat crop X',
+      table: { category: 'Capture' },
+    },
+    flatCropY: {
+      control: { type: 'number', min: 0, max: 540, step: 8 },
+      name: 'Flat crop Y',
       table: { category: 'Capture' },
     },
   },
@@ -208,8 +220,25 @@ export const MEDIA_AUTHORING_STORY: MetaCompositionStoryConfig = {
       pitch: args.equirectPitch,
       horizontalFov: args.equirectFov,
     },
+    'visual.media.equirect-sphere-viewport': {
+      yaw: args.equirectYaw,
+      pitch: args.equirectPitch,
+      horizontalFov: args.equirectFov,
+    },
+    'visual.media.flat-video-viewport': {
+      cropX: args.flatCropX,
+      cropY: args.flatCropY,
+    },
   }),
   play: async ({ canvasElement }) => {
+    const sphere = canvasElement.querySelector('rd-equirect-sphere-viewport');
+    if (sphere) {
+      await customElements.whenDefined('rd-equirect-sphere-viewport');
+      await waitFor(() => {
+        expect(sphere.getAttribute('yaw')).toBeTruthy();
+      });
+      return;
+    }
     const viewport = canvasElement.querySelector('rd-equirect-viewport');
     if (!viewport) {
       return;

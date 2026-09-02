@@ -273,6 +273,18 @@
       "import": "./src/visual/media/equirect-viewport/EquirectViewport.svelte",
       "default": "./src/visual/media/equirect-viewport/EquirectViewport.svelte"
     },
+    "./visual/media/equirect-sphere-viewport": {
+      "types": "./src/visual/media/equirect-sphere-viewport/types.d.ts",
+      "svelte": "./src/visual/media/equirect-sphere-viewport/EquirectSphereViewport.svelte",
+      "import": "./src/visual/media/equirect-sphere-viewport/EquirectSphereViewport.svelte",
+      "default": "./src/visual/media/equirect-sphere-viewport/EquirectSphereViewport.svelte"
+    },
+    "./visual/media/flat-video-viewport": {
+      "types": "./src/visual/media/flat-video-viewport/types.d.ts",
+      "svelte": "./src/visual/media/flat-video-viewport/FlatVideoViewport.svelte",
+      "import": "./src/visual/media/flat-video-viewport/FlatVideoViewport.svelte",
+      "default": "./src/visual/media/flat-video-viewport/FlatVideoViewport.svelte"
+    },
     "./visual/media/live-capture": {
       "types": "./src/visual/media/live-capture/types.d.ts",
       "svelte": "./src/visual/media/live-capture/LiveCapture.svelte",

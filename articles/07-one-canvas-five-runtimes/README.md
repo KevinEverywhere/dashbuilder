@@ -78,13 +78,14 @@ During a migration, teams often keep one screen on the stack that
 already implements it instead of rewriting immediately.
 
 Only the **Svelte** proof does that on purpose. Its shell hosts
-four guests:
+three guests:
 
-- **Authoring** — React viewports and ffmpeg.wasm were already
-  built; Svelte mounts that screen with a small React helper.
 - **Globe** — the Vue Three.js wrapper around the geo globe.
 - **Media** — the Angular YouTube embed component.
 - **Map** — the `<rd-geo-map>` custom element via `svelte:element`.
+
+Authoring is native Svelte — EquirectSphereViewport, FlatVideoViewport,
+and WasmMedia from `@rosettadash/svelte` (DAS-179).
 
 That is a realistic pattern: reuse what already works, wire it in
 one app frame, and document the bridge. Storybook showed each piece
@@ -92,7 +93,7 @@ alone; Destination Atlas shows them together. If you capture a
 screenshot for documentation, show both the Svelte host and what it
 is embedding.
 
-![Purposeful mix — Svelte shell with an embedded React Authoring screen.](graphics/03-mix.png)
+![Purposeful mix — Svelte shell with an embedded Vue Globe screen.](graphics/03-mix.png)
 
 The smaller demos under `demos/` do the same at card scale: a React
 host page, a Vue host page, a custom-element 360° tour. Same idea,

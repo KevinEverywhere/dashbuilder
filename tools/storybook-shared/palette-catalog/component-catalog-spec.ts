@@ -186,6 +186,22 @@ export const COMPONENT_CATALOG_EXTRAS: Partial<Record<string, ComponentCatalogEx
     dependencies: ['@rosettadash/web-components (`<rd-equirect-viewport>`)', 'Video Source metadata input.'],
     assumptions: ['Defines crop/framing on a 2:1 frame — not a 3D renderer; host app owns WebGL preview.'],
   },
+  'visual.media.equirect-sphere-viewport': {
+    dependencies: [
+      '@rosettadash/web-components (`<rd-equirect-sphere-viewport>`)',
+      'Video Source or bound video-src for texture',
+    ],
+    assumptions: [
+      'Interior Three.js sphere with orbit + Shift+drag export rectangle; emits camera-change and output-size events.',
+    ],
+  },
+  'visual.media.flat-video-viewport': {
+    dependencies: [
+      '@rosettadash/web-components (`<rd-flat-video-viewport>`)',
+      'Video Source or bound video-src',
+    ],
+    assumptions: ['Draggable crop rectangle on flat video with output mirror canvas; emits crop-change events.'],
+  },
   'visual.media.live-capture': {
     dependencies: ['Browser getUserMedia APIs', 'HTTPS or localhost in production hosts.'],
     assumptions: ['Authoring-only unless includeInExport is enabled.'],
