@@ -5,9 +5,11 @@ import { SelectInput } from '@rosettadash/react/visual/input/select';
 import {
   EQUIRECT_VIDEO_DESTINATIONS,
   FLAT_VIDEO_DESTINATIONS,
+  attributionNoticeJson,
   destinationHasFlatVideo,
   getDestinationById,
   isEquirectDestination,
+  youtubeVideoAttribution,
 } from '@destination-atlas';
 import type { AtlasContext } from '../state/useDestinationAtlasState';
 import { localizedDestinationName } from '../lib/atlas-utils';
@@ -49,6 +51,11 @@ export function MediaScreen({
       ]
     : [];
 
+  const youtubeAttributionNotice =
+    flatSelected?.youtubeId != null
+      ? attributionNoticeJson(youtubeVideoAttribution(flatSelected.youtubeId))
+      : '';
+
   const handleFlatChange = (destinationId: string) => {
     setSelectedId(destinationId);
   };
@@ -61,8 +68,8 @@ export function MediaScreen({
     <section className="da-panel">
       <h2>Media</h2>
       <p>
-        Watch destination videos here (YouTube). Authoring is upload-your-own for flat or 360°
-        sources — this library does not ship VR files.
+        Watch flat destination videos here (YouTube). Authoring autoloads 360° library clips for
+        twenty-six cities; upload flat or 360° sources anytime for extract.
       </p>
       <div className="rd-media-layout">
         <div className="rd-media-primary">
@@ -97,13 +104,16 @@ export function MediaScreen({
                 onChange={handleEquirectChange}
               />
               <p className="da-note">
-                Choosing a 360° destination switches to the Authoring tab.
+                Choosing a 360° destination switches to Authoring and autoloads the library clip when available.
               </p>
             </>
           ) : null}
         </div>
         <div className="rd-media-tools">
           <VideoMetadataPanel items={metadataItems} />
+          {youtubeAttributionNotice ? (
+            <rd-attribution-notice notice={youtubeAttributionNotice} />
+          ) : null}
         </div>
       </div>
     </section>

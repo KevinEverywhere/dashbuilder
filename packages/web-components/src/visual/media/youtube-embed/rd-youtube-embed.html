@@ -1,15 +1,23 @@
 <div class="rd-media-youtube-embed" data-ref="root">
-  <iframe
-    data-ref="iframe"
-    class="rd-media-youtube-embed__iframe"
-    title="YouTube video"
-    loading="lazy"
-    credentialless
-    referrerpolicy="strict-origin-when-cross-origin"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-  ></iframe>
-  <p class="rd-media-youtube-embed__empty" data-ref="empty" hidden>
-    Provide a YouTube video id or URL.
+  <div class="rd-media-youtube-embed__stage">
+    <iframe
+      data-ref="iframe"
+      class="rd-media-youtube-embed__iframe"
+      title="YouTube video"
+      loading="lazy"
+      credentialless
+      referrerpolicy="strict-origin-when-cross-origin"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+    ></iframe>
+    <p class="rd-media-youtube-embed__empty" data-ref="empty" hidden>
+      Provide a YouTube video id or URL.
+    </p>
+  </div>
+  <p class="rd-media-youtube-embed__attribution" data-ref="attribution" hidden>
+    <span data-ref="attribution-text">Embedded via YouTube — subject to Google Terms of Service.</span>
+    <a data-ref="watch-link" href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer"
+      >YouTube ToS</a
+    >
   </p>
 </div>

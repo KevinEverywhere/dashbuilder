@@ -1,4 +1,9 @@
 export {
+  RdAttributionNoticeElement,
+  DB_ATTRIBUTION_NOTICE_TAG,
+  registerRdAttributionNotice,
+} from './attribution-notice/index.js';
+export {
   RdGeoMapElement,
   DB_GEO_MAP_TAG,
   registerRdGeoMap,
@@ -12,6 +17,7 @@ export * from './3d-scene/index.js';
 export * from './3d-gltf-model/index.js';
 export * from './3d-geo-globe/index.js';
 
+import { registerRdAttributionNotice } from './attribution-notice/index.js';
 import { registerRdGeoMap } from './geo-map/index.js';
 import { registerRdThreeBarChart } from './3d-bar-chart/index.js';
 import { registerRdThreeScatterPlot } from './3d-scatter/index.js';
@@ -20,6 +26,7 @@ import { registerRdThreeGltfModel } from './3d-gltf-model/index.js';
 import { registerRdThreeGeoGlobe } from './3d-geo-globe/index.js';
 
 export function registerRosettaDashDisplayElements(): void {
+  registerRdAttributionNotice();
   registerRdGeoMap();
   registerRdThreeBarChart();
   registerRdThreeScatterPlot();

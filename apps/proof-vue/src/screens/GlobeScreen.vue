@@ -9,10 +9,12 @@ export const GLOBE_SOURCE = `<GlobeScreen part="explorer" locale={locale} select
 import { computed } from 'vue';
 import { ThreeGeoGlobe } from '@rosettadash/vue/visual/display/3d-geo-globe';
 import {
-  DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
   DEFAULT_WORLD_EQUIRECT_URL,
   GLOBE_TEXTURE_SOURCE_OPTIONS,
   MOCK_DESTINATIONS,
+  GLOBE_EQUIRECT_ATTRIBUTION,
+  THREE_JS_ATTRIBUTION,
+  attributionNoticeJson,
 } from '@destination-atlas';
 import GeoExplorerLayout, { type GeoExplorerListPlacement } from '../components/GeoExplorerLayout.vue';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
@@ -101,7 +103,8 @@ function selectFromGlobe(event: unknown) {
   </GeoExplorerLayout>
 
   <div v-if="embedded && part === 'footer'" class="da-maps-footer">
-    <p class="da-note">{{ DEFAULT_WORLD_EQUIRECT_ATTRIBUTION }}</p>
+    <rd-attribution-notice :notice="attributionNoticeJson(GLOBE_EQUIRECT_ATTRIBUTION)" />
+    <rd-attribution-notice :notice="attributionNoticeJson(THREE_JS_ATTRIBUTION)" />
     <details class="da-globe-sources">
       <summary>Future globe texture sources</summary>
       <ul>

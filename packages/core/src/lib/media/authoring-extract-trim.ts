@@ -19,6 +19,14 @@ export function isValidAuthoringRecordRange(range: AuthoringRecordRange | null |
   return normalizeAuthoringRecordRange(range ?? { startSec: 0, endSec: 0 }) !== null;
 }
 
+/** Default extract trim — full source duration once metadata is available. */
+export function defaultAuthoringRecordRange(durationSec: number): AuthoringRecordRange | null {
+  if (!Number.isFinite(durationSec) || durationSec <= 0.05) {
+    return null;
+  }
+  return { startSec: 0, endSec: durationSec };
+}
+
 /** Download filename for an extracted subsection, derived from the user's source file. */
 export function authoringExtractDownloadName(inputFile: File | Blob | null | undefined): string {
   if (inputFile instanceof File && inputFile.name) {

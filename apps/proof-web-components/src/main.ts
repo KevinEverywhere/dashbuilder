@@ -498,7 +498,7 @@ function wireSettings(root: HTMLElement): void {
 }
 
 function wireAuthoring(root: HTMLElement): void {
-  wireAuthoringPipeline(root);
+  wireAuthoringPipeline(root.querySelector('[data-ref="screen-root"]') ?? root, atlas.selectedId);
 }
 
 function renderScreenHtml(): string {
@@ -514,7 +514,7 @@ function renderScreenHtml(): string {
     case 'media':
       return renderMedia(atlas);
     case 'authoring':
-      return renderAuthoring();
+      return renderAuthoring(atlas);
     case 'intel':
       return renderIntel(atlas, liveNews);
     case 'plan':
@@ -555,6 +555,9 @@ function wireScreen(root: HTMLElement): void {
     wireSettings(root);
   }
   if (atlas.screen === 'authoring') {
+    root.querySelector('[data-ref="auth-dest"]')?.addEventListener('value-change', (event) => {
+      atlas.setSelectedId((event as CustomEvent<{ value: string }>).detail.value);
+    });
     wireAuthoring(root);
   }
   if (atlas.screen === 'plan') {

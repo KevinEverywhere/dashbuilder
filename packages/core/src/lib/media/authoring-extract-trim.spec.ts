@@ -5,6 +5,7 @@ import {
   authoringPreviewRecordingDownloadName,
   isValidAuthoringRecordRange,
   normalizeAuthoringRecordRange,
+  defaultAuthoringRecordRange,
 } from './authoring-extract-trim';
 
 describe('authoring-extract-trim', () => {
@@ -18,6 +19,11 @@ describe('authoring-extract-trim', () => {
   it('rejects ranges shorter than 50ms', () => {
     expect(normalizeAuthoringRecordRange({ startSec: 1, endSec: 1.02 })).toBeNull();
     expect(isValidAuthoringRecordRange({ startSec: 1, endSec: 1.02 })).toBe(false);
+  });
+
+  it('builds a default full-clip range from duration', () => {
+    expect(defaultAuthoringRecordRange(8)).toEqual({ startSec: 0, endSec: 8 });
+    expect(defaultAuthoringRecordRange(0)).toBeNull();
   });
 
   it('builds ffmpeg args with trim', () => {

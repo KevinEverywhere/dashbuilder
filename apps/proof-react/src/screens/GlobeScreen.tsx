@@ -1,10 +1,12 @@
 import { GeoExplorerLayout, type GeoExplorerListPlacement } from '@rosettadash/react/layout/geo-explorer';
 import { ThreeGeoGlobe } from '@rosettadash/react/visual/display/3d-geo-globe';
 import {
-  DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
   DEFAULT_WORLD_EQUIRECT_URL,
   GLOBE_TEXTURE_SOURCE_OPTIONS,
   MOCK_DESTINATIONS,
+  GLOBE_EQUIRECT_ATTRIBUTION,
+  THREE_JS_ATTRIBUTION,
+  attributionNoticeJson,
 } from '@destination-atlas';
 import type { AtlasContext } from '../state/useDestinationAtlasState';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
@@ -76,7 +78,8 @@ export function GlobeScreen({
 
   const renderFooter = () => (
     <>
-      <p className="da-note">{DEFAULT_WORLD_EQUIRECT_ATTRIBUTION}</p>
+      <rd-attribution-notice notice={attributionNoticeJson(GLOBE_EQUIRECT_ATTRIBUTION)} />
+      <rd-attribution-notice notice={attributionNoticeJson(THREE_JS_ATTRIBUTION)} />
       <details className="da-globe-sources">
         <summary>Future globe texture sources</summary>
         <ul>

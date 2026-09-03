@@ -3,7 +3,7 @@ import { GeoExplorerLayout, type GeoExplorerListPlacement } from '@rosettadash/r
 import { GeoMap } from '@rosettadash/react/visual/display/geo-map';
 import { SelectInput } from '@rosettadash/react/visual/input/select';
 import { TextInput } from '@rosettadash/react/visual/input/text';
-import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider } from '@destination-atlas';
+import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider, attributionNoticeJson, mapProviderAttribution } from '@destination-atlas';
 import type { AtlasContext } from '../state/useDestinationAtlasState';
 import { useConsumerSecrets } from '../state/consumer-secrets-context';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
@@ -191,6 +191,9 @@ export function MapScreen({
           apiKey={mapProvider === 'google-maps' ? googleMapsApiKey : undefined}
           tileUrl={mapProvider === 'maplibre' ? maplibreTileUrl : undefined}
           onMarkerSelect={({ id }) => selectDestination(id)}
+        />
+        <rd-attribution-notice
+          notice={attributionNoticeJson(mapProviderAttribution(mapProvider))}
         />
       </div>
     </GeoExplorerLayout>

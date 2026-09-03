@@ -1,6 +1,6 @@
 # Storybook: Making Sense of the Pieces
 
-RosettaDash ships five catalogs. They share one sidebar. The ports are 6006 (Web Components), 6007 (React), 6008 (Vue), 6009 (Angular), 6010 (Svelte). The header says `RosettaDash · {runtime} catalog`.
+RosettaDash ships five Storybook catalogs. They share one sidebar. The ports are 6006 (Web Components), 6007 (React), 6008 (Vue), 6009 (Angular), 6010 (Svelte). The header says `RosettaDash · {runtime} catalog`.
 
 Example:
 

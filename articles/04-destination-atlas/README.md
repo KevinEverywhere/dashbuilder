@@ -1,36 +1,14 @@
-# Destination Atlas: Components in a Product
+# Destination Atlas: Components working together
 
-Storybook proves a single component in isolation. Destination Atlas
-proves the pieces working together as a product.
+Destination Atlas provides information about thirty cities, five per inhabited continent, using every component in RosettaDash at least once. You browse places, look at trends, open a map, watch a video, and more. The app is a functional demo built around component workflows.
 
-Destination Atlas is current and historic information about world
-locations: thirty cities, five per inhabited continent, with visitor
-estimates from 2015 through 2024. You browse places, look at trends,
-open a map, watch a video, and plan access. The app is a functional
-demo built around explorer workflows. Page-embed widgets under
-`demos/` do one job at card scale. Destination Atlas is a full
-product.
-
-Five proof apps share one library, `libs/destination-atlas`, and the
-same screen names. This article uses the Angular proof:
+Five proof apps share one library, `libs/destination-atlas`, and the same screen names. This article uses the Angular proof:
 
 ```bash
 npm run proof:angular
 ```
 
-Open <http://localhost:4312>. The other runtimes follow the same
-screens.
-
-## Why a travel app
-
-Most dashboard demos clone analytics: KPIs, a table, a line chart, a
-date range. That set appears in Destination Atlas too. A place
-explorer also requires work those clones skip: a map with more than
-one engine, a globe, media you watch versus media you extract, roles,
-locale, API keys, and infrastructure you can inspect.
-
-Each component earns its place on a screen because the explorer
-needed it.
+Open <http://localhost:4312>. The other runtimes follow the same screens.
 
 ## The workbench
 

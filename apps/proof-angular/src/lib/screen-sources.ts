@@ -37,7 +37,8 @@ export const MEDIA_SOURCE = `<MediaScreen>
   <da-video-metadata-panel />
 </MediaScreen>`;
 
-export const AUTHORING_SOURCE = `<AuthoringScreen>
+export const AUTHORING_SOURCE = `<AuthoringScreen selectedId={selectedId}>
+  <da-bound-select-input label="360° destination" />
   <rd-video-source />
   <rd-equirect-sphere-viewport />
   <rd-wasm-media operation="equirect-extract" />

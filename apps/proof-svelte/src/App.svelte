@@ -178,7 +178,11 @@
                 onOpenAuthoring={atlas.openAuthoringForDestination}
               />
             {:else if atlas.screen === 'authoring'}
-              <AuthoringScreen locale={atlas.locale} selectedId={atlas.selectedId} />
+              <AuthoringScreen
+                locale={atlas.locale}
+                selectedId={atlas.selectedId}
+                onSelectedIdChange={atlas.setSelectedId}
+              />
             {:else if atlas.screen === 'intel'}
               <IntelScreen
                 userRole={atlas.userRole}

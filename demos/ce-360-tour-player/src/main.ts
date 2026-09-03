@@ -14,7 +14,9 @@ if (root) {
         <h1>Visit desk</h1>
         <p>
           The block on the right is <code>TourPlayer</code> — a vanilla drop-in composed from
-          RosettaDash select, map, KPI, badge, and detail atoms plus a Wikimedia 360 still.
+          RosettaDash select, map, KPI, badge, and detail atoms plus the same
+          Three.js interior-sphere viewport as Authoring
+          (<code>rd-equirect-sphere-viewport</code>).
         </p>
       </header>
     </div>

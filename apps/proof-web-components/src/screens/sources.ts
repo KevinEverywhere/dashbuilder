@@ -30,7 +30,8 @@ export const SCREEN_SOURCES: Record<string, string> = {
   <SelectInput label="Flat video (YouTube)" />
   <rd-youtube-embed video-id={…} />
 </MediaScreen>`,
-  authoring: `<AuthoringScreen>
+  authoring: `<AuthoringScreen selectedId={selectedId}>
+  <SelectInput label="360° destination" />
   <input type="file" accept="video/*" />
   <rd-flat-video-viewport />
   <rd-equirect-sphere-viewport flip-interior />

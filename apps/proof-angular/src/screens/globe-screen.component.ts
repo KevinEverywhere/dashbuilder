@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ThreeGeoGlobe } from '@rosettadash/angular/visual/display/3d-geo-globe';
 import {
-  DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
   DEFAULT_WORLD_EQUIRECT_URL,
   GLOBE_TEXTURE_SOURCE_OPTIONS,
   MOCK_DESTINATIONS,
+  GLOBE_EQUIRECT_ATTRIBUTION,
+  THREE_JS_ATTRIBUTION,
+  attributionNoticeJson,
 } from '@destination-atlas';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
 import { AtlasStateService } from '../services/atlas-state.service';
@@ -42,7 +44,8 @@ export type GlobeScreenPart = 'explorer' | 'footer';
 
     @if (showFooter()) {
       <div class="da-maps-footer">
-        <p class="da-note">{{ attribution }}</p>
+        <rd-attribution-notice [attr.notice]="globeAttributionNotice()"></rd-attribution-notice>
+        <rd-attribution-notice [attr.notice]="threeAttributionNotice()"></rd-attribution-notice>
         <details class="da-globe-sources">
           <summary>Future globe texture sources</summary>
           <ul>
@@ -68,7 +71,8 @@ export class GlobeScreenComponent {
   readonly atlas = inject(AtlasStateService);
 
   readonly textureUrl = DEFAULT_WORLD_EQUIRECT_URL;
-  readonly attribution = DEFAULT_WORLD_EQUIRECT_ATTRIBUTION;
+  readonly globeAttributionNotice = () => attributionNoticeJson(GLOBE_EQUIRECT_ATTRIBUTION);
+  readonly threeAttributionNotice = () => attributionNoticeJson(THREE_JS_ATTRIBUTION);
   readonly textureSources = GLOBE_TEXTURE_SOURCE_OPTIONS;
 
   readonly markers = computed(() =>

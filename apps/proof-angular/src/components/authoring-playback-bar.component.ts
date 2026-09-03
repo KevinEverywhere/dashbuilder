@@ -180,7 +180,7 @@ function rangeStyle(startSec: number, endSec: number, duration: number) {
           Extract uses {{ formatTime(recordRange()!.startSec) }}–{{ formatTime(recordRange()!.endSec) }} ({{
             formatTime(recordRange()!.endSec - recordRange()!.startSec)
           }}
-          recorded). Output mirror recording (same clip as playback download).
+          span).
         </p>
       }
       <p class="da-note da-authoring-playback__hint">

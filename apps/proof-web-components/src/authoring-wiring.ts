@@ -4,6 +4,7 @@ import {
   authoringExtractDownloadName,
   authoringPreviewRecordingDownloadName,
   centerCropForOutput,
+  defaultAuthoringRecordRange,
   flatCropToCropRegion,
   getAuthoringOutputPreset,
   isEquirectSourceDimensions,
@@ -12,6 +13,7 @@ import {
   type AuthoringRecordRange,
   type FlatCropRect,
 } from '@rosettadash/core';
+import { fetchAuthoring360File } from '@destination-atlas';
 import type {
   RdEquirectSphereViewportElement,
   RdFlatVideoViewportElement,
@@ -32,6 +34,8 @@ type SetPropertyElement = HTMLElement & { setProperty(name: string, value: unkno
 
 let wiredRoot: HTMLElement | null = null;
 let sourceObjectUrl: string | null = null;
+let applyLibraryFile: ((detail: { file: File; metadata: DashRow }) => void) | null = null;
+let lastLibraryDestId = '';
 
 const state = {
   mode: 'none' as ViewportMode,
@@ -165,6 +169,31 @@ function buildCropRegion(): DashRow | null {
     });
   }
   return null;
+}
+
+function applyDefaultRecordRange(root: HTMLElement): void {
+  if (state.recordRange) {
+    return;
+  }
+  const viewport = getActiveViewport(root);
+  if (!viewport) {
+    return;
+  }
+  const range = defaultAuthoringRecordRange(viewport.getDuration());
+  if (!range) {
+    return;
+  }
+  state.recordRange = range;
+  const recordHint = root.querySelector('[data-ref="auth-record-hint"]');
+  if (recordHint) {
+    recordHint.hidden = true;
+  }
+  const rangeNote = root.querySelector('[data-ref="auth-range-note"]');
+  if (rangeNote) {
+    rangeNote.hidden = false;
+    rangeNote.textContent = `Extract uses ${range.startSec.toFixed(1)}s–${range.endSec.toFixed(1)}s. Record on the playback bar to limit that range.`;
+  }
+  syncWasm(root);
 }
 
 function syncWasm(root: HTMLElement): void {
@@ -409,8 +438,31 @@ function resetView(root: HTMLElement): void {
   syncWasm(root);
 }
 
-export function wireAuthoringPipeline(root: HTMLElement): void {
+async function loadLibraryClip(destinationId: string): Promise<void> {
+  if (!destinationId || lastLibraryDestId === destinationId) {
+    return;
+  }
+  lastLibraryDestId = destinationId;
+  const file = await fetchAuthoring360File(destinationId);
+  if (!file || !applyLibraryFile) {
+    if (wiredRoot) {
+      setSourceLoaded(wiredRoot, false);
+      setMode(wiredRoot, 'none');
+    }
+    return;
+  }
+  const { width, height } = await probeVideoFile(file);
+  applyLibraryFile({
+    file,
+    metadata: { sourceWidth: width, sourceHeight: height, name: file.name },
+  });
+}
+
+export function wireAuthoringPipeline(root: HTMLElement, destinationId?: string): void {
   if (wiredRoot === root) {
+    if (destinationId) {
+      void loadLibraryClip(destinationId);
+    }
     return;
   }
   resetAuthoringPlaybackBar();
@@ -455,6 +507,9 @@ export function wireAuthoringPipeline(root: HTMLElement): void {
       sphere?.setProperty('videoSrc', sourceObjectUrl);
       syncViewports(root);
       syncWasm(root);
+      applyDefaultRecordRange(root);
+      window.setTimeout(() => applyDefaultRecordRange(root), 300);
+      window.setTimeout(() => applyDefaultRecordRange(root), 1200);
       return;
     }
 
@@ -470,9 +525,16 @@ export function wireAuthoringPipeline(root: HTMLElement): void {
     applyFlatCrop(root, centered);
     syncViewports(root);
     syncWasm(root);
+    applyDefaultRecordRange(root);
+    window.setTimeout(() => applyDefaultRecordRange(root), 300);
+    window.setTimeout(() => applyDefaultRecordRange(root), 1200);
   };
 
+  applyLibraryFile = onVideoFile;
   fileInputs.forEach((input) => wireFileInput(input, onVideoFile));
+  if (destinationId) {
+    void loadLibraryClip(destinationId);
+  }
 
   asFlatViewport(root.querySelector('[data-ref="auth-flat-viewport"]'))?.addEventListener('crop-change', (event) => {
     const crop = (event as CustomEvent<FlatCropRect>).detail;
@@ -523,10 +585,25 @@ export function wireAuthoringPipeline(root: HTMLElement): void {
         ? 'Drag on the sphere or use Camera framing sliders · FOV above 130° enters little-planet'
         : 'Drag the crop rectangle · corner handles set a custom output size · presets snap to standard dimensions',
     onRecordRangeChange: (range) => {
-      state.recordRange = range;
+      if (range) {
+        state.recordRange = range;
+      } else {
+        const viewport = getActiveViewport(root);
+        state.recordRange = viewport ? defaultAuthoringRecordRange(viewport.getDuration()) : null;
+      }
       const recordHint = root.querySelector('[data-ref="auth-record-hint"]');
       if (recordHint) {
-        recordHint.hidden = Boolean(range);
+        recordHint.hidden = Boolean(state.recordRange);
+      }
+      const rangeNote = root.querySelector('[data-ref="auth-range-note"]');
+      if (rangeNote) {
+        if (state.recordRange) {
+          rangeNote.hidden = false;
+          rangeNote.textContent = `Extract uses ${state.recordRange.startSec.toFixed(1)}s–${state.recordRange.endSec.toFixed(1)}s. Record on the playback bar to limit that range.`;
+        } else {
+          rangeNote.hidden = true;
+          rangeNote.textContent = '';
+        }
       }
       syncWasm(root);
     },
@@ -717,6 +794,8 @@ export function resetAuthoringWiring(): void {
   revokeSourceUrl();
   resetAuthoringPlaybackBar();
   wiredRoot = null;
+  applyLibraryFile = null;
+  lastLibraryDestId = '';
   state.mode = 'none';
   state.inputFile = null;
   state.recordRange = null;

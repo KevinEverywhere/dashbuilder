@@ -1,6 +1,5 @@
 import {
   DEFAULT_APP_LOCALES,
-  DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
   DESTINATION_ATLAS_ABOUT_INTRO,
   DESTINATION_ATLAS_CROSS_FRAMEWORK_SHOWCASES,
   DESTINATION_ATLAS_CURRENT_RUNTIME_BADGE,
@@ -18,7 +17,17 @@ import {
   formatVisitorCount,
   getDestinationById,
   isEquirectDestination,
+  AUTHORING_360_DISPLAY_CATALOG,
+  authoring360CatalogJson,
+  authoring360Attribution,
+  attributionNoticeJson,
+  FFMPEG_WASM_ATTRIBUTION,
+  GLOBE_EQUIRECT_ATTRIBUTION,
+  mapProviderAttribution,
+  THREE_JS_ATTRIBUTION,
+  youtubeVideoAttribution,
   type DestinationAtlasRuntimeId,
+  type AttributionNotice,
 } from '@destination-atlas';
 import {
   AUTHORING_OUTPUT_CUSTOM_ID,
@@ -54,6 +63,10 @@ import { themeLabel, type ThemePreference } from './lib/theme.js';
 import type { LiveNewsArticle } from './lib/news-api.js';
 
 const CURRENT_RUNTIME_ID: DestinationAtlasRuntimeId = 'web-components';
+
+function attributionNoticeEl(notice: AttributionNotice): string {
+  return `<rd-attribution-notice notice='${jsonAttr(notice)}'></rd-attribution-notice>`;
+}
 
 export function renderAbout(): string {
   const matrixHead = DESTINATION_ATLAS_RUNTIME_MATRIX_COLUMNS.map(
@@ -303,7 +316,7 @@ export function mapsExplorerMarkup(atlas: AtlasState): string {
       <strong>Native custom element.</strong>
       Map is <code>rd-geo-map</code> hosted directly. Marker select and <code>selected-id</code> stay bound to the destination list and Settings.
     </div>
-    ${geoExplorerMarkup(`<div class="da-map-stage"><rd-geo-map class="da-map-stage__map" data-ref="geo-map"></rd-geo-map></div>`, items, atlas.selectedId, atlas.listPlacement)}`;
+    ${geoExplorerMarkup(`<div class="da-map-stage"><rd-geo-map class="da-map-stage__map" data-ref="geo-map"></rd-geo-map>${attributionNoticeEl(mapProviderAttribution(atlas.mapProvider))}</div>`, items, atlas.selectedId, atlas.listPlacement)}`;
 }
 
 export function globeFooterMarkup(): string {
@@ -313,7 +326,8 @@ export function globeFooterMarkup(): string {
   ).join('');
   return `
     <div class="da-maps-footer">
-      <p class="da-note">${escapeHtml(DEFAULT_WORLD_EQUIRECT_ATTRIBUTION)}</p>
+      ${attributionNoticeEl(GLOBE_EQUIRECT_ATTRIBUTION)}
+      ${attributionNoticeEl(THREE_JS_ATTRIBUTION)}
       <details class="da-globe-sources">
         <summary>Future globe texture sources</summary>
         <ul>${sources}</ul>
@@ -331,7 +345,7 @@ export function renderMaps(atlas: AtlasState): string {
           <button type="button" class="da-tabbar__tab da-tabbar__tab--right" data-maps-panel="globe"${ariaCurrentPage(atlas.mapsPanel === 'globe')}>Globe</button>
         </nav>
         <div class="da-maps-explorer" data-ref="maps-explorer">${mapsExplorerMarkup(atlas)}</div>
-        ${atlas.mapsPanel === 'globe' ? globeFooterMarkup() : ''}
+        ${atlas.mapsPanel === 'globe' ? globeFooterMarkup() : `<div class="da-maps-footer">${attributionNoticeEl(mapProviderAttribution(atlas.mapProvider))}</div>`}
       </div>
     </section>`;
 }
@@ -352,7 +366,7 @@ export function renderMedia(atlas: AtlasState): string {
   return `
     <section class="da-panel">
       <h2>Media</h2>
-      <p>Watch destination videos here (YouTube). Authoring is upload-your-own — this library does not ship VR files.</p>
+      <p>Watch flat destination videos here (YouTube). Authoring autoloads 360° library clips for twenty-six cities; upload flat or 360° sources anytime for extract.</p>
       <div class="rd-media-layout">
         <div class="rd-media-primary">
           <rd-select-input label="Destination video (YouTube)" options='${jsonAttr(FLAT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: localizedDestinationName(d, atlas.locale) })))}' value="${attr(flatSelected?.id ?? '')}" data-ref="media-flat"></rd-select-input>
@@ -365,7 +379,7 @@ export function renderMedia(atlas: AtlasState): string {
           ${
             EQUIRECT_VIDEO_DESTINATIONS.length > 0
               ? `<rd-select-input label="360° video (Authoring)" options='${jsonAttr(EQUIRECT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: `${localizedDestinationName(d, atlas.locale)} · 360°` })))}' value="${attr(equirectSelected?.id ?? '')}" data-ref="media-360"></rd-select-input>
-                 <p class="da-note">Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.</p>`
+                 <p class="da-note">Choosing a 360° destination switches to Authoring and autoloads the library clip when available.</p>`
               : ''
           }
         </div>
@@ -377,20 +391,59 @@ export function renderMedia(atlas: AtlasState): string {
                 ? `<dl>${metadata.map((item) => `<div><dt>${escapeHtml(item.label)}</dt><dd>${escapeHtml(item.value)}</dd></div>`).join('')}</dl>`
                 : `<p class="da-note">Select a flat video to inspect metadata.</p>`
             }
+            ${
+              flatSelected?.youtubeId
+                ? attributionNoticeEl(youtubeVideoAttribution(flatSelected.youtubeId))
+                : ''
+            }
           </section>
         </div>
       </div>
     </section>`;
 }
 
-export function renderAuthoring(): string {
+export function renderAuthoring(atlas: AtlasState): string {
   const presetOptions = [
     ...AUTHORING_OUTPUT_PRESETS.map((entry) => ({ value: entry.id, label: entry.label })),
     { value: AUTHORING_OUTPUT_CUSTOM_ID, label: 'Custom' },
   ];
+  const destinationOptions = MOCK_DESTINATIONS.map((dest) => ({
+    value: dest.id,
+    label: `${localizedDestinationName(dest, atlas.locale)} · 360°`,
+  }));
+  const authoring360ShippedCount = AUTHORING_360_DISPLAY_CATALOG.filter(
+    (entry) => entry.status === 'shipped',
+  ).length;
+  const authoring360CatalogBlock = `
+    <section class="da-authoring-catalog" aria-label="360° library catalog">
+      <details open>
+        <summary>360° library — ${authoring360ShippedCount} shipped clips (JSON)</summary>
+        <p class="da-note da-authoring-catalog__hint">
+          Autoload uses <code>clipPath</code> for the selected destination.
+          Run <code>npm run authoring:fetch-360</code> to generate local MP4s.
+        </p>
+        <pre class="da-authoring-catalog__json">${escapeHtml(authoring360CatalogJson())}</pre>
+      </details>
+    </section>`;
   return `
     <section class="da-panel da-panel--authoring">
       <h2>Authoring</h2>
+      <rd-select-input
+        label="360° destination"
+        options='${jsonAttr(destinationOptions)}'
+        value="${attr(atlas.selectedId)}"
+        data-ref="auth-dest"
+      ></rd-select-input>
+      <p class="da-note da-authoring-dest-hint">
+        Syncs with the header selection and autoloads the library clip when available.
+        You can still click the source viewport to upload your own video.
+      </p>
+      ${
+        authoring360Attribution(atlas.selectedId)
+          ? attributionNoticeEl(authoring360Attribution(atlas.selectedId)!)
+          : ''
+      }
+      ${authoring360CatalogBlock}
       <div class="da-authoring-workspace">
         <header class="da-authoring-workspace__headers">
           <h3 class="da-authoring-pane__title">Source</h3>
@@ -530,13 +583,17 @@ export function renderAuthoring(): string {
                 </div>
               </div>
               <p class="da-note da-note--filter" data-ref="auth-filter-note" hidden></p>
-              <p class="da-note" data-ref="auth-record-hint">Record a segment on the playback bar, then extract that subsection.</p>
+              <p class="da-note" data-ref="auth-range-note" hidden></p>
+              <p class="da-note" data-ref="auth-record-hint">
+                Waiting for source duration… extract will enable once the clip is ready.
+              </p>
               <rd-select-input
                 label="Extract format"
                 value="mp4"
                 options='[{"value":"mp4","label":"MP4 (H.264 transcode)"},{"value":"webm","label":"WebM (mirror copy)"}]'
                 data-ref="auth-extract-format"
               ></rd-select-input>
+              ${attributionNoticeEl(FFMPEG_WASM_ATTRIBUTION)}
               <rd-wasm-media
                 label="Extract preview recording"
                 operation="equirect-extract"

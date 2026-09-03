@@ -12,11 +12,13 @@ import {
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
+  defaultAuthoringRecordRange,
   flatCropToCropRegion,
   authoringExtractDownloadName,
   authoringPreviewRecordingDownloadName,
   getAuthoringOutputPreset,
   isEquirectSourceDimensions,
+  type AuthoringRecordRange,
   type AuthoringRecordRange,
   virtualCameraToCropRegion,
   wrapSignedDegrees,
@@ -28,9 +30,16 @@ import { WasmMedia } from '@rosettadash/angular/visual/wasm/media';
 import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
+  fetchAuthoring360File,
   getAuthoringExampleById,
   getAuthoringExampleForDestinationId,
   getDestinationById,
+  MOCK_DESTINATIONS,
+  AUTHORING_360_DISPLAY_CATALOG,
+  authoring360CatalogJson,
+  authoring360Attribution,
+  attributionNoticeJson,
+  FFMPEG_WASM_ATTRIBUTION,
 } from '@destination-atlas';
 import { localizedDestinationName } from '../lib/atlas-utils';
 import { AtlasStateService } from '../services/atlas-state.service';
@@ -84,6 +93,33 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
   template: `
     <section class="da-panel da-panel--authoring">
       <h2>Authoring</h2>
+
+      <da-bound-select-input
+        [fieldLabel]="'360° destination'"
+        [options]="destinationOptions()"
+        [value]="atlas.selectedId()"
+        (valueChange)="onDestinationChange($event)"
+      />
+      <p class="da-note da-authoring-dest-hint">
+        Syncs with the header selection and autoloads the library clip when available.
+        You can still click the source viewport to upload your own video.
+      </p>
+      @if (authoring360Notice()) {
+        <rd-attribution-notice [attr.notice]="authoring360Notice()"></rd-attribution-notice>
+      }
+
+      <section class="da-authoring-catalog" aria-label="360° library catalog">
+        <details open>
+          <summary>
+            360° library — {{ authoring360ShippedCount }} shipped clips (JSON)
+          </summary>
+          <p class="da-note da-authoring-catalog__hint">
+            Autoload uses <code>clipPath</code> for the selected destination.
+            Run <code>npm run authoring:fetch-360</code> to generate local MP4s.
+          </p>
+          <pre class="da-authoring-catalog__json">{{ authoring360CatalogJsonText }}</pre>
+        </details>
+      </section>
 
       <div class="da-authoring-workspace">
         <header class="da-authoring-workspace__headers">
@@ -196,7 +232,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 [disabled]="false"
                 [hint]="playbackHint()"
                 [recordRange]="recordRange()"
-                (recordRangeChange)="recordRange.set($event)"
+                (recordRangeChange)="onRecordRangeChange($event)"
                 (previewRecordingChange)="previewRecording.set($event)"
                 (resetView)="resetView()"
                 (playbackStop)="resetExportRectangle()"
@@ -351,7 +387,14 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
 
             @if (inputFile()) {
               @if (!recordRange()) {
-                <p class="da-note">Record a segment on the playback bar, then extract that subsection.</p>
+                <p class="da-note">
+                  Waiting for source duration… extract will enable once the clip is ready.
+                </p>
+              } @else {
+                <p class="da-note">
+                  Extract uses {{ recordRange()!.startSec.toFixed(1) }}s–{{ recordRange()!.endSec.toFixed(1) }}s.
+                  Record on the playback bar to limit that range.
+                </p>
               }
               <da-bound-select-input
                 label="Extract format"
@@ -359,6 +402,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 [options]="extractFormatOptions"
                 (valueChange)="extractFormat.set($event === 'webm' ? 'webm' : 'mp4')"
               />
+              <rd-attribution-notice [attr.notice]="ffmpegNotice"></rd-attribution-notice>
               <rd-wasm-media
                 label="ffmpeg.wasm extract"
                 operation="equirect-extract"
@@ -418,6 +462,25 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
 })
 export class AuthoringScreenComponent {
   readonly atlas = inject(AtlasStateService);
+
+  readonly authoring360CatalogJsonText = authoring360CatalogJson();
+  readonly authoring360ShippedCount = AUTHORING_360_DISPLAY_CATALOG.filter(
+    (entry) => entry.status === 'shipped',
+  ).length;
+
+  readonly authoring360Notice = computed(() => {
+    const notice = authoring360Attribution(this.atlas.selectedId());
+    return notice ? attributionNoticeJson(notice) : '';
+  });
+
+  readonly ffmpegNotice = attributionNoticeJson(FFMPEG_WASM_ATTRIBUTION);
+
+  readonly destinationOptions = computed(() =>
+    MOCK_DESTINATIONS.map((dest) => ({
+      value: dest.id,
+      label: `${localizedDestinationName(dest, this.atlas.locale())} · 360°`,
+    })),
+  );
 
   readonly exampleId = signal(DEFAULT_AUTHORING_EXAMPLE_ID);
   readonly inputFile = signal<File | null>(null);
@@ -588,6 +651,37 @@ export class AuthoringScreenComponent {
     });
 
     effect((onCleanup) => {
+      const destId = this.atlas.selectedId();
+      this.exampleId();
+      if (!destId || this.userPickedFile) {
+        return;
+      }
+      let cancelled = false;
+      this.sourceLoadBusy.set(true);
+      this.sourceLoadError.set(null);
+      void fetchAuthoring360File(destId)
+        .then((file) => {
+          if (cancelled || this.userPickedFile) {
+            return;
+          }
+          this.sourceLoadBusy.set(false);
+          if (file) {
+            this.inputFile.set(file);
+          }
+        })
+        .catch((error: unknown) => {
+          if (cancelled) {
+            return;
+          }
+          this.sourceLoadBusy.set(false);
+          this.sourceLoadError.set(error instanceof Error ? error.message : String(error));
+        });
+      onCleanup(() => {
+        cancelled = true;
+      });
+    });
+
+    effect((onCleanup) => {
       const file = this.inputFile();
       if (!file) {
         return;
@@ -616,6 +710,20 @@ export class AuthoringScreenComponent {
           this.sourceHeight.set(probedHeight);
         }
       });
+    });
+
+    effect(() => {
+      if (!this.sourceReady() || this.recordRange()) {
+        return;
+      }
+      const viewport = this.viewportRef();
+      if (!viewport) {
+        return;
+      }
+      const range = defaultAuthoringRecordRange(viewport.getDuration());
+      if (range) {
+        this.recordRange.set(range);
+      }
     });
 
     effect(() => {
@@ -777,6 +885,21 @@ export class AuthoringScreenComponent {
     this.extractProgress.set(0);
     this.extractError.set(null);
     this.extractBusy.set(false);
+  }
+
+  onRecordRangeChange(range: AuthoringRecordRange | null): void {
+    if (range) {
+      this.recordRange.set(range);
+      return;
+    }
+    const viewport = this.viewportRef();
+    this.recordRange.set(
+      viewport ? defaultAuthoringRecordRange(viewport.getDuration()) : null,
+    );
+  }
+
+  onDestinationChange(destinationId: string): void {
+    this.atlas.setSelectedId(destinationId);
   }
 
   onAuthoringFileSelected(event: Event): void {

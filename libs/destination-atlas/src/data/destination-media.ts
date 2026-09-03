@@ -3,14 +3,14 @@ import { getAuthoringExampleForDestinationId } from './authoring-examples.js';
 import { MOCK_DESTINATIONS } from './destinations.js';
 
 export function isEquirectDestination(dest: Destination | undefined): boolean {
-  return dest?.videoProjection === 'equirect' || Boolean(dest?.equirectVideoUrl);
+  return dest?.videoProjection === 'equirect';
 }
 
 export function destinationHasFlatVideo(dest: Destination | undefined): boolean {
   return Boolean(dest?.youtubeId) && !isEquirectDestination(dest);
 }
 
-/** Destinations that route to Authoring (360° workflow) — upload required; no shipped autoload or VR files. */
+/** Destinations that route Media → Authoring (`videoProjection === 'equirect'`). Library 360 clips do not set this. */
 export function destinationHasEquirectVideo(dest: Destination | undefined): boolean {
   return isEquirectDestination(dest);
 }

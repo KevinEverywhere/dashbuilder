@@ -12,9 +12,11 @@
   import {
     EQUIRECT_VIDEO_DESTINATIONS,
     FLAT_VIDEO_DESTINATIONS,
+    attributionNoticeJson,
     destinationHasFlatVideo,
     getDestinationById,
     isEquirectDestination,
+    youtubeVideoAttribution,
   } from '@destination-atlas';
   import AngularMount from '../components/AngularMount.svelte';
   import BoundSelectInput from '../components/BoundSelectInput.svelte';
@@ -59,6 +61,12 @@
       : [],
   );
 
+  const youtubeAttributionNotice = $derived(
+    flatSelected?.youtubeId
+      ? attributionNoticeJson(youtubeVideoAttribution(flatSelected.youtubeId))
+      : '',
+  );
+
   const youtubeInputs = $derived({
     videoId: flatSelected?.youtubeId,
     title: flatSelected
@@ -76,8 +84,8 @@
 <section class="da-panel">
   <h2>Media</h2>
   <p>
-    Watch flat destination videos here. 360° equirectangular locations open in
-    <strong>Authoring</strong> — upload your source and frame the export there.
+    Watch flat destination videos here. 360° destinations open in
+    <strong>Authoring</strong> — autoloads the library clip when shipped; upload your own anytime.
   </p>
   <div class="rd-media-layout">
     <div class="rd-media-primary">
@@ -117,12 +125,15 @@
           onValueChange={(value) => onOpenAuthoring?.(value)}
         />
         <p class="da-note">
-          Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.
+          Choosing a 360° destination switches to Authoring and autoloads the library clip when available.
         </p>
       {/if}
     </div>
     <div class="rd-media-tools">
       <VideoMetadataPanel items={metadataItems} />
+      {#if youtubeAttributionNotice}
+        <rd-attribution-notice notice={youtubeAttributionNotice}></rd-attribution-notice>
+      {/if}
     </div>
   </div>
 </section>

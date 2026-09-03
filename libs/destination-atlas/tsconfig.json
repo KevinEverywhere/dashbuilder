@@ -3,8 +3,9 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
-    "outDir": "../../dist/out-tsc/destination-atlas"
+    "outDir": "../../dist/out-tsc/destination-atlas",
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["src/**/*.spec.ts"]
 }

@@ -2,8 +2,7 @@
 export const DEFAULT_WORLD_EQUIRECT_URL =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/1280px-Equirectangular_projection_SW.jpg';
 
-export const DEFAULT_WORLD_EQUIRECT_ATTRIBUTION =
-  'Equirectangular world map — Wikimedia Commons / public domain. Replace with your licensed texture in production.';
+export { DEFAULT_WORLD_EQUIRECT_ATTRIBUTION, GLOBE_EQUIRECT_ATTRIBUTION } from './attributions.js';
 
 /** Candidate globe / equirect texture sources for product planning (not wired automatically). */
 export interface GlobeTextureSourceOption {

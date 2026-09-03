@@ -164,7 +164,11 @@ export function App() {
                 />
               ) : null}
               {atlas.screen === 'authoring' ? (
-                <AuthoringScreen locale={atlas.locale} selectedId={atlas.selectedId} />
+                <AuthoringScreen
+                  locale={atlas.locale}
+                  selectedId={atlas.selectedId}
+                  setSelectedId={atlas.setSelectedId}
+                />
               ) : null}
               {atlas.screen === 'intel' ? (
                 <IntelScreen

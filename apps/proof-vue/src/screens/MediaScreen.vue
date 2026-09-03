@@ -13,9 +13,11 @@ import { YoutubeEmbed } from '@rosettadash/vue/visual/media/youtube-embed';
 import {
   EQUIRECT_VIDEO_DESTINATIONS,
   FLAT_VIDEO_DESTINATIONS,
+  attributionNoticeJson,
   destinationHasFlatVideo,
   getDestinationById,
   isEquirectDestination,
+  youtubeVideoAttribution,
 } from '@destination-atlas';
 import BoundSelectInput from '../components/BoundSelectInput.vue';
 import VideoMetadataPanel from '../components/VideoMetadataPanel.vue';
@@ -54,14 +56,19 @@ const metadataItems = computed(() =>
       ]
     : [],
 );
+
+const youtubeAttributionNotice = computed(() => {
+  const id = flatSelected.value?.youtubeId;
+  return id ? attributionNoticeJson(youtubeVideoAttribution(id)) : '';
+});
 </script>
 
 <template>
   <section class="da-panel">
     <h2>Media</h2>
     <p>
-      Watch flat destination videos here. 360° equirectangular locations open in
-      <strong>Authoring</strong> — upload your source and frame the export there.
+      Watch flat destination videos here. 360° destinations open in
+      <strong>Authoring</strong> — autoloads the library clip when shipped; upload your own anytime.
     </p>
     <div class="rd-media-layout">
       <div class="rd-media-primary">
@@ -98,12 +105,13 @@ const metadataItems = computed(() =>
             @update:value="emit('openAuthoring', $event)"
           />
           <p class="da-note">
-            Choosing a 360° destination switches to the Authoring tab to upload and frame your equirect source.
+            Choosing a 360° destination switches to Authoring and autoloads the library clip when available.
           </p>
         </template>
       </div>
       <div class="rd-media-tools">
         <VideoMetadataPanel :items="metadataItems" />
+        <rd-attribution-notice v-if="youtubeAttributionNotice" :notice="youtubeAttributionNotice" />
       </div>
     </div>
   </section>

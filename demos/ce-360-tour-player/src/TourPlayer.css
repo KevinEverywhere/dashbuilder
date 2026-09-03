@@ -13,8 +13,8 @@
 }
 
 rd-geo-map.rd-tour-player__map {
-  min-height: 11rem;
-  height: 11rem;
+  min-height: 9rem;
+  height: 9rem;
 }
 
 .rd-tour-player__look {
@@ -51,32 +51,47 @@ rd-geo-map.rd-tour-player__map {
 .rd-tour-pano {
   box-sizing: border-box;
   position: relative;
-  height: 11rem;
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: var(--rd-radius-md, 0.5rem);
   overflow: hidden;
-  cursor: grab;
-  background-color: #1a2233;
+  background-color: #05080a;
   user-select: none;
-  touch-action: none;
 }
 
-.rd-tour-pano__strip {
-  display: flex;
-  height: 100%;
-  width: max-content;
-}
-
-.rd-tour-pano__strip img {
+.rd-tour-pano__sphere {
+  position: absolute;
+  inset: 0;
   display: block;
+  width: 100%;
   height: 100%;
-  width: auto;
-  max-width: none;
-  flex: 0 0 auto;
-  pointer-events: none;
-  user-select: none;
 }
 
-.rd-tour-pano--dragging {
+.rd-tour-player rd-attribution-notice {
+  margin-top: 0.35rem;
+}
+
+.rd-tour-pano rd-equirect-sphere-viewport .rd-equirect-sphere-viewport__export-frame {
+  display: none !important;
+}
+
+.rd-tour-pano rd-equirect-sphere-viewport {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.rd-tour-pano .rd-equirect-sphere-viewport__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.rd-tour-pano .rd-equirect-sphere-viewport__canvas:active {
   cursor: grabbing;
 }
 
@@ -84,13 +99,32 @@ rd-geo-map.rd-tour-player__map {
   background-image: linear-gradient(120deg, #2c3d5c, #6b8cce 45%, #c9a46a);
 }
 
-.rd-tour-pano--fallback .rd-tour-pano__strip {
+.rd-tour-pano--fallback .rd-tour-pano__sphere {
   visibility: hidden;
+}
+
+.rd-tour-pano__hint {
+  position: absolute;
+  z-index: 2;
+  top: 0.55rem;
+  right: 0.55rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.3rem;
+  background: rgb(13 18 28 / 0.72);
+  color: rgb(255 255 255 / 0.92);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.rd-tour-pano--interacted .rd-tour-pano__hint {
+  opacity: 0;
 }
 
 .rd-tour-pano__label {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   left: 0.6rem;
   bottom: 0.5rem;
   padding: 0.15rem 0.45rem;
@@ -100,4 +134,5 @@ rd-geo-map.rd-tour-player__map {
   font-size: 0.7rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  pointer-events: none;
 }

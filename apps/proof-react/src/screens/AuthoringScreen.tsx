@@ -3,6 +3,7 @@ import {
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
+  defaultAuthoringRecordRange,
   flatCropToCropRegion,
   getAuthoringOutputPreset,
   isEquirectSourceDimensions,
@@ -25,8 +26,15 @@ import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
   getAuthoringExampleById,
+  fetchAuthoring360File,
   getAuthoringExampleForDestinationId,
   getDestinationById,
+  MOCK_DESTINATIONS,
+  AUTHORING_360_DISPLAY_CATALOG,
+  authoring360CatalogJson,
+  authoring360Attribution,
+  attributionNoticeJson,
+  FFMPEG_WASM_ATTRIBUTION,
 } from '@destination-atlas';
 import { AuthoringPlaybackBar } from '../components/AuthoringPlaybackBar';
 import { PlaybackReverseIcon } from '../components/authoring-playback-icons';
@@ -34,7 +42,8 @@ import { AuthoringCameraControls, LITTLE_PLANET_HFOV, LITTLE_PLANET_PITCH } from
 import { localizedDestinationName } from '../lib/atlas-utils';
 import type { AuthoringViewportHandle } from '../lib/authoring-viewport';
 
-export const AUTHORING_SOURCE = `<AuthoringScreen>
+export const AUTHORING_SOURCE = `<AuthoringScreen selectedId={selectedId}>
+  <SelectInput label="360° destination" … />
   <VideoSource onVideoFile={…} />
   <EquirectSphereViewport videoSrc={sourceUrl} yaw={…} pitch={…} />
   <WasmMedia operation="equirect-extract" inputFile={inputFile} />
@@ -72,9 +81,11 @@ function evenDimension(value: number): number {
 export function AuthoringScreen({
   locale = 'en',
   selectedId,
+  setSelectedId,
 }: {
   locale?: string;
   selectedId?: string;
+  setSelectedId?: (id: string) => void;
 }) {
   const [exampleId, setExampleId] = useState(DEFAULT_AUTHORING_EXAMPLE_ID);
   const [inputFile, setInputFile] = useState<File | null>(null);
@@ -130,6 +141,35 @@ export function AuthoringScreen({
     sourceWidth && sourceHeight && sourceHeight > 0 ? sourceWidth / sourceHeight : null;
   const equirectAspectWarning =
     isEquirectSource && sourceAspect !== null && Math.abs(sourceAspect - 2) > 0.05;
+
+  const handleRecordRangeChange = (range: AuthoringRecordRange | null) => {
+    if (range) {
+      setRecordRange(range);
+      return;
+    }
+    const viewport = viewportRef.current;
+    setRecordRange(viewport ? defaultAuthoringRecordRange(viewport.getDuration()) : null);
+  };
+
+  useEffect(() => {
+    if (!sourceReady || recordRange) {
+      return;
+    }
+    const syncDefault = () => {
+      const viewport = viewportRef.current;
+      if (!viewport) {
+        return;
+      }
+      setRecordRange((current) => current ?? defaultAuthoringRecordRange(viewport.getDuration()));
+    };
+    syncDefault();
+    const retryA = window.setTimeout(syncDefault, 300);
+    const retryB = window.setTimeout(syncDefault, 1200);
+    return () => {
+      window.clearTimeout(retryA);
+      window.clearTimeout(retryB);
+    };
+  }, [sourceReady, inputFile, isEquirectSource, recordRange]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -194,6 +234,35 @@ export function AuthoringScreen({
       return null;
     });
   }, [exampleId, example]);
+
+  useEffect(() => {
+    if (!selectedId || userPickedFileRef.current) {
+      return;
+    }
+    let cancelled = false;
+    setSourceLoadBusy(true);
+    setSourceLoadError(null);
+    void fetchAuthoring360File(selectedId)
+      .then((file) => {
+        if (cancelled || userPickedFileRef.current) {
+          return;
+        }
+        setSourceLoadBusy(false);
+        if (file) {
+          setInputFile(file);
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        setSourceLoadBusy(false);
+        setSourceLoadError(error instanceof Error ? error.message : String(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, exampleId]);
 
   useEffect(() => {
     if (!inputFile) {
@@ -299,6 +368,30 @@ export function AuthoringScreen({
     }
     return `${example.label} · ${localizedDestinationName(destination, locale)}`;
   }, [destination, example, locale]);
+
+  const authoring360CatalogJsonText = useMemo(() => authoring360CatalogJson(), []);
+  const authoring360ShippedCount = useMemo(
+    () => AUTHORING_360_DISPLAY_CATALOG.filter((entry) => entry.status === 'shipped').length,
+    [],
+  );
+
+  const authoring360NoticeJson = useMemo(() => {
+    if (!selectedId) {
+      return '';
+    }
+    const notice = authoring360Attribution(selectedId);
+    return notice ? attributionNoticeJson(notice) : '';
+  }, [selectedId]);
+
+  const ffmpegNoticeJson = attributionNoticeJson(FFMPEG_WASM_ATTRIBUTION);
+  const destinationOptions = useMemo(
+    () =>
+      MOCK_DESTINATIONS.map((dest) => ({
+        value: dest.id,
+        label: `${localizedDestinationName(dest, locale)} · 360°`,
+      })),
+    [locale],
+  );
 
   const handleOutputPresetChange = (presetId: string) => {
     setOutputPresetId(presetId);
@@ -418,6 +511,37 @@ export function AuthoringScreen({
   return (
     <section className="da-panel da-panel--authoring">
       <h2>Authoring</h2>
+
+      {setSelectedId ? (
+        <>
+          <SelectInput
+            label="360° destination"
+            options={destinationOptions}
+            value={selectedId ?? ''}
+            onChange={setSelectedId}
+          />
+          <p className="da-note da-authoring-dest-hint">
+            Syncs with the header selection and autoloads the library clip when available.
+            You can still click the source viewport to upload your own video.
+          </p>
+          {authoring360NoticeJson ? (
+            <rd-attribution-notice notice={authoring360NoticeJson} />
+          ) : null}
+        </>
+      ) : null}
+
+      <section className="da-authoring-catalog" aria-label="360° library catalog">
+        <details open>
+          <summary>
+            360° library — {authoring360ShippedCount} shipped clips (JSON)
+          </summary>
+          <p className="da-note da-authoring-catalog__hint">
+            Autoload uses <code>clipPath</code> for the selected destination. Run{' '}
+            <code>npm run authoring:fetch-360</code> to generate local MP4s.
+          </p>
+          <pre className="da-authoring-catalog__json">{authoring360CatalogJsonText}</pre>
+        </details>
+      </section>
 
       <div className="da-authoring-workspace">
         <header className="da-authoring-workspace__headers">
@@ -541,7 +665,7 @@ export function AuthoringScreen({
                   viewportRef={viewportRef}
                   disabled={false}
                   recordRange={recordRange}
-                  onRecordRangeChange={setRecordRange}
+                  onRecordRangeChange={handleRecordRangeChange}
                   onPreviewRecording={setPreviewRecording}
                   hint={
                     isEquirectSource
@@ -726,8 +850,15 @@ export function AuthoringScreen({
             {inputFile ? (
               <>
                 {!recordRange ? (
-                  <p className="da-note">Record a segment on the playback bar, then extract that subsection.</p>
-                ) : null}
+                  <p className="da-note">
+                    Waiting for source duration… extract will enable once the clip is ready.
+                  </p>
+                ) : (
+                  <p className="da-note">
+                    Extract uses {recordRange.startSec.toFixed(1)}s–{recordRange.endSec.toFixed(1)}s.
+                    Record on the playback bar to limit that range.
+                  </p>
+                )}
                 <SelectInput
                   label="Extract format"
                   value={extractFormat}
@@ -737,7 +868,9 @@ export function AuthoringScreen({
                   ]}
                   onChange={(value) => setExtractFormat(value === 'webm' ? 'webm' : 'mp4')}
                 />
+                <rd-attribution-notice notice={ffmpegNoticeJson} />
                 <WasmMedia
+                  key={`${inputFile.name}-${recordRange?.startSec ?? 'na'}-${recordRange?.endSec ?? 'na'}`}
                   label="ffmpeg.wasm extract"
                   operation="equirect-extract"
                   extractionMode={isEquirectSource ? 'rectilinear' : 'flat-crop'}

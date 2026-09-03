@@ -112,6 +112,9 @@ export class RdWasmMediaElement extends HTMLElement {
       } else {
         this.inputFile = null;
       }
+      if (this.shadowRoot && this.resourcesReady) {
+        void this.resourcesReady.then(() => this.paint());
+      }
     } else if (name === 'previewRecording') {
       this.previewRecording = value instanceof Blob ? value : null;
       if (this.shadowRoot && this.resourcesReady) {

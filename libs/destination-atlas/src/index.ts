@@ -5,4 +5,6 @@ export * from './data/globe-sources.js';
 export * from './data/views-demo.js';
 export * from './data/about-guides.js';
 export * from './data/authoring-examples.js';
+export * from './data/authoring-360-sources.js';
+export * from './data/attributions.js';
 export * from './data/destination-media.js';

@@ -130,6 +130,8 @@ export class RdYoutubeEmbedElement extends HTMLElement {
 
     const iframe = root.querySelector<HTMLIFrameElement>('[data-ref="iframe"]');
     const empty = root.querySelector<HTMLElement>('[data-ref="empty"]');
+    const attribution = root.querySelector<HTMLElement>('[data-ref="attribution"]');
+    const watchLink = root.querySelector<HTMLAnchorElement>('[data-ref="watch-link"]');
     if (!iframe || !empty) {
       return;
     }
@@ -139,11 +141,17 @@ export class RdYoutubeEmbedElement extends HTMLElement {
       iframe.removeAttribute('src');
       iframe.hidden = true;
       empty.hidden = false;
+      attribution?.setAttribute('hidden', '');
       return;
     }
 
     iframe.hidden = false;
     empty.hidden = true;
+    attribution?.removeAttribute('hidden');
+    if (watchLink) {
+      watchLink.href = `https://www.youtube.com/watch?v=${id}`;
+      watchLink.textContent = 'Watch on YouTube';
+    }
     iframe.title = this.embedTitle;
     (iframe as HTMLIFrameElement & { credentialless?: boolean }).credentialless = true;
     iframe.src = buildYouTubeEmbedUrl(id, {

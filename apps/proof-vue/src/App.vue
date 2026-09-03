@@ -166,6 +166,7 @@ function openSetting(field: SettingFieldTarget | 'theme' | 'ai') {
                 v-else-if="atlas.screen.value === 'authoring'"
                 :locale="atlas.locale.value"
                 :selected-id="atlas.selectedId.value"
+                @update:selected-id="atlas.setSelectedId"
               />
               <IntelScreen
                 v-else-if="atlas.screen.value === 'intel'"

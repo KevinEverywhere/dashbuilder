@@ -1,5 +1,6 @@
 <script module lang="ts">
   export const AUTHORING_SOURCE = `<AuthoringScreen {locale} {selectedId}>
+  <SelectInput label="360° destination" />
   <EquirectSphereViewport videoSrc={sourceUrl} yaw={…} pitch={…} />
   <FlatVideoViewport videoSrc={sourceUrl} cropX={…} />
   <WasmMedia operation="equirect-extract" inputFile={inputFile} />
@@ -15,11 +16,45 @@
   import AuthoringPlaybackBar from '../components/AuthoringPlaybackBar.svelte';
   import BoundSelectInput from '../components/BoundSelectInput.svelte';
   import { createAuthoringScreen } from '../lib/authoring-screen.svelte';
+  import {
+    AUTHORING_360_DISPLAY_CATALOG,
+    authoring360CatalogJson,
+    MOCK_DESTINATIONS,
+    authoring360Attribution,
+    attributionNoticeJson,
+    FFMPEG_WASM_ATTRIBUTION,
+  } from '@destination-atlas';
+  import { defaultAuthoringRecordRange, type AuthoringRecordRange } from '@rosettadash/core';
+  import { localizedDestinationName } from '../lib/atlas-utils';
   import type { AuthoringViewportHandle } from '../lib/authoring-viewport';
 
-  let { locale, selectedId }: { locale: string; selectedId: string } = $props();
+  let {
+    locale,
+    selectedId,
+    onSelectedIdChange,
+  }: {
+    locale: string;
+    selectedId: string;
+    onSelectedIdChange?: (id: string) => void;
+  } = $props();
+
+  const destinationOptions = $derived(
+    MOCK_DESTINATIONS.map((dest) => ({
+      value: dest.id,
+      label: `${localizedDestinationName(dest, locale)} · 360°`,
+    })),
+  );
 
   const screen = createAuthoringScreen(() => locale, () => selectedId);
+  const authoring360CatalogJsonText = authoring360CatalogJson();
+  const authoring360ShippedCount = AUTHORING_360_DISPLAY_CATALOG.filter(
+    (entry) => entry.status === 'shipped',
+  ).length;
+  const authoring360Notice = $derived.by(() => {
+    const notice = authoring360Attribution(selectedId);
+    return notice ? attributionNoticeJson(notice) : '';
+  });
+  const ffmpegNotice = attributionNoticeJson(FFMPEG_WASM_ATTRIBUTION);
 
   let sphereViewport: AuthoringViewportHandle | undefined = $state();
   let flatViewport: AuthoringViewportHandle | undefined = $state();
@@ -28,10 +63,69 @@
   const viewport = $derived<AuthoringViewportHandle | null>(
     sphereViewport ?? flatViewport ?? null,
   );
+
+  $effect(() => {
+    if (!screen.sourceReady || screen.recordRange || !viewport) {
+      return;
+    }
+    const applyDefault = () => {
+      if (screen.recordRange || !viewport) {
+        return;
+      }
+      const range = defaultAuthoringRecordRange(viewport.getDuration());
+      if (range) {
+        screen.recordRange = range;
+      }
+    };
+    applyDefault();
+    const retryA = window.setTimeout(applyDefault, 300);
+    const retryB = window.setTimeout(applyDefault, 1200);
+    return () => {
+      window.clearTimeout(retryA);
+      window.clearTimeout(retryB);
+    };
+  });
+
+  function onRecordRangeChange(range: AuthoringRecordRange | null) {
+    if (range) {
+      screen.recordRange = range;
+      return;
+    }
+    screen.recordRange = viewport
+      ? defaultAuthoringRecordRange(viewport.getDuration())
+      : null;
+  }
 </script>
 
 <section class="da-panel da-panel--authoring">
   <h2>Authoring</h2>
+
+  <BoundSelectInput
+    fieldLabel="360° destination"
+    options={destinationOptions}
+    value={selectedId}
+    onValueChange={(id) => onSelectedIdChange?.(id)}
+  />
+  <p class="da-note da-authoring-dest-hint">
+    Syncs with the header selection and autoloads the library clip when available.
+    You can still click the source viewport to upload your own video.
+  </p>
+  {#if authoring360Notice}
+    <rd-attribution-notice notice={authoring360Notice}></rd-attribution-notice>
+  {/if}
+
+  <section class="da-authoring-catalog" aria-label="360° library catalog">
+    <details open>
+      <summary>
+        360° library — {authoring360ShippedCount} shipped clips (JSON)
+      </summary>
+      <p class="da-note da-authoring-catalog__hint">
+        Autoload uses <code>clipPath</code> for the selected destination. Run
+        <code>npm run authoring:fetch-360</code> to generate local MP4s.
+      </p>
+      <pre class="da-authoring-catalog__json">{authoring360CatalogJsonText}</pre>
+    </details>
+  </section>
 
   <div class="da-authoring-workspace">
     <header class="da-authoring-workspace__headers">
@@ -144,9 +238,7 @@
             disabled={false}
             hint={screen.playbackHint}
             recordRange={screen.recordRange}
-            onRecordRangeChange={(range) => {
-              screen.recordRange = range;
-            }}
+            onRecordRangeChange={onRecordRangeChange}
             onPreviewRecordingChange={(blob) => {
               screen.previewRecording = blob;
             }}
@@ -395,7 +487,14 @@
 
           {#if screen.inputFile}
             {#if !screen.recordRange}
-              <p class="da-note">Record a segment on the playback bar, then extract that subsection.</p>
+              <p class="da-note">
+                Waiting for source duration… extract will enable once the clip is ready.
+              </p>
+            {:else}
+              <p class="da-note">
+                Extract uses {screen.recordRange.startSec.toFixed(1)}s–{screen.recordRange.endSec.toFixed(1)}s.
+                Record on the playback bar to limit that range.
+              </p>
             {/if}
             <SelectInput
               label="Extract format"
@@ -405,6 +504,8 @@
                 screen.extractFormat = value === 'webm' ? 'webm' : 'mp4';
               }}
             />
+            <rd-attribution-notice notice={ffmpegNotice}></rd-attribution-notice>
+            {#key `${screen.inputFile.name}-${screen.recordRange?.startSec ?? 'na'}-${screen.recordRange?.endSec ?? 'na'}`}
             <WasmMedia
               label="ffmpeg.wasm extract"
               operation="equirect-extract"
@@ -425,6 +526,7 @@
               onExtractComplete={screen.onExtractComplete}
               onExtractError={screen.onExtractError}
             />
+            {/key}
           {:else}
             <p class="da-note">Attach a video file to enable ffmpeg.wasm extract.</p>
           {/if}

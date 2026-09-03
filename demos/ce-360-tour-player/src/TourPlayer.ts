@@ -1,5 +1,11 @@
 import { createPanoramaViewport } from './panorama';
-import { getTourScene, TOUR_SCENES, type TourScene } from './scenes';
+import {
+  attributionNoticeJson,
+  authoring360Attribution,
+  mapProviderAttribution,
+  THREE_JS_ATTRIBUTION,
+} from '@destination-atlas';
+import { defaultTourScene, getTourScene, TOUR_SCENES, type TourScene } from './scenes';
 import './TourPlayer.css';
 
 export interface TourPlayerOptions {
@@ -19,7 +25,7 @@ function createEl(tag: string, attrs: Record<string, string> = {}, className?: s
 }
 
 function sceneOptions(scenes: TourScene[]): string {
-  return JSON.stringify(scenes.map((scene) => ({ value: scene.id, label: scene.label })));
+  return JSON.stringify(scenes.map((scene) => ({ value: scene.id, label: scene.pulldownLabel })));
 }
 
 function sceneMarkers(scenes: TourScene[]): Array<{ id: string; lat: number; lng: number; label: string }> {
@@ -27,13 +33,14 @@ function sceneMarkers(scenes: TourScene[]): Array<{ id: string; lat: number; lng
     id: scene.id,
     lat: scene.lat,
     lng: scene.lng,
-    label: scene.label,
+    label: scene.pulldownLabel,
   }));
 }
 
 export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
   const scenes = options.scenes ?? TOUR_SCENES;
-  const initial = getTourScene(options.defaultSceneId ?? '', scenes) ?? scenes[0];
+  const initial =
+    getTourScene(options.defaultSceneId ?? '', scenes) ?? defaultTourScene(scenes);
   if (!initial) {
     return createEl('rd-flex-layout', { title: '360 tour', direction: 'column', gap: '10' }, 'rd-tour-player');
   }
@@ -46,7 +53,7 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
     'rd-tour-player',
   );
   const select = createEl('rd-select-input', {
-    label: 'Scene',
+    label: '360° destination',
     options: sceneOptions(scenes),
     value: current.id,
   });
@@ -80,12 +87,18 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
 
   const paintLook = (scene: TourScene, heading = scene.heading) => {
     facts.replaceChildren();
-    const rows: Array<[string, string, string?]> = [
-      ['Scene', scene.label],
-      ['Look', heading],
-      ['Credit', scene.credit, scene.sourceUrl],
-      ['License', scene.license],
-    ];
+    const rows: Array<[string, string, string?]> =
+      scene.status === 'upload-required'
+        ? [
+            ['Destination', scene.pulldownLabel],
+            ['Status', 'No shipped still — upload in Authoring'],
+          ]
+        : [
+            ['Scene', scene.label],
+            ['Look', heading],
+            ['Credit', scene.credit, scene.sourceUrl],
+            ['License', scene.license],
+          ];
     for (const [label, value, href] of rows) {
       const row = document.createElement('div');
       const dt = document.createElement('dt');
@@ -106,7 +119,7 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
     }
   };
 
-  const pano = createPanoramaViewport(current.imageUrl, (heading) => {
+  const pano = createPanoramaViewport(current.videoUrl, (heading) => {
     kpi.setAttribute('value', heading);
     paintLook(current, heading);
   });
@@ -117,19 +130,53 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
   root.append(select, map, metrics, pano.element, detail);
   paintLook(current);
 
+  const mapAttribution = document.createElement('rd-attribution-notice');
+  mapAttribution.setAttribute('notice', attributionNoticeJson(mapProviderAttribution('leaflet')));
+  root.insertBefore(mapAttribution, metrics);
+
+  const applySceneAttribution = (scene: TourScene) => {
+    let sphereNotice = root.querySelector('[data-ref="sphere-attribution"]');
+    if (scene.status === 'shipped') {
+      const notice = authoring360Attribution(scene.id);
+      if (notice) {
+        if (!sphereNotice) {
+          sphereNotice = document.createElement('rd-attribution-notice');
+          sphereNotice.setAttribute('data-ref', 'sphere-attribution');
+          root.insertBefore(sphereNotice, detail);
+        }
+        sphereNotice.setAttribute('notice', attributionNoticeJson(notice));
+        (sphereNotice as HTMLElement).hidden = false;
+      }
+    } else if (sphereNotice) {
+      (sphereNotice as HTMLElement).hidden = true;
+    }
+  };
+
+  applySceneAttribution(current);
+
+  const threeNotice = document.createElement('rd-attribution-notice');
+  threeNotice.setAttribute('notice', attributionNoticeJson(THREE_JS_ATTRIBUTION));
+  root.insertBefore(threeNotice, detail);
+
   const applyScene = (scene: TourScene) => {
     current = scene;
     select.setAttribute('value', scene.id);
     map.setAttribute('center', JSON.stringify({ lat: scene.lat, lng: scene.lng }));
     map.setAttribute('selected-id', scene.id);
-    kpi.setAttribute('title', scene.label);
+    kpi.setAttribute('title', scene.pulldownLabel);
     kpi.setAttribute('value', scene.heading);
     kpi.setAttribute('delta', `${scene.lat.toFixed(2)}, ${scene.lng.toFixed(2)}`);
-    pano.setImage(scene.imageUrl);
+    pano.setVideoUrl(scene.videoUrl);
     pano.setHeading(scene.heading);
-    badge.setAttribute('status-text', '360 still');
-    badge.setAttribute('tone', 'success');
+    if (scene.status === 'upload-required') {
+      badge.setAttribute('status-text', 'Upload in Authoring');
+      badge.setAttribute('tone', 'warning');
+    } else {
+      badge.setAttribute('status-text', '360 still');
+      badge.setAttribute('tone', 'success');
+    }
     paintLook(scene);
+    applySceneAttribution(scene);
   };
 
   const setScene = (id: string) => {

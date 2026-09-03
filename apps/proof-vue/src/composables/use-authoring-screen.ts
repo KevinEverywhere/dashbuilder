@@ -3,6 +3,7 @@ import {
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
+  defaultAuthoringRecordRange,
   flatCropToCropRegion,
   authoringExtractDownloadName,
   authoringPreviewRecordingDownloadName,
@@ -16,6 +17,7 @@ import type { VideoFileDetail } from '@rosettadash/vue/visual/media/video-source
 import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
+  fetchAuthoring360File,
   getAuthoringExampleById,
   getAuthoringExampleForDestinationId,
   getDestinationById,
@@ -157,6 +159,27 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
   const viewportRef = computed<AuthoringViewportHandle | null>(
     () => sphereViewportRef.value ?? flatViewportRef.value ?? null,
   );
+
+  function syncDefaultRecordRange(viewport: AuthoringViewportHandle | null): void {
+    if (!viewport || recordRange.value || !sourceReady.value) {
+      return;
+    }
+    const range = defaultAuthoringRecordRange(viewport.getDuration());
+    if (range) {
+      recordRange.value = range;
+    }
+  }
+
+  function setRecordRange(range: AuthoringRecordRange | null): void {
+    recordRange.value = range;
+    if (!range) {
+      syncDefaultRecordRange(viewportRef.value);
+    }
+  }
+
+  function setPreviewRecording(blob: Blob | null): void {
+    previewRecording.value = blob;
+  }
 
   function revokeExtractUrl(): void {
     if (extractObjectUrl) {
@@ -428,6 +451,43 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
     revokeExtractUrl();
   });
 
+  watch([selectedId, exampleId], ([destId], _prev, onCleanup) => {
+    if (!destId || userPickedFile) {
+      return;
+    }
+    let cancelled = false;
+    sourceLoadBusy.value = true;
+    sourceLoadError.value = null;
+    void fetchAuthoring360File(destId)
+      .then((file) => {
+        if (cancelled || userPickedFile) {
+          return;
+        }
+        sourceLoadBusy.value = false;
+        if (file) {
+          inputFile.value = file;
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        sourceLoadBusy.value = false;
+        sourceLoadError.value = error instanceof Error ? error.message : String(error);
+      });
+    onCleanup(() => {
+      cancelled = true;
+    });
+  }, { immediate: true });
+
+  watch([viewportRef, sourceReady, inputFile], () => {
+    syncDefaultRecordRange(viewportRef.value);
+    if (!recordRange.value && sourceReady.value) {
+      window.setTimeout(() => syncDefaultRecordRange(viewportRef.value), 300);
+      window.setTimeout(() => syncDefaultRecordRange(viewportRef.value), 1200);
+    }
+  });
+
   watch(inputFile, (file, _oldFile, onCleanup) => {
     if (!file) {
       return;
@@ -571,6 +631,8 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
     cropHeight,
     recordRange,
     previewRecording,
+    setRecordRange,
+    setPreviewRecording,
     extractFormat,
     exportReferenceToken,
     outputSizeCommitToken,

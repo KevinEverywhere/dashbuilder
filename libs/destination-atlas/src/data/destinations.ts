@@ -79,7 +79,7 @@ function fromSeed(seed: DestinationSeed): Destination {
   };
 }
 
-/** Five cities per inhabited continent (30 total). YouTube-only — no shipped 360° / VR sources. */
+/** Five cities per inhabited continent (30 total). YouTube for Media; Authoring 360 clips are Commons stills (see authoring-360-sources). */
 const DESTINATION_SEEDS: DestinationSeed[] = [
   {
     id: 'tokyo',

@@ -45,6 +45,7 @@
     "pack:core": "nx build core && npm pack ./dist/packages/core --dry-run",
     "pack:runtimes": "nx run-many -t build -p runtime-react,runtime-angular,runtime-vue,runtime-svelte && npm pack ./dist/packages/react --dry-run && npm pack ./dist/packages/angular --dry-run && npm pack ./dist/packages/vue --dry-run && npm pack ./dist/packages/svelte --dry-run",
     "pack:web-components": "nx build web-components && node scripts/bundle-browser-media.mjs && npm pack ./dist/packages/web-components --dry-run",
+    "authoring:fetch-360": "node scripts/fetch-authoring-360.mjs",
     "proof:angular": "nx serve proof-angular",
     "proof:angular:build": "nx build proof-angular",
     "proof:react": "nx serve proof-react",

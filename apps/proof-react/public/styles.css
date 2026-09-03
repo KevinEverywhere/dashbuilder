@@ -950,6 +950,43 @@ rd-wasm-media {
   gap: 0.75rem;
 }
 
+.da-authoring-dest-hint {
+  margin: 0.35rem 0 0.75rem;
+}
+
+.da-authoring-catalog {
+  margin-top: 0.75rem;
+}
+
+.da-authoring-catalog details {
+  border: 1px solid var(--rd-border-subtle, rgba(127, 127, 127, 0.35));
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--rd-surface-2, rgba(127, 127, 127, 0.08));
+}
+
+.da-authoring-catalog summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.da-authoring-catalog__hint {
+  margin: 0.5rem 0 0.65rem;
+}
+
+.da-authoring-catalog__json {
+  margin: 0;
+  max-height: 14rem;
+  overflow: auto;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--rd-surface-1, rgba(0, 0, 0, 0.2));
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .da-authoring-workspace {
   display: grid;
   gap: 0.75rem 1rem;

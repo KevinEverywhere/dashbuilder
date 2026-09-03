@@ -7,7 +7,7 @@ npm install
 npm start
 ```
 
-Open <http://localhost:4200>. You need both processes. Save, preview, and export talk to the API. There is no required cloud. The machine in front of you is the environment.
+Open <http://localhost:4200>, where the angular app runs; the NestJS app is running on <http://localhost:3000>. You need both processes, which launch together. Save, preview, and export talk to the API.
 
 ## Getting Started
 
@@ -15,7 +15,7 @@ You select a front end framework, which determines future choices of servers, da
 
 After you have selected Web Components, React, Angular, Vue, or Svelte, choose the mix of server and database (if any) along with how you will style the components, then press Continue to builder.
 
-If you have a small screen, you will immediately see an alert saying that you need a screen with of 1024 pixel or greater. Truthfully, the builder is more suited for large desktop screens, at least 1280 or more pixels.
+If you have a small screen, you will immediately see an alert saying that you need a screen width of 1024 pixel or greater. Truthfully, the builder is more suited for large desktop screens, at least 1280 or more pixels.
 
 ## Becoming Familiar with the Interface
 
@@ -52,4 +52,4 @@ A **composite component** is a group of components that work as a unit. You can 
 
 ## Next
 
-The next article is Storybook: same pieces, isolated, before they have to are part of a product. Do not open Destination Atlas yet. Learn one component on a catalog page first. If you want a composite that already left, `demos/` has eleven of those. They are the export, not the shop floor.
+The next article is Storybook: same pieces, isolated, before they are part of a product.

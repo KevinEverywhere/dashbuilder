@@ -1770,3 +1770,46 @@ rd-flat-video-viewport .rd-flat-video-viewport__handle--se,
   object-fit: contain;
 }
 
+.rd-attribution-notice-host {
+  display: block;
+}
+
+.rd-attribution-notice {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--rd-radius-sm, 0.375rem);
+  background: var(--rd-color-surface-muted, #f3f5f8);
+  border: 1px solid var(--rd-color-border, #d9dee7);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--rd-color-muted, #5b667a);
+}
+
+.rd-attribution-notice__kind {
+  margin: 0 0 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rd-attribution-notice__summary,
+.rd-attribution-notice__links,
+.rd-attribution-notice__license {
+  margin: 0.15rem 0 0;
+}
+
+.rd-attribution-notice__links a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.da-map-stage rd-attribution-notice,
+.da-maps-footer rd-attribution-notice,
+.rd-media-tools rd-attribution-notice,
+.da-panel--authoring rd-attribution-notice,
+.rd-tour-player rd-attribution-notice {
+  margin-top: 0.45rem;
+}
+

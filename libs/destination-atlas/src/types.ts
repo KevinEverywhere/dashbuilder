@@ -125,7 +125,7 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
   {
     id: 'media',
     label: 'Media',
-    description: 'Flat YouTube embeds; 360° destinations route to Authoring for upload and extract.',
+    description: 'Flat YouTube embeds; 360° destinations route to Authoring (library autoload + extract).',
   },
   {
     id: 'authoring',

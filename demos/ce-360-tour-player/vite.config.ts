@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   root: __dirname,
+  publicDir: resolve(__dirname, 'public'),
   cacheDir: resolve(__dirname, '../../node_modules/.vite/ce-360-tour-player'),
   build: {
     outDir: '../../dist/demos/ce-360-tour-player',
@@ -31,6 +32,6 @@ export default defineConfig({
     port: 4330,
   },
   optimizeDeps: {
-    include: ['leaflet'],
+    include: ['leaflet', 'three'],
   },
 });

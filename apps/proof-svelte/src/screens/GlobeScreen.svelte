@@ -8,10 +8,12 @@
 <script lang="ts">
   import { ThreeGeoGlobe } from '@rosettadash/vue/visual/display/3d-geo-globe';
   import {
-    DEFAULT_WORLD_EQUIRECT_ATTRIBUTION,
     DEFAULT_WORLD_EQUIRECT_URL,
     GLOBE_TEXTURE_SOURCE_OPTIONS,
     MOCK_DESTINATIONS,
+    GLOBE_EQUIRECT_ATTRIBUTION,
+    THREE_JS_ATTRIBUTION,
+    attributionNoticeJson,
   } from '@destination-atlas';
   import GeoExplorerLayout, { type GeoExplorerListPlacement } from '../components/GeoExplorerLayout.svelte';
   import VueMount from '../components/VueMount.svelte';
@@ -108,7 +110,8 @@
 
 {#if embedded && part === 'footer'}
   <div class="da-maps-footer">
-    <p class="da-note">{DEFAULT_WORLD_EQUIRECT_ATTRIBUTION}</p>
+    <rd-attribution-notice notice={attributionNoticeJson(GLOBE_EQUIRECT_ATTRIBUTION)}></rd-attribution-notice>
+    <rd-attribution-notice notice={attributionNoticeJson(THREE_JS_ATTRIBUTION)}></rd-attribution-notice>
     <details class="da-globe-sources">
       <summary>Future globe texture sources</summary>
       <ul>

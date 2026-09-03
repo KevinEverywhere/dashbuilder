@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-  import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider } from '@destination-atlas';
+  import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider, attributionNoticeJson, mapProviderAttribution } from '@destination-atlas';
   import {
     DB_GEO_MAP_TAG,
     registerRdGeoMap,
@@ -88,6 +88,7 @@
   );
 
   const activeProvider = $derived(GEO_MAP_PROVIDERS.find((entry) => entry.id === mapProvider));
+  const mapAttributionNotice = $derived(attributionNoticeJson(mapProviderAttribution(mapProvider)));
 
   function submitLocation() {
     const resolved = resolveMapLocationQuery(mapLocationQuery, locale);
@@ -200,6 +201,7 @@
   <GeoExplorerLayout {listPlacement} items={listItems} {selectedId} onSelect={selectDestination}>
     <div class="da-map-stage">
       <svelte:element this={DB_GEO_MAP_TAG} bind:this={mapHost} class="da-map-stage__map"></svelte:element>
+      <rd-attribution-notice notice={mapAttributionNotice}></rd-attribution-notice>
     </div>
   </GeoExplorerLayout>
 {/if}

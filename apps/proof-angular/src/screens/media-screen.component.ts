@@ -3,9 +3,11 @@ import { YoutubeEmbed } from '@rosettadash/angular/visual/media/youtube-embed';
 import {
   EQUIRECT_VIDEO_DESTINATIONS,
   FLAT_VIDEO_DESTINATIONS,
+  attributionNoticeJson,
   destinationHasFlatVideo,
   getDestinationById,
   isEquirectDestination,
+  youtubeVideoAttribution,
 } from '@destination-atlas';
 import { localizedDestinationName } from '../lib/atlas-utils';
 import { AtlasStateService } from '../services/atlas-state.service';
@@ -21,8 +23,8 @@ import { VideoMetadataPanelComponent } from '../components/video-metadata-panel.
     <section class="da-panel">
       <h2>Media</h2>
       <p>
-        Watch flat destination videos here. 360° equirectangular locations open in
-        <strong>Authoring</strong> — upload your source and frame the export there.
+        Watch flat destination videos here. 360° destinations open in
+        <strong>Authoring</strong> — autoloads the library clip when shipped; upload your own anytime.
       </p>
       <div class="rd-media-layout">
         <div class="rd-media-primary">
@@ -51,13 +53,15 @@ import { VideoMetadataPanelComponent } from '../components/video-metadata-panel.
               (valueChange)="onEquirectChange($event)"
             />
             <p class="da-note">
-              Choosing a 360° destination switches to the Authoring tab and loads its equirect source
-              for sphere preview and ffmpeg.wasm extract.
+              Choosing a 360° destination switches to Authoring and autoloads the library clip when available.
             </p>
           }
         </div>
         <div class="rd-media-tools">
           <da-video-metadata-panel [items]="metadataItems()" />
+          @if (youtubeAttributionNotice(); as notice) {
+            <rd-attribution-notice [attr.notice]="notice"></rd-attribution-notice>
+          }
         </div>
       </div>
     </section>
@@ -104,6 +108,11 @@ export class MediaScreenComponent {
       { label: 'Video id', value: flat.youtubeId ?? '—' },
       { label: 'Region', value: flat.region },
     ];
+  });
+
+  readonly youtubeAttributionNotice = computed(() => {
+    const id = this.flatSelected()?.youtubeId;
+    return id ? attributionNoticeJson(youtubeVideoAttribution(id)) : '';
   });
 
   readonly youtubeTitle = computed(() => {

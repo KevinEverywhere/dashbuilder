@@ -7,7 +7,7 @@ export const MAP_SOURCE = `<MapScreen part="toolbar|explorer" mapProvider={mapPr
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { GeoMap } from '@rosettadash/vue/visual/display/geo-map';
-import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider } from '@destination-atlas';
+import { GEO_MAP_PROVIDERS, MOCK_DESTINATIONS, getDestinationById, type GeoMapProvider, attributionNoticeJson, mapProviderAttribution } from '@destination-atlas';
 import GeoExplorerLayout, { type GeoExplorerListPlacement } from '../components/GeoExplorerLayout.vue';
 import BoundSelectInput from '../components/BoundSelectInput.vue';
 import BoundTextInput from '../components/BoundTextInput.vue';
@@ -74,6 +74,10 @@ const listItems = computed(() =>
 );
 
 const activeProvider = computed(() => GEO_MAP_PROVIDERS.find((entry) => entry.id === props.mapProvider));
+
+const mapAttributionNotice = computed(() =>
+  attributionNoticeJson(mapProviderAttribution(props.mapProvider)),
+);
 
 function submitLocation() {
   const resolved = resolveMapLocationQuery(props.mapLocationQuery, props.locale);
@@ -177,6 +181,7 @@ function selectDestination(event: unknown) {
         :tile-url="mapProvider === 'maplibre' ? secrets.maplibreTileUrl : undefined"
         @marker-select="selectDestination"
       />
+      <rd-attribution-notice :notice="mapAttributionNotice" />
     </div>
   </GeoExplorerLayout>
 </template>

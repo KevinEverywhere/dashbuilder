@@ -13,5 +13,5 @@ Standalone consumer-style samples that sit outside the Destination Atlas proof a
 | [vue-flight-tracker](./vue-flight-tracker/README.md) | Vue | Flight tracker | `npm run demo:flight` | 4327 |
 | [svelte-media-player](./svelte-media-player/README.md) | Svelte | Media player | `npm run demo:media` | 4328 |
 | [svelte-transit-arrivals](./svelte-transit-arrivals/README.md) | Svelte | Transit arrivals | `npm run demo:transit` | 4329 |
-| [ce-360-tour-player](./ce-360-tour-player/README.md) | CE | 360 tour player | `npm run demo:tour` | 4330 |
+| [ce-360-tour-player](./ce-360-tour-player/README.md) | CE | 360 tour (30-city pulldown) | `npm run demo:tour` | 4330 |
 | [ce-listing-browser](./ce-listing-browser/README.md) | CE | Listing browser | `npm run demo:listing` | 4331 |

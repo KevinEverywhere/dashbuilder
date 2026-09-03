@@ -62,6 +62,10 @@ tools/.venv-vlc/
 # Local test media and scratch files (authoring experiments, ffmpeg output)
 .local/
 
+# Generated Authoring 360 clips (npm run authoring:fetch-360)
+libs/destination-atlas/media/authoring-360/*.mp4
+apps/proof-*/public/authoring-360/
+
 # Playwright (local e2e artifacts — see dist/.playwright when outputDir is under dist)
 /playwright-report/
 /test-results/

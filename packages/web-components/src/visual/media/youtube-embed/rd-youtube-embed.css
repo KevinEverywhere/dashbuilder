@@ -4,6 +4,13 @@
 }
 
 .rd-media-youtube-embed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.rd-media-youtube-embed__stage {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -39,4 +46,21 @@
 
 .rd-media-youtube-embed__empty[hidden] {
   display: none !important;
+}
+
+.rd-media-youtube-embed__attribution {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--rd-color-muted, #6b7280);
+}
+
+.rd-media-youtube-embed__attribution[hidden] {
+  display: none !important;
+}
+
+.rd-media-youtube-embed__attribution a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 export const AUTHORING_SOURCE = `<AuthoringScreen :locale="locale" :selected-id="selectedId">
+  <SelectInput label="360° destination" />
   <EquirectSphereViewport />
   <FlatVideoViewport />
   <WasmMedia />
@@ -10,18 +11,48 @@ export const AUTHORING_SOURCE = `<AuthoringScreen :locale="locale" :selected-id=
 </script>
 
 <script setup lang="ts">
-import { toRefs } from 'vue';
+import { toRefs, computed } from 'vue';
+import {
+  AUTHORING_360_DISPLAY_CATALOG,
+  authoring360CatalogJson,
+  MOCK_DESTINATIONS,
+  authoring360Attribution,
+  attributionNoticeJson,
+  FFMPEG_WASM_ATTRIBUTION,
+} from '@destination-atlas';
 import { EquirectSphereViewport } from '@rosettadash/vue/visual/media/equirect-sphere-viewport';
 import { FlatVideoViewport } from '@rosettadash/vue/visual/media/flat-video-viewport';
 import { WasmMedia } from '@rosettadash/vue/visual/wasm/media';
 import { SelectInput } from '@rosettadash/vue/visual/input/select';
 import AuthoringPlaybackBar from '../components/AuthoringPlaybackBar.vue';
 import AuthoringCameraControls from '../components/AuthoringCameraControls.vue';
+import BoundSelectInput from '../components/BoundSelectInput.vue';
+import { localizedDestinationName } from '../lib/atlas-utils';
 import { useAuthoringScreen } from '../composables/use-authoring-screen';
 
 const props = defineProps<{ locale: string; selectedId: string }>();
+const emit = defineEmits<{ 'update:selectedId': [string] }>();
 
 const { locale, selectedId } = toRefs(props);
+
+const destinationOptions = computed(() =>
+  MOCK_DESTINATIONS.map((dest) => ({
+    value: dest.id,
+    label: `${localizedDestinationName(dest, locale.value)} · 360°`,
+  })),
+);
+
+const authoring360CatalogJsonText = authoring360CatalogJson();
+const authoring360ShippedCount = computed(
+  () => AUTHORING_360_DISPLAY_CATALOG.filter((entry) => entry.status === 'shipped').length,
+);
+
+const authoring360NoticeJson = computed(() => {
+  const notice = authoring360Attribution(selectedId.value);
+  return notice ? attributionNoticeJson(notice) : '';
+});
+
+const ffmpegNoticeJson = attributionNoticeJson(FFMPEG_WASM_ATTRIBUTION);
 
 const {
   sphereViewportRef,
@@ -54,6 +85,8 @@ const {
   cropHeight,
   recordRange,
   previewRecording,
+  setRecordRange,
+  setPreviewRecording,
   extractFormat,
   extractFormatOptions,
   extractFilter,
@@ -88,6 +121,31 @@ const {
 <template>
   <section class="da-panel da-panel--authoring">
     <h2>Authoring</h2>
+
+    <BoundSelectInput
+      field-label="360° destination"
+      :options="destinationOptions"
+      :value="selectedId"
+      @update:value="emit('update:selectedId', $event)"
+    />
+    <p class="da-note da-authoring-dest-hint">
+      Syncs with the header selection and autoloads the library clip when available.
+      You can still click the source viewport to upload your own video.
+    </p>
+    <rd-attribution-notice v-if="authoring360NoticeJson" :notice="authoring360NoticeJson" />
+
+    <section class="da-authoring-catalog" aria-label="360° library catalog">
+      <details open>
+        <summary>
+          360° library — {{ authoring360ShippedCount }} shipped clips (JSON)
+        </summary>
+        <p class="da-note da-authoring-catalog__hint">
+          Autoload uses <code>clipPath</code> for the selected destination.
+          Run <code>npm run authoring:fetch-360</code> to generate local MP4s.
+        </p>
+        <pre class="da-authoring-catalog__json">{{ authoring360CatalogJsonText }}</pre>
+      </details>
+    </section>
 
     <div class="da-authoring-workspace">
       <header class="da-authoring-workspace__headers">
@@ -200,8 +258,8 @@ const {
               :disabled="false"
               :hint="playbackHint"
               :record-range="recordRange"
-              @update:record-range="recordRange = $event"
-              @update:preview-recording="previewRecording = $event"
+              @update:record-range="setRecordRange"
+              @update:preview-recording="setPreviewRecording"
               @reset-view="resetView"
               @playback-stop="resetExportRectangle"
             />
@@ -411,7 +469,11 @@ const {
 
             <template v-if="inputFile">
               <p v-if="!recordRange" class="da-note">
-                Record a segment on the playback bar, then extract that subsection.
+                Waiting for source duration… extract will enable once the clip is ready.
+              </p>
+              <p v-else class="da-note">
+                Extract uses {{ recordRange.startSec.toFixed(1) }}s–{{ recordRange.endSec.toFixed(1) }}s.
+                Record on the playback bar to limit that range.
               </p>
               <SelectInput
                 label="Extract format"
@@ -419,7 +481,9 @@ const {
                 :options="extractFormatOptions"
                 :on-change="(value) => (extractFormat = value === 'webm' ? 'webm' : 'mp4')"
               />
+              <rd-attribution-notice :notice="ffmpegNoticeJson" />
               <WasmMedia
+                :key="`${inputFile.name}-${recordRange?.startSec ?? 'na'}-${recordRange?.endSec ?? 'na'}`"
                 label="ffmpeg.wasm extract"
                 operation="equirect-extract"
                 :extraction-mode="isEquirectSource ? 'rectilinear' : 'flat-crop'"

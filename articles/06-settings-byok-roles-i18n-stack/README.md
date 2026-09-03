@@ -1,12 +1,8 @@
 # Settings including BYOK, Roles, i18n, Stack, and Details
 
-Articles 4 and 5 were the explorer: cities, maps, a globe, watch
-versus extract. This piece is organization. Who can open a screen.
-Which language the app speaks. Where keys live. What stack was
-chosen.
+As an app developer, we regularly revisit the same behind-the-scenes challenges. Things such as connecting keys and authenticatiom, enabling views based on roles, ensuring that each language target gets what they asked for, and other minutia.
 
-Settings is the name of the tab and the name of this article. Plan
-and Stack sit next to it. This article uses the Svelte proof:
+For this view, we will use the svelte app.
 
 ```bash
 npm run proof:svelte
@@ -16,9 +12,7 @@ Open <http://localhost:4314>.
 
 ## Settings — locale, keys, details
 
-The Settings tab is the session desk. Role, app locale, default map
-provider, selected city. Theme if you want it dark. A feedback box
-that admits it is a demo. Two ideas matter on this screen.
+The Settings tab is the session desk. Role, app locale, default map provider, selected city. Theme if you want it dark. A feedback box.
 
 **App locale.** `domain.i18n.app-language-select` sets a base app
 language using standard locale codes (`en`, `es`, `fr`, `de`, `ja` in
@@ -28,18 +22,7 @@ can follow. The builder and catalog UI stay English. The **app** can be
 multilingual. A news-API language filter, if you ever add one, is a
 different component.
 
-**Keys stay in the browser.** Two Admin collapsibles: **Integration
-keys** and **AI providers** — both bring-your-own-key (BYOK) vaults.
-Maps want Google or
-MapTiler. There is a news key in the same vault. AI is OpenAI,
-Anthropic, Gemini, Azure, Ollama — all on the same Settings page.
-The vault is encrypted in this browser. Nothing goes to a RosettaDash
-server. Map reads a stored key when one exists; otherwise it falls
-back to what the proof ships in env. Viewer and Editor can see that
-the vault exists. Only Admin can write it.
-
-Same BYOK idea as the builder’s optional AI drawer, aimed at the
-consumer app.
+**Keys stay in the browser.** Two Admin collapsibles: **Integration keys** and **AI providers** — both bring-your-own-key (BYOK) vaults. Maps want Google or MapTiler. There is a news key in the same vault. AI is OpenAI, Anthropic, Gemini, Azure, Ollama — all on the same Settings page. The vault is encrypted in this browser. Nothing goes to a RosettaDash server. Map reads a stored key when one exists; otherwise it falls back to what the proof ships in env. Viewer and Editor can see that the vault exists. Only Admin can write it.
 
 ![Settings — locale and the Admin BYOK collapsibles on one page.](graphics/01-settings.png)
 

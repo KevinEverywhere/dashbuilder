@@ -14,6 +14,7 @@ import {
 import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
+  fetchAuthoring360File,
   getAuthoringExampleById,
   getAuthoringExampleForDestinationId,
   getDestinationById,
@@ -422,6 +423,35 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
       sourceLoadError = null;
       revokeExtractUrl();
     });
+  });
+
+  $effect(() => {
+    const destId = getSelectedId();
+    void exampleId;
+    if (!destId || userPickedFileRef.current) {
+      return;
+    }
+    let cancelled = false;
+    sourceLoadBusy = true;
+    sourceLoadError = null;
+    void fetchAuthoring360File(destId).then((file) => {
+      if (cancelled || userPickedFileRef.current) {
+        return;
+      }
+      sourceLoadBusy = false;
+      if (file) {
+        inputFile = file;
+      }
+    }).catch((error: unknown) => {
+      if (cancelled) {
+        return;
+      }
+      sourceLoadBusy = false;
+      sourceLoadError = error instanceof Error ? error.message : String(error);
+    });
+    return () => {
+      cancelled = true;
+    };
   });
 
   $effect(() => {

@@ -5,6 +5,8 @@ import {
   MOCK_DESTINATIONS,
   getDestinationById,
   type GeoMapProvider,
+  attributionNoticeJson,
+  mapProviderAttribution,
 } from '@destination-atlas';
 import { formatRegionLabel, localizedDestinationName } from '../lib/atlas-utils';
 import { destinationMapView, resolveMapLocationQuery } from '../lib/map-location';
@@ -111,6 +113,7 @@ export type MapScreenPart = 'toolbar' | 'explorer';
             [tileUrl]="atlas.mapProvider() === 'maplibre' ? secrets.maplibreTileUrl() : undefined"
             (markerSelect)="selectDestination($event.id)"
           />
+          <rd-attribution-notice [attr.notice]="mapAttributionNotice()"></rd-attribution-notice>
         </div>
       </da-geo-explorer-layout>
     }
@@ -162,6 +165,10 @@ export class MapScreenComponent {
 
   readonly activeProvider = computed(() =>
     GEO_MAP_PROVIDERS.find((entry) => entry.id === this.atlas.mapProvider()),
+  );
+
+  readonly mapAttributionNotice = computed(() =>
+    attributionNoticeJson(mapProviderAttribution(this.atlas.mapProvider())),
   );
 
   showToolbar(): boolean {

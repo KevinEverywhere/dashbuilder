@@ -347,7 +347,7 @@ export function AuthoringPlaybackBar({
       {recordRange ? (
         <p className="da-note da-authoring-playback__segment-note">
           Extract uses {formatTime(recordRange.startSec)}–{formatTime(recordRange.endSec)} (
-          {formatTime(recordRange.endSec - recordRange.startSec)} recorded). Output mirror recording
+          {formatTime(recordRange.endSec - recordRange.startSec)} span).
           (same clip as playback download).
         </p>
       ) : null}

@@ -1,112 +1,94 @@
-import { formatPanHeading, headingFromPanOffset, wrapPeriod } from '@rosettadash/core';
+import { formatPanHeading, wrapSignedDegrees } from '@rosettadash/core';
+import {
+  DB_EQUIRECT_SPHERE_VIEWPORT_TAG,
+  type EquirectSphereCameraChange,
+  type RdEquirectSphereViewportElement,
+} from '@rosettadash/web-components/visual/media/equirect-sphere-viewport';
 
 export interface PanoramaViewport {
   element: HTMLDivElement;
-  setImage(url: string): void;
+  setVideoUrl(url: string | null): void;
   setHeading(label: string): void;
 }
 
+function headingFromYaw(yaw: number): string {
+  const degrees = wrapSignedDegrees(yaw);
+  return formatPanHeading(degrees < 0 ? degrees + 360 : degrees);
+}
+
+function freezeTourFrame(viewport: RdEquirectSphereViewportElement): void {
+  viewport.pause();
+  viewport.seek(0);
+}
+
 export function createPanoramaViewport(
-  imageUrl: string,
+  videoUrl: string | null,
   onHeading?: (label: string) => void,
 ): PanoramaViewport {
   const element = document.createElement('div');
   element.className = 'rd-tour-pano';
   element.setAttribute('role', 'img');
-  element.setAttribute('aria-label', 'Scene viewport');
+  element.setAttribute('aria-label', '360° scene — drag to look around');
 
-  const strip = document.createElement('div');
-  strip.className = 'rd-tour-pano__strip';
+  const viewport = document.createElement(DB_EQUIRECT_SPHERE_VIEWPORT_TAG) as RdEquirectSphereViewportElement;
+  viewport.className = 'rd-tour-pano__sphere';
+  viewport.setAttribute('flip-interior', '');
+  viewport.setAttribute('horizontal-fov', '75');
+  viewport.setAttribute('min-horizontal-fov', '45');
+  viewport.setAttribute('max-horizontal-fov', '95');
 
-  const first = document.createElement('img');
-  const second = document.createElement('img');
-  first.alt = '';
-  second.alt = '';
-  first.draggable = false;
-  second.draggable = false;
-  strip.append(first, second);
+  const hint = document.createElement('span');
+  hint.className = 'rd-tour-pano__hint';
+  hint.textContent = 'Drag to look around';
 
   const label = document.createElement('span');
   label.className = 'rd-tour-pano__label';
   label.textContent = 'Scene viewport';
-  element.append(strip, label);
 
-  let offsetPx = 0;
-  let period = 0;
-  let dragging = false;
-  let lastX = 0;
+  element.append(viewport, hint, label);
 
-  function emitHeading(): void {
-    onHeading?.(formatPanHeading(headingFromPanOffset(offsetPx, period)));
-  }
+  let freezeTimer: number | undefined;
 
-  function paintOffset(): void {
-    if (period <= 0) {
-      strip.style.transform = 'translate3d(0, 0, 0)';
-      return;
-    }
-    const wrapped = wrapPeriod(offsetPx, period);
-    strip.style.transform = `translate3d(${-wrapped}px, 0, 0)`;
-    emitHeading();
-  }
-
-  function measurePeriod(): void {
-    period = first.getBoundingClientRect().width;
-    paintOffset();
-  }
-
-  function applyImage(url: string): void {
-    element.classList.remove('rd-tour-pano--fallback');
-    first.onerror = () => {
-      element.classList.add('rd-tour-pano--fallback');
-    };
-    first.src = url;
-    second.src = url;
-  }
-
-  first.addEventListener('load', measurePeriod);
-  new ResizeObserver(measurePeriod).observe(element);
-
-  applyImage(imageUrl);
-  paintOffset();
-
-  element.addEventListener('pointerdown', (event) => {
-    dragging = true;
-    lastX = event.clientX;
-    element.setPointerCapture(event.pointerId);
-    element.classList.add('rd-tour-pano--dragging');
-  });
-
-  element.addEventListener('pointermove', (event) => {
-    if (!dragging) {
-      return;
-    }
-    offsetPx -= event.clientX - lastX;
-    lastX = event.clientX;
-    paintOffset();
-  });
-
-  const endDrag = (event: PointerEvent) => {
-    if (!dragging) {
-      return;
-    }
-    dragging = false;
-    element.classList.remove('rd-tour-pano--dragging');
-    if (element.hasPointerCapture(event.pointerId)) {
-      element.releasePointerCapture(event.pointerId);
-    }
+  const scheduleFreeze = () => {
+    window.clearTimeout(freezeTimer);
+    freezeTimer = window.setTimeout(() => {
+      freezeTourFrame(viewport);
+    }, 400);
   };
 
-  element.addEventListener('pointerup', endDrag);
-  element.addEventListener('pointercancel', endDrag);
+  viewport.addEventListener('camera-change', (event) => {
+    const detail = (event as CustomEvent<EquirectSphereCameraChange>).detail;
+    if (detail) {
+      onHeading?.(headingFromYaw(detail.yaw));
+    }
+  });
+
+  viewport.addEventListener(
+    'pointerdown',
+    () => {
+      element.classList.add('rd-tour-pano--interacted');
+    },
+    { once: true },
+  );
+
+  const setVideoUrl = (url: string | null) => {
+    element.classList.remove('rd-tour-pano--interacted');
+    if (!url) {
+      viewport.removeAttribute('video-src');
+      element.classList.add('rd-tour-pano--fallback');
+      return;
+    }
+    element.classList.remove('rd-tour-pano--fallback');
+    viewport.setAttribute('video-src', url);
+    scheduleFreeze();
+    window.setTimeout(scheduleFreeze, 1200);
+  };
+
+  setVideoUrl(videoUrl);
 
   return {
     element,
-    setImage(url: string) {
-      offsetPx = 0;
-      applyImage(url);
-      measurePeriod();
-    },
+    setVideoUrl,
     setHeading(next: string) {
       label.textContent = next;
     },

@@ -4,7 +4,7 @@
 **Research:** [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126)  
 **Gap WC components:** [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127) app-language-select · [DAS-128](https://planetkevin.atlassian.net/browse/DAS-128) geo-map · [DAS-129](https://planetkevin.atlassian.net/browse/DAS-129) youtube-embed
 
-Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only; Authoring is upload-your-own (no shipped VR).
+Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for 26 cities (`npm run authoring:fetch-360`); Barcelona, Nairobi, Rio, and Melbourne stay upload-your-own.
 
 ## Product intent
 
@@ -70,18 +70,20 @@ Each proof app’s About page lists all five runtimes in a **three-column matrix
 
 Implemented in React proof: [DAS-130](https://planetkevin.atlassian.net/browse/DAS-130). Runtime matrix redesign: [DAS-143](https://planetkevin.atlassian.net/browse/DAS-143).
 
-### Authoring tab (upload-first, flat + 360°)
+### Authoring tab (library autoload + upload, flat + 360°)
 
-**Authoring** is separate from **Media**. Media is for watching flat YouTube embeds; selecting a 360° destination navigates to Authoring where users **upload** their own source:
+**Authoring** is separate from **Media**. Media is for watching flat YouTube embeds; a 360° destination choice on Media routes to Authoring.
+
+**360° library:** twenty-six cities autoload short MP4 clips from Wikimedia Commons stills (`npm run authoring:fetch-360`, catalog in `authoring-360-sources.json`). Barcelona, Nairobi, Rio, and Melbourne are upload-your-own. The **360° destination** pulldown lists all thirty cities; a collapsible JSON catalog panel shows shipped clips and gaps.
 
 - **Source pane** — auto-detects flat vs ~2:1 equirect:
   - **Flat (2D):** `FlatVideoViewport` — draggable crop rectangle, live output mirror
   - **360° equirect:** `EquirectSphereViewport` — interior Three.js sphere, orbit + Shift+drag framing, little-planet blend at wide FOV
-- **Playback bar** — play/pause/stop/record; orange segment marks recorded trim range used for extract
-- **Output pane** — program preview + ffmpeg.wasm extract (trimmed to record range when set) + download
+- **Playback bar** — play/pause/stop/record; orange segment marks trim span used for extract (defaults to full clip when none recorded)
+- **Output pane** — program preview + ffmpeg.wasm extract + download
 - **Export controls** — preset sizes, custom W×H, reverse-playback toggle
 
-Default camera framing for Cusco and other destinations comes from `libs/destination-atlas/src/data/authoring-examples.ts` (presets only — **no autoload**).
+Default camera framing for Cusco and other destinations comes from `libs/destination-atlas/src/data/authoring-examples.ts` (presets when no library clip is loaded).
 
 **Dev setup (all proof apps):** from repo root run `npm install` (includes `@ffmpeg/ffmpeg`, `@ffmpeg/util`, and `@ffmpeg/core` as devDependencies). Proof and Storybook Vite configs serve `@ffmpeg/core` from same-origin `/ffmpeg-core/*` (see `tools/vite/ffmpeg-core-vite-plugin.mjs`) and set COOP + `Cross-Origin-Embedder-Policy: credentialless` so ffmpeg.wasm can use SharedArrayBuffer while YouTube embeds still load. `<rd-wasm-media>` accepts `inputFile`, `cropRegion`, `recordRange`, and `reverse` — loads core via `@rosettadash/core` helpers (no unpkg CDN fetch).
 
