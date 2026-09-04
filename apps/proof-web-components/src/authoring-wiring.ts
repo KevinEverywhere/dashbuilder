@@ -13,7 +13,13 @@ import {
   type AuthoringRecordRange,
   type FlatCropRect,
 } from '@rosettadash/core';
-import { fetchAuthoring360File } from '@destination-atlas';
+import {
+  destinationMissingContentMessage,
+  fetchAuthoring360File,
+  getAuthoring360Source,
+  getDestinationById,
+} from '@destination-atlas';
+import { localizedDestinationName } from './atlas-utils.js';
 import type {
   RdEquirectSphereViewportElement,
   RdFlatVideoViewportElement,
@@ -33,6 +39,7 @@ type ViewportMode = 'flat' | 'equirect' | 'none';
 type SetPropertyElement = HTMLElement & { setProperty(name: string, value: unknown): void };
 
 let wiredRoot: HTMLElement | null = null;
+let wiredLocale = 'en';
 let sourceObjectUrl: string | null = null;
 let applyLibraryFile: ((detail: { file: File; metadata: DashRow }) => void) | null = null;
 let lastLibraryDestId = '';
@@ -338,8 +345,49 @@ function syncViewports(root: HTMLElement): void {
   });
 }
 
+function setMissingContent(root: HTMLElement, message: string | null): void {
+  const pickSource = root.querySelector('[data-ref="auth-pick-source"]');
+  const missingSource = root.querySelector('[data-ref="auth-missing-source"]');
+  const missingMessage = root.querySelector('[data-ref="auth-missing-message"]');
+  const sourcePlaceholder = root.querySelector('[data-ref="auth-source-placeholder"]');
+  const outputPreview = root.querySelector('[data-ref="auth-output-preview"]');
+
+  if (message) {
+    pickSource?.toggleAttribute('hidden', true);
+    missingSource?.toggleAttribute('hidden', false);
+    if (missingMessage) {
+      missingMessage.textContent = message;
+    }
+    sourcePlaceholder?.toggleAttribute('hidden', false);
+    if (sourcePlaceholder) {
+      sourcePlaceholder.textContent = message;
+      sourcePlaceholder.classList.add('da-authoring-missing-content');
+    }
+    root.querySelector('[data-ref="auth-source-controls"]')?.toggleAttribute('hidden', true);
+    root.querySelector('[data-ref="auth-output-controls"]')?.toggleAttribute('hidden', true);
+    root.querySelector('[data-ref="auth-output-placeholder"]')?.toggleAttribute('hidden', true);
+
+    if (outputPreview instanceof HTMLElement) {
+      outputPreview.classList.add('da-authoring-program-preview-host--placeholder');
+      outputPreview.innerHTML = `<p class="da-authoring-missing-content">${message}</p>`;
+    }
+    return;
+  }
+
+  pickSource?.toggleAttribute('hidden', false);
+  missingSource?.toggleAttribute('hidden', true);
+  if (sourcePlaceholder) {
+    sourcePlaceholder.textContent = 'Choose a source video to show playback and framing controls.';
+    sourcePlaceholder.classList.remove('da-authoring-missing-content');
+  }
+}
+
 function setSourceLoaded(root: HTMLElement, loaded: boolean): void {
+  if (!loaded) {
+    setMissingContent(root, null);
+  }
   root.querySelector('[data-ref="auth-pick-source"]')?.toggleAttribute('hidden', loaded);
+  root.querySelector('[data-ref="auth-missing-source"]')?.toggleAttribute('hidden', true);
   root.querySelector('[data-ref="auth-source-toolbar"]')?.toggleAttribute('hidden', !loaded);
   root.querySelector('[data-ref="auth-source-placeholder"]')?.toggleAttribute('hidden', loaded);
   root.querySelector('[data-ref="auth-source-controls"]')?.toggleAttribute('hidden', !loaded);
@@ -443,11 +491,35 @@ async function loadLibraryClip(destinationId: string): Promise<void> {
     return;
   }
   lastLibraryDestId = destinationId;
+  if (!getAuthoring360Source(destinationId)) {
+    if (wiredRoot) {
+      setSourceLoaded(wiredRoot, false);
+      setMode(wiredRoot, 'none');
+      const destination = getDestinationById(destinationId);
+      if (destination) {
+        setMissingContent(
+          wiredRoot,
+          destinationMissingContentMessage(localizedDestinationName(destination, wiredLocale)),
+        );
+      }
+    }
+    return;
+  }
+  if (wiredRoot) {
+    setMissingContent(wiredRoot, null);
+  }
   const file = await fetchAuthoring360File(destinationId);
   if (!file || !applyLibraryFile) {
     if (wiredRoot) {
       setSourceLoaded(wiredRoot, false);
       setMode(wiredRoot, 'none');
+      const destination = getDestinationById(destinationId);
+      if (destination) {
+        setMissingContent(
+          wiredRoot,
+          destinationMissingContentMessage(localizedDestinationName(destination, wiredLocale)),
+        );
+      }
     }
     return;
   }
@@ -458,9 +530,15 @@ async function loadLibraryClip(destinationId: string): Promise<void> {
   });
 }
 
-export function wireAuthoringPipeline(root: HTMLElement, destinationId?: string): void {
+export function wireAuthoringPipeline(
+  root: HTMLElement,
+  destinationId?: string,
+  locale = 'en',
+): void {
+  wiredLocale = locale;
   if (wiredRoot === root) {
     if (destinationId) {
+      lastLibraryDestId = '';
       void loadLibraryClip(destinationId);
     }
     return;
@@ -495,6 +573,7 @@ export function wireAuthoringPipeline(root: HTMLElement, destinationId?: string)
     state.pitch = state.defaultPitch;
     state.horizontalFov = state.defaultHorizontalFov;
 
+    setMissingContent(root, null);
     wasm.setProperty('inputFile', detail.file);
     setSourceLoaded(root, true);
     syncSourceDimensionsNote(root);
@@ -794,6 +873,7 @@ export function resetAuthoringWiring(): void {
   revokeSourceUrl();
   resetAuthoringPlaybackBar();
   wiredRoot = null;
+  wiredLocale = 'en';
   applyLibraryFile = null;
   lastLibraryDestId = '';
   state.mode = 'none';

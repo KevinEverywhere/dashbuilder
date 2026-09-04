@@ -30,7 +30,9 @@ import { WasmMedia } from '@rosettadash/angular/visual/wasm/media';
 import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
+  destinationMissingContentMessage,
   fetchAuthoring360File,
+  getAuthoring360Source,
   getAuthoringExampleById,
   getAuthoringExampleForDestinationId,
   getDestinationById,
@@ -190,6 +192,10 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 aria-busy="true"
                 aria-label="Loading source video"
               ></div>
+            } @else if (showMissingContent()) {
+              <div class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
+                <p class="da-authoring-missing-content">{{ missingContentMessage() }}</p>
+              </div>
             } @else {
               <div class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
                 <label class="da-authoring-choose-file">
@@ -209,6 +215,10 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
           <div class="da-authoring-workspace__video-col">
             @if (sourceUrl()) {
               <div #outputPreviewHost class="da-authoring-program-preview-host"></div>
+            } @else if (showMissingContent()) {
+              <div class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
+                <p class="da-authoring-missing-content">{{ missingContentMessage() }}</p>
+              </div>
             } @else {
               <div class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
                 <p class="da-authoring-output-placeholder">Choose source file to create output</p>
@@ -219,7 +229,11 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
 
         <div class="da-authoring-workspace__footers">
           <div class="da-authoring-pane da-authoring-pane--source" aria-label="Authoring source controls">
-            @if (!sourceUrl() && !sourceLoadBusy()) {
+            @if (!sourceUrl() && !sourceLoadBusy() && showMissingContent()) {
+              <p class="da-note da-authoring-controls-placeholder da-authoring-missing-content">
+                {{ missingContentMessage() }}
+              </p>
+            } @else if (!sourceUrl() && !sourceLoadBusy()) {
               <p class="da-note da-authoring-controls-placeholder">
                 Choose a source video to show playback and framing controls.
               </p>
@@ -487,6 +501,7 @@ export class AuthoringScreenComponent {
   readonly sourceUrl = signal<string | null>(null);
   readonly sourceLoadBusy = signal(false);
   readonly sourceLoadError = signal<string | null>(null);
+  readonly libraryAutoloadResolved = signal(false);
   readonly cropRegion = signal<CropRegion | null>(null);
   readonly extractUrl = signal<string | null>(null);
   readonly extractFilter = signal('');
@@ -531,6 +546,29 @@ export class AuthoringScreenComponent {
 
   readonly example = computed(
     () => getAuthoringExampleById(this.exampleId()) ?? DESTINATION_ATLAS_AUTHORING_EXAMPLES[0],
+  );
+
+  readonly activeDestination = computed(() => {
+    const selectedId = this.atlas.selectedId();
+    const fromSelection = selectedId ? getDestinationById(selectedId) : undefined;
+    const example = this.example();
+    return fromSelection ?? (example ? getDestinationById(example.destinationId) : undefined);
+  });
+
+  readonly missingContentMessage = computed(() => {
+    const destination = this.activeDestination();
+    return destination
+      ? destinationMissingContentMessage(localizedDestinationName(destination, this.atlas.locale()))
+      : '';
+  });
+
+  readonly showMissingContent = computed(
+    () =>
+      Boolean(this.activeDestination()) &&
+      this.libraryAutoloadResolved() &&
+      !this.inputFile() &&
+      !this.sourceLoadBusy() &&
+      !this.sourceUrl(),
   );
 
   readonly exampleOptions = computed(() =>
@@ -656,8 +694,14 @@ export class AuthoringScreenComponent {
       if (!destId || this.userPickedFile) {
         return;
       }
+      if (!getAuthoring360Source(destId)) {
+        this.sourceLoadBusy.set(false);
+        this.libraryAutoloadResolved.set(true);
+        return;
+      }
       let cancelled = false;
       this.sourceLoadBusy.set(true);
+      this.libraryAutoloadResolved.set(false);
       this.sourceLoadError.set(null);
       void fetchAuthoring360File(destId)
         .then((file) => {
@@ -675,6 +719,11 @@ export class AuthoringScreenComponent {
           }
           this.sourceLoadBusy.set(false);
           this.sourceLoadError.set(error instanceof Error ? error.message : String(error));
+        })
+        .finally(() => {
+          if (!cancelled) {
+            this.libraryAutoloadResolved.set(true);
+          }
         });
       onCleanup(() => {
         cancelled = true;

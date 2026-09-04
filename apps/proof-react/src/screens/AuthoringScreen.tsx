@@ -27,8 +27,10 @@ import {
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
   getAuthoringExampleById,
   fetchAuthoring360File,
+  getAuthoring360Source,
   getAuthoringExampleForDestinationId,
   getDestinationById,
+  destinationMissingContentMessage,
   MOCK_DESTINATIONS,
   AUTHORING_360_DISPLAY_CATALOG,
   authoring360CatalogJson,
@@ -92,6 +94,7 @@ export function AuthoringScreen({
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [sourceLoadBusy, setSourceLoadBusy] = useState(false);
   const [sourceLoadError, setSourceLoadError] = useState<string | null>(null);
+  const [libraryAutoloadResolved, setLibraryAutoloadResolved] = useState(false);
   const [cropRegion, setCropRegion] = useState<CropRegion | null>(null);
   const [extractUrl, setExtractUrl] = useState<string | null>(null);
   const [extractResultKind, setExtractResultKind] = useState<'preview-recording' | 'ffmpeg' | null>(null);
@@ -103,6 +106,13 @@ export function AuthoringScreen({
 
   const example = getAuthoringExampleById(exampleId) ?? DESTINATION_ATLAS_AUTHORING_EXAMPLES[0];
   const destination = example ? getDestinationById(example.destinationId) : undefined;
+  const activeDestination = (selectedId ? getDestinationById(selectedId) : undefined) ?? destination;
+  const missingContentMessage = activeDestination
+    ? destinationMissingContentMessage(localizedDestinationName(activeDestination, locale))
+    : '';
+  const showMissingContent = Boolean(
+    activeDestination && libraryAutoloadResolved && !inputFile && !sourceLoadBusy && !sourceUrl,
+  );
 
   const [yaw, setYaw] = useState(example?.defaultYaw ?? 25);
   const [pitch, setPitch] = useState(example?.defaultPitch ?? -8);
@@ -239,8 +249,14 @@ export function AuthoringScreen({
     if (!selectedId || userPickedFileRef.current) {
       return;
     }
+    if (!getAuthoring360Source(selectedId)) {
+      setSourceLoadBusy(false);
+      setLibraryAutoloadResolved(true);
+      return;
+    }
     let cancelled = false;
     setSourceLoadBusy(true);
+    setLibraryAutoloadResolved(false);
     setSourceLoadError(null);
     void fetchAuthoring360File(selectedId)
       .then((file) => {
@@ -258,6 +274,11 @@ export function AuthoringScreen({
         }
         setSourceLoadBusy(false);
         setSourceLoadError(error instanceof Error ? error.message : String(error));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLibraryAutoloadResolved(true);
+        }
       });
     return () => {
       cancelled = true;
@@ -618,6 +639,10 @@ export function AuthoringScreen({
                 aria-busy="true"
                 aria-label="Loading source video"
               />
+            ) : showMissingContent ? (
+              <div className="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
+                <p className="da-authoring-missing-content">{missingContentMessage}</p>
+              </div>
             ) : (
               <div className="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
                 <label className="da-authoring-choose-file">
@@ -640,6 +665,10 @@ export function AuthoringScreen({
                 ref={setOutputPreviewHost}
                 className="da-authoring-program-preview-host"
               />
+            ) : showMissingContent ? (
+              <div className="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
+                <p className="da-authoring-missing-content">{missingContentMessage}</p>
+              </div>
             ) : (
               <div className="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
                 <p className="da-authoring-output-placeholder">Choose source file to create output</p>
@@ -651,9 +680,15 @@ export function AuthoringScreen({
         <div className="da-authoring-workspace__footers">
           <div className="da-authoring-pane da-authoring-pane--source" aria-label="Authoring source controls">
             {!sourceUrl && !sourceLoadBusy ? (
-              <p className="da-note da-authoring-controls-placeholder">
-                Choose a source video to show playback and framing controls.
-              </p>
+              showMissingContent ? (
+                <p className="da-note da-authoring-controls-placeholder da-authoring-missing-content">
+                  {missingContentMessage}
+                </p>
+              ) : (
+                <p className="da-note da-authoring-controls-placeholder">
+                  Choose a source video to show playback and framing controls.
+                </p>
+              )
             ) : !sourceReady ? (
               <p className="da-note da-authoring-controls-placeholder" aria-busy="true">
                 Loading source video…

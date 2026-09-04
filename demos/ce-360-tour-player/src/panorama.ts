@@ -8,6 +8,7 @@ import {
 export interface PanoramaViewport {
   element: HTMLDivElement;
   setVideoUrl(url: string | null): void;
+  setMissingContent(message: string | null): void;
   setHeading(label: string): void;
 }
 
@@ -41,11 +42,15 @@ export function createPanoramaViewport(
   hint.className = 'rd-tour-pano__hint';
   hint.textContent = 'Drag to look around';
 
+  const missingContent = document.createElement('p');
+  missingContent.className = 'rd-tour-pano__missing-content';
+  missingContent.hidden = true;
+
   const label = document.createElement('span');
   label.className = 'rd-tour-pano__label';
   label.textContent = 'Scene viewport';
 
-  element.append(viewport, hint, label);
+  element.append(viewport, hint, missingContent, label);
 
   let freezeTimer: number | undefined;
 
@@ -71,8 +76,23 @@ export function createPanoramaViewport(
     { once: true },
   );
 
+  const setMissingContent = (message: string | null) => {
+    if (message) {
+      missingContent.textContent = message;
+      missingContent.hidden = false;
+      hint.hidden = true;
+      element.classList.add('rd-tour-pano--fallback');
+      viewport.removeAttribute('video-src');
+      return;
+    }
+    missingContent.textContent = '';
+    missingContent.hidden = true;
+    hint.hidden = false;
+  };
+
   const setVideoUrl = (url: string | null) => {
     element.classList.remove('rd-tour-pano--interacted');
+    setMissingContent(null);
     if (!url) {
       viewport.removeAttribute('video-src');
       element.classList.add('rd-tour-pano--fallback');
@@ -89,6 +109,7 @@ export function createPanoramaViewport(
   return {
     element,
     setVideoUrl,
+    setMissingContent,
     setHeading(next: string) {
       label.textContent = next;
     },

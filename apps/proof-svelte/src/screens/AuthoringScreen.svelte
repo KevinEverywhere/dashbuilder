@@ -196,6 +196,10 @@
               aria-busy="true"
               aria-label="Loading source video"
             ></div>
+          {:else if screen.showMissingContent}
+            <div class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
+              <p class="da-authoring-missing-content">{screen.missingContentMessage}</p>
+            </div>
           {:else}
             <div class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
               <label class="da-authoring-choose-file">
@@ -215,6 +219,10 @@
       <div class="da-authoring-workspace__video-col">
         {#if screen.sourceUrl}
           <div bind:this={outputPreviewHost} class="da-authoring-program-preview-host"></div>
+        {:else if screen.showMissingContent}
+          <div class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
+            <p class="da-authoring-missing-content">{screen.missingContentMessage}</p>
+          </div>
         {:else}
           <div class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder">
             <p class="da-authoring-output-placeholder">Choose source file to create output</p>
@@ -225,7 +233,11 @@
 
     <div class="da-authoring-workspace__footers">
       <div class="da-authoring-pane da-authoring-pane--source" aria-label="Authoring source controls">
-        {#if !screen.sourceUrl && !screen.sourceLoadBusy}
+        {#if !screen.sourceUrl && !screen.sourceLoadBusy && screen.showMissingContent}
+          <p class="da-note da-authoring-controls-placeholder da-authoring-missing-content">
+            {screen.missingContentMessage}
+          </p>
+        {:else if !screen.sourceUrl && !screen.sourceLoadBusy}
           <p class="da-note da-authoring-controls-placeholder">
             Choose a source video to show playback and framing controls.
           </p>

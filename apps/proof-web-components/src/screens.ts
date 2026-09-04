@@ -473,6 +473,13 @@ export function renderAuthoring(atlas: AtlasState): string {
                 Choose video file
               </label>
             </div>
+            <div
+              class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder"
+              data-ref="auth-missing-source"
+              hidden
+            >
+              <p class="da-authoring-missing-content" data-ref="auth-missing-message"></p>
+            </div>
             <rd-flat-video-viewport
               class="da-authoring-flat-viewport"
               hidden

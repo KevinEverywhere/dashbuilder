@@ -18,7 +18,9 @@ import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
   fetchAuthoring360File,
+  getAuthoring360Source,
   getAuthoringExampleById,
+  destinationMissingContentMessage,
   getAuthoringExampleForDestinationId,
   getDestinationById,
 } from '@destination-atlas';
@@ -50,6 +52,7 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
   const sourceUrl = ref<string | null>(null);
   const sourceLoadBusy = ref(false);
   const sourceLoadError = ref<string | null>(null);
+  const libraryAutoloadResolved = ref(false);
   const cropRegion = ref<CropRegion | null>(null);
   const extractUrl = ref<string | null>(null);
   const extractFilter = ref('');
@@ -89,6 +92,23 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
 
   const example = computed(
     () => getAuthoringExampleById(exampleId.value) ?? DESTINATION_ATLAS_AUTHORING_EXAMPLES[0],
+  );
+  const activeDestination = computed(() => {
+    const destId = selectedId.value;
+    return (destId ? getDestinationById(destId) : undefined) ?? getDestinationById(example.value.destinationId);
+  });
+  const missingContentMessage = computed(() =>
+    activeDestination.value
+      ? destinationMissingContentMessage(localizedDestinationName(activeDestination.value, locale.value))
+      : '',
+  );
+  const showMissingContent = computed(
+    () =>
+      Boolean(activeDestination.value) &&
+      libraryAutoloadResolved.value &&
+      !inputFile.value &&
+      !sourceLoadBusy.value &&
+      !sourceUrl.value,
   );
 
   const exampleOptions = computed(() =>
@@ -455,8 +475,14 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
     if (!destId || userPickedFile) {
       return;
     }
+    if (!getAuthoring360Source(destId)) {
+      sourceLoadBusy.value = false;
+      libraryAutoloadResolved.value = true;
+      return;
+    }
     let cancelled = false;
     sourceLoadBusy.value = true;
+    libraryAutoloadResolved.value = false;
     sourceLoadError.value = null;
     void fetchAuthoring360File(destId)
       .then((file) => {
@@ -474,6 +500,11 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
         }
         sourceLoadBusy.value = false;
         sourceLoadError.value = error instanceof Error ? error.message : String(error);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          libraryAutoloadResolved.value = true;
+        }
       });
     onCleanup(() => {
       cancelled = true;
@@ -666,6 +697,8 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
     applyLittlePlanetPreset,
     onExtractProgress,
     onExtractComplete,
+    showMissingContent,
+    missingContentMessage,
     onExtractError,
   };
 }

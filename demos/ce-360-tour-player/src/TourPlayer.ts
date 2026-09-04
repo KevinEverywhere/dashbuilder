@@ -2,6 +2,7 @@ import { createPanoramaViewport } from './panorama';
 import {
   attributionNoticeJson,
   authoring360Attribution,
+  destinationMissingContentMessage,
   mapProviderAttribution,
   THREE_JS_ATTRIBUTION,
 } from '@destination-atlas';
@@ -169,9 +170,11 @@ export function createTourPlayer(options: TourPlayerOptions = {}): HTMLElement {
     pano.setVideoUrl(scene.videoUrl);
     pano.setHeading(scene.heading);
     if (scene.status === 'upload-required') {
+      pano.setMissingContent(destinationMissingContentMessage(scene.label));
       badge.setAttribute('status-text', 'Upload in Authoring');
       badge.setAttribute('tone', 'warning');
     } else {
+      pano.setMissingContent(null);
       badge.setAttribute('status-text', '360 still');
       badge.setAttribute('tone', 'success');
     }

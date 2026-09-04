@@ -45,6 +45,15 @@ export function destinationsMissingAuthoring360(): string[] {
   return MOCK_DESTINATIONS.map((dest) => dest.id).filter((id) => !sourceByDestinationId.has(id));
 }
 
+/** User-facing copy when a destination has no library clip in the player viewport. */
+export function destinationMissingContentMessage(destinationName: string): string {
+  return `We currently have no content for ${destinationName}. Please try again later.`;
+}
+
+export function destinationAuthoring360Shipped(destinationId: string): boolean {
+  return sourceByDestinationId.has(destinationId);
+}
+
 /** One row per destination for Authoring UI — shipped clips + upload gaps. */
 export interface Authoring360CatalogEntry {
   destinationId: string;

@@ -452,7 +452,11 @@ function wireSettings(root: HTMLElement): void {
 }
 
 function wireAuthoring(root: HTMLElement): void {
-  wireAuthoringPipeline(root.querySelector('[data-ref="screen-root"]') ?? root, atlas.selectedId);
+  wireAuthoringPipeline(
+    root.querySelector('[data-ref="screen-root"]') ?? root,
+    atlas.selectedId,
+    atlas.locale,
+  );
 }
 
 function renderScreenHtml(): string {

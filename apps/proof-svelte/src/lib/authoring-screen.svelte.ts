@@ -14,7 +14,9 @@ import {
 import {
   DEFAULT_AUTHORING_EXAMPLE_ID,
   DESTINATION_ATLAS_AUTHORING_EXAMPLES,
+  destinationMissingContentMessage,
   fetchAuthoring360File,
+  getAuthoring360Source,
   getAuthoringExampleById,
   getAuthoringExampleForDestinationId,
   getDestinationById,
@@ -50,6 +52,7 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
   let sourceUrl = $state<string | null>(null);
   let sourceLoadBusy = $state(false);
   let sourceLoadError = $state<string | null>(null);
+  let libraryAutoloadResolved = $state(false);
   let cropRegion = $state<CropRegion | null>(null);
   let extractUrl = $state<string | null>(null);
   let extractFilter = $state('');
@@ -90,6 +93,27 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
 
   const example = $derived(
     getAuthoringExampleById(exampleId) ?? DESTINATION_ATLAS_AUTHORING_EXAMPLES[0],
+  );
+
+  const activeDestination = $derived.by(() => {
+    const destId = getSelectedId();
+    const fromSelection = destId ? getDestinationById(destId) : undefined;
+    const current = example;
+    return fromSelection ?? (current ? getDestinationById(current.destinationId) : undefined);
+  });
+
+  const missingContentMessage = $derived(
+    activeDestination
+      ? destinationMissingContentMessage(localizedDestinationName(activeDestination, getLocale()))
+      : '',
+  );
+
+  const showMissingContent = $derived(
+    Boolean(activeDestination) &&
+      libraryAutoloadResolved &&
+      !inputFile &&
+      !sourceLoadBusy &&
+      !sourceUrl,
   );
 
   const exampleOptions = $derived(
@@ -431,24 +455,37 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
     if (!destId || userPickedFileRef.current) {
       return;
     }
+    if (!getAuthoring360Source(destId)) {
+      sourceLoadBusy = false;
+      libraryAutoloadResolved = true;
+      return;
+    }
     let cancelled = false;
     sourceLoadBusy = true;
+    libraryAutoloadResolved = false;
     sourceLoadError = null;
-    void fetchAuthoring360File(destId).then((file) => {
-      if (cancelled || userPickedFileRef.current) {
-        return;
-      }
-      sourceLoadBusy = false;
-      if (file) {
-        inputFile = file;
-      }
-    }).catch((error: unknown) => {
-      if (cancelled) {
-        return;
-      }
-      sourceLoadBusy = false;
-      sourceLoadError = error instanceof Error ? error.message : String(error);
-    });
+    void fetchAuthoring360File(destId)
+      .then((file) => {
+        if (cancelled || userPickedFileRef.current) {
+          return;
+        }
+        sourceLoadBusy = false;
+        if (file) {
+          inputFile = file;
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        sourceLoadBusy = false;
+        sourceLoadError = error instanceof Error ? error.message : String(error);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          libraryAutoloadResolved = true;
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -578,6 +615,15 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
     },
     get sourceLoadError() {
       return sourceLoadError;
+    },
+    get libraryAutoloadResolved() {
+      return libraryAutoloadResolved;
+    },
+    get showMissingContent() {
+      return showMissingContent;
+    },
+    get missingContentMessage() {
+      return missingContentMessage;
     },
     get cropRegion() {
       return cropRegion;

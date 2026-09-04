@@ -103,6 +103,24 @@ rd-geo-map.rd-tour-player__map {
   visibility: hidden;
 }
 
+.rd-tour-pano__missing-content {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 1rem;
+  box-sizing: border-box;
+  color: rgb(255 255 255 / 0.92);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  pointer-events: none;
+}
+
 .rd-tour-pano__hint {
   position: absolute;
   z-index: 2;

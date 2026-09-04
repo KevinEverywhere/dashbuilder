@@ -115,6 +115,8 @@ const {
   onExtractProgress,
   onExtractComplete,
   onExtractError,
+  showMissingContent,
+  missingContentMessage,
 } = useAuthoringScreen({ locale, selectedId });
 </script>
 
@@ -214,6 +216,12 @@ const {
               aria-busy="true"
               aria-label="Loading source video"
             ></div>
+            <div
+              v-else-if="showMissingContent"
+              class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder"
+            >
+              <p class="da-authoring-missing-content">{{ missingContentMessage }}</p>
+            </div>
             <div v-else class="da-authoring-sphere-viewport da-authoring-sphere-viewport--placeholder">
               <label class="da-authoring-choose-file">
                 <input
@@ -235,6 +243,12 @@ const {
             class="da-authoring-program-preview-host"
           ></div>
           <div
+            v-else-if="showMissingContent"
+            class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder"
+          >
+            <p class="da-authoring-missing-content">{{ missingContentMessage }}</p>
+          </div>
+          <div
             v-else
             class="da-authoring-program-preview-host da-authoring-program-preview-host--placeholder"
           >
@@ -245,7 +259,13 @@ const {
 
       <div class="da-authoring-workspace__footers">
         <div class="da-authoring-pane da-authoring-pane--source" aria-label="Authoring source controls">
-          <p v-if="!sourceUrl && !sourceLoadBusy" class="da-note da-authoring-controls-placeholder">
+          <p
+            v-if="!sourceUrl && !sourceLoadBusy && showMissingContent"
+            class="da-note da-authoring-controls-placeholder da-authoring-missing-content"
+          >
+            {{ missingContentMessage }}
+          </p>
+          <p v-else-if="!sourceUrl && !sourceLoadBusy" class="da-note da-authoring-controls-placeholder">
             Choose a source video to show playback and framing controls.
           </p>
           <p v-else-if="!sourceReady" class="da-note da-authoring-controls-placeholder" aria-busy="true">
