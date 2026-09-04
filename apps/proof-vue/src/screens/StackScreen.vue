@@ -1,7 +1,7 @@
 <script lang="ts">
 export const STACK_SOURCE = `<StackScreen userRole={userRole}>
   <RoleGate currentRole={userRole} allowedRoles={['admin']} label="Infrastructure stack">
-    <EnvConfig envKeys="DATABASE_URL, GOOGLE_MAPS_KEY, NEWS_API_KEY" keyStatus={…} />
+    <EnvConfig envKeys="DATABASE_URL, GOOGLE_MAPS_KEY" keyStatus={…} />
     …
   </RoleGate>
 </StackScreen>`;
@@ -22,7 +22,7 @@ import RoleGatePanel from '../components/RoleGatePanel.vue';
 import { useConsumerSecrets } from '../composables/use-consumer-secrets';
 import type { AtlasUserRole } from '../lib/roles';
 
-const STACK_ENV_KEYS = ['DATABASE_URL', 'GOOGLE_MAPS_KEY', 'NEWS_API_KEY', 'FEATURE_FLAGS'];
+const STACK_ENV_KEYS = ['DATABASE_URL', 'GOOGLE_MAPS_KEY', 'FEATURE_FLAGS'];
 
 defineProps<{ userRole: AtlasUserRole }>();
 

@@ -177,7 +177,6 @@ function openSetting(field: SettingFieldTarget | 'theme' | 'ai') {
                 @update:news-query="atlas.setNewsQuery"
                 @update:news-region="atlas.setNewsRegion"
                 @update:selected-article-id="atlas.setSelectedArticleId"
-                @open-settings="openSetting('integrations')"
               />
               <PlanScreen
                 v-else-if="atlas.screen.value === 'plan'"

@@ -24,7 +24,6 @@ import { resolveMapLocationQuery } from './lib/map-location.js';
 import { screenAllowedForRole } from './lib/roles.js';
 import { subscribeRouter } from './lib/router.js';
 import { createThemePreference, type ThemePreference } from './lib/theme.js';
-import { fetchLiveNewsArticles, type LiveNewsArticle } from './lib/news-api.js';
 import {
   contextSummaryMarkup,
   globeFooterMarkup,
@@ -69,12 +68,6 @@ let carouselIndex = 0;
 let tripStart = '2026-04-10';
 let tripEnd = '2026-04-17';
 let tripDuration = 8;
-let liveNews: { articles: LiveNewsArticle[] | null; warning: string | null; mode: string } = {
-  articles: null,
-  warning: null,
-  mode: 'mock',
-};
-let liveNewsRequest = 0;
 
 function setRouterMode(mode: ClientRouterMode): void {
   routerMode = mode;
@@ -339,8 +332,6 @@ function wireMedia(root: HTMLElement): void {
   });
 }
 
-let liveNewsKey = '';
-
 function wireIntel(root: HTMLElement): void {
   root.querySelector('[data-ref="news-search"]')?.addEventListener('search', (event) => {
     atlas.setNewsQuery((event as CustomEvent<{ query: string }>).detail.query);
@@ -352,43 +343,6 @@ function wireIntel(root: HTMLElement): void {
   });
   root.querySelector('[data-ref="news-table"]')?.addEventListener('row-select', (event) => {
     atlas.setSelectedArticleId((event as CustomEvent<{ id: string }>).detail.id);
-    render();
-  });
-  root.querySelectorAll('[data-ref="open-integrations"]').forEach((el) => {
-    el.addEventListener('click', () => atlas.openSetting('integrations'));
-  });
-  const requestId = ++liveNewsRequest;
-  const apiKey = getConsumerSecrets().newsApiKey;
-  const newsKey = `${apiKey}|${atlas.newsQuery}|${atlas.newsRegion}`;
-  if (!apiKey) {
-    liveNews = { articles: null, warning: null, mode: 'mock' };
-    liveNewsKey = newsKey;
-    return;
-  }
-  if (newsKey === liveNewsKey) {
-    return;
-  }
-  liveNewsKey = newsKey;
-  void fetchLiveNewsArticles({ apiKey, query: atlas.newsQuery, region: atlas.newsRegion }).then((result) => {
-    if (requestId !== liveNewsRequest || atlas.screen !== 'intel') {
-      return;
-    }
-    if (!result) {
-      liveNews = {
-        articles: null,
-        warning:
-          'NEWS_API_KEY is configured but the browser blocked the request (typical NewsAPI CORS). Showing mock headlines.',
-        mode: 'mock',
-      };
-    } else if (result.articles.length) {
-      liveNews = { articles: result.articles, warning: result.warning ?? null, mode: 'live' };
-    } else {
-      liveNews = {
-        articles: null,
-        warning: result.warning ?? 'News API returned no results — showing mock headlines.',
-        mode: 'mock',
-      };
-    }
     render();
   });
 }
@@ -516,7 +470,7 @@ function renderScreenHtml(): string {
     case 'authoring':
       return renderAuthoring(atlas);
     case 'intel':
-      return renderIntel(atlas, liveNews);
+      return renderIntel(atlas);
     case 'plan':
       return renderPlan(atlas, { start: tripStart, end: tripEnd, duration: tripDuration });
     case 'views': {

@@ -4,7 +4,11 @@ Short silent MP4s for Destination Atlas Authoring. Each file is an
 8-second encode of a Wikimedia Commons still that is already ~2:1
 equirectangular (or padded to 2048×1024).
 
-Regenerate (does not commit binaries):
+**Shipped in git:** `media/authoring-360/*.mp4` (~14 MB total). After
+`npm install`, `authoring:link-360` symlinks them into proof apps and
+`demo:tour`.
+
+Rebuild from Commons (optional; needs ffmpeg + network):
 
 ```
 npm run authoring:fetch-360

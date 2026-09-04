@@ -32,7 +32,7 @@ RosettaDash runs on **your machine** during development. There is no required pu
 |------|------|-----|
 | **Product (this repo)** | Contribute, run the visual builder | `git clone` → `npm install` → `npm start` |
 | **Components (scoped npm)** | Drop typed elements into an existing app | `npm install @rosettadash/<runtime>` |
-| **Destination Atlas (proof apps)** | See a full consumer product on each runtime | Clone repo → `npm run proof:react` (or `:web-components`, `:angular`, `:vue`, `:svelte`) |
+| **Destination Atlas (proof apps)** | See a full consumer product on each runtime | Clone repo → `npm install` → `npm run proof:react` (or `:web-components`, `:angular`, `:vue`, `:svelte`) |
 | **Storybook (repo only)** | Browse components in isolation | `npm run storybook:web-components` (or `:react`, `:vue`, `:angular`, `:svelte`) |
 
 ```ts
@@ -80,6 +80,11 @@ Five Nx apps share mock data from `libs/destination-atlas/` and the same screens
 Most screens are native to that runtime. **Svelte** embeds Vue Globe, Angular Media, and `<rd-geo-map>` on Map ([DAS-158](https://planetkevin.atlassian.net/browse/DAS-158)); Authoring is native Svelte ([DAS-179](https://planetkevin.atlassian.net/browse/DAS-179)). **Web Components** and **Vue** proofs stay native end to end ([DAS-121](https://planetkevin.atlassian.net/browse/DAS-121), [DAS-157](https://planetkevin.atlassian.net/browse/DAS-157)).
 
 Full guide: [docs/43-destination-atlas-proof-apps.md](docs/43-destination-atlas-proof-apps.md).
+
+After `npm install`, Authoring 360° clips and `demo:tour` media are
+linked automatically (`postinstall` → `authoring:link-360`). Clips live
+in `libs/destination-atlas/media/authoring-360/` (twenty-six MP4s,
+~14 MB, tracked in git).
 
 ## Component examples (Storybook)
 
@@ -161,6 +166,13 @@ npm run setup:e2e      # Playwright Chromium (required once for e2e)
 npm run e2e:fresh      # use once after setup:e2e if Nx replays an old cached failure
 npm run verify:all     # optional sanity check
 ```
+
+`npm install` also runs **`authoring:link-360`** (via `postinstall`): it
+symlinks the twenty-six shipped Authoring / tour MP4s from
+`libs/destination-atlas/media/authoring-360/` into each proof app and
+`demo:tour`. Those clips are **in the repo** (~14 MB). To rebuild from
+Wikimedia Commons stills: `npm run authoring:fetch-360` (needs **ffmpeg**
+and network).
 
 If you skip `npm run setup:e2e`, e2e fails with `Executable doesn't exist at .../ms-playwright/...`. Equivalent:
 

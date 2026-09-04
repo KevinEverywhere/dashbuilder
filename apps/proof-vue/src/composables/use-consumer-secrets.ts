@@ -13,12 +13,10 @@ import {
   isAtlasKeyConfigured,
   resolveAtlasGoogleMapsKey,
   resolveAtlasMapTilerKey,
-  resolveAtlasNewsKey,
   resolveAtlasSecret,
   maplibreTileUrlForStore,
   GOOGLE_MAPS_API_KEY,
   MAPTILER_API_KEY,
-  NEWS_API_KEY,
 } from '../lib/atlas-secrets';
 
 export interface ConsumerSecretsContextValue {
@@ -37,7 +35,6 @@ export interface ConsumerSecretsContextValue {
   scoutAiReady: boolean;
   googleMapsApiKey: string;
   mapTilerApiKey: string;
-  newsApiKey: string;
   maplibreTileUrl?: string;
   stackKeyStatus: (envKeys: string[]) => Array<{ envKey: string; configured: boolean }>;
 }
@@ -141,9 +138,6 @@ export function provideConsumerSecrets(app?: App) {
     get mapTilerApiKey() {
       return resolveAtlasMapTilerKey(store);
     },
-    get newsApiKey() {
-      return resolveAtlasNewsKey(store);
-    },
     get maplibreTileUrl() {
       return maplibreTileUrlForStore(store);
     },
@@ -167,4 +161,4 @@ export function useConsumerSecrets(): ConsumerSecretsContextValue {
   return context;
 }
 
-export { GOOGLE_MAPS_API_KEY, MAPTILER_API_KEY, NEWS_API_KEY };
+export { GOOGLE_MAPS_API_KEY, MAPTILER_API_KEY };

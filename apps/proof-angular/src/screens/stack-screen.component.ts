@@ -11,7 +11,7 @@ import { AtlasStateService } from '../services/atlas-state.service';
 import { ConsumerSecretsService } from '../services/consumer-secrets.service';
 import { RoleGatePanelComponent } from '../components/role-gate-panel.component';
 
-const STACK_ENV_KEYS = ['DATABASE_URL', 'GOOGLE_MAPS_KEY', 'NEWS_API_KEY', 'FEATURE_FLAGS'];
+const STACK_ENV_KEYS = ['DATABASE_URL', 'GOOGLE_MAPS_KEY', 'FEATURE_FLAGS'];
 
 @Component({
   selector: 'da-stack-screen',

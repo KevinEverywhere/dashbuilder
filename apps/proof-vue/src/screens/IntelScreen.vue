@@ -6,15 +6,13 @@ export const INTEL_SOURCE = `<IntelScreen userRole={userRole} newsQuery={newsQue
 </script>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { NewsArticleDetail } from '@rosettadash/vue/visual/news/article-detail';
 import { NewsRegionSelect } from '@rosettadash/vue/visual/news/region-select';
 import { NewsResultsTable } from '@rosettadash/vue/visual/news/results-table';
 import { NewsSearchBox } from '@rosettadash/vue/visual/news/search-box';
 import RoleGatePanel from '../components/RoleGatePanel.vue';
-import { useConsumerSecrets } from '../composables/use-consumer-secrets';
 import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
-import { fetchLiveNewsArticles, type LiveNewsArticle } from '../lib/news-api';
 import type { AtlasUserRole } from '../lib/roles';
 
 const props = defineProps<{
@@ -28,52 +26,10 @@ const emit = defineEmits<{
   'update:newsQuery': [string];
   'update:newsRegion': [string];
   'update:selectedArticleId': [string];
-  openSettings: [];
 }>();
 
-const secrets = useConsumerSecrets();
-const liveArticles = ref<LiveNewsArticle[] | null>(null);
-const liveWarning = ref<string | null>(null);
-const liveMode = ref<'idle' | 'loading' | 'mock' | 'live'>('idle');
-
-watch(
-  () => [secrets.newsApiKey, props.newsQuery, props.newsRegion] as const,
-  ([apiKey, query, region]) => {
-    if (!apiKey) {
-      liveArticles.value = null;
-      liveWarning.value = null;
-      liveMode.value = 'mock';
-      return;
-    }
-    liveMode.value = 'loading';
-    void fetchLiveNewsArticles({ apiKey, query, region }).then((result) => {
-      if (!result) {
-        liveArticles.value = null;
-        liveWarning.value =
-          'NEWS_API_KEY is configured but the browser blocked the request (typical NewsAPI CORS). Showing mock headlines.';
-        liveMode.value = 'mock';
-        return;
-      }
-      if (result.articles.length) {
-        liveArticles.value = result.articles;
-        liveWarning.value = result.warning ?? null;
-        liveMode.value = 'live';
-        return;
-      }
-      liveArticles.value = null;
-      liveWarning.value = result.warning ?? 'News API returned no results — showing mock headlines.';
-      liveMode.value = 'mock';
-    });
-  },
-  { immediate: true },
-);
-
-const articleSource = computed(() =>
-  liveMode.value === 'live' && liveArticles.value?.length ? liveArticles.value : MOCK_NEWS,
-);
-
 const filtered = computed(() =>
-  articleSource.value.filter((article) => {
+  MOCK_NEWS.filter((article) => {
     const matchesQuery =
       !props.newsQuery || article.headline.toLowerCase().includes(props.newsQuery.toLowerCase());
     const matchesRegion = !props.newsRegion || article.region === props.newsRegion;
@@ -87,13 +43,13 @@ const selectedArticle = computed(() => filtered.value.find((a) => a.id === props
 <template>
   <section class="da-panel">
     <h2>Intel</h2>
-    <p>Regional news discovery with optional live NewsAPI when a key is configured in Settings.</p>
+    <p>Hidden route — not in Destination Atlas nav. Palette news-discovery demo for source parity.</p>
 
     <RoleGatePanel
-      gate-label="News discovery"
+      gate-label="Palette demo"
       :current-role="userRole"
       :allowed-roles="['editor', 'admin']"
-      status-text="Editor news tools"
+      status-text="Editor palette demo"
       hidden-status-text="Intel search is hidden for Viewer role."
     >
       <div class="da-stack da-stack--2">
@@ -107,14 +63,6 @@ const selectedArticle = computed(() => filtered.value.find((a) => a.id === props
         />
       </div>
     </RoleGatePanel>
-
-    <p v-if="!secrets.newsApiKey" class="da-note da-byok-cta">
-      Using mock headlines.
-      <button type="button" class="da-locale-link" @click="emit('openSettings')">
-        Add NEWS_API_KEY in Settings → Integrations
-      </button>
-    </p>
-    <p v-else-if="liveWarning" class="da-note">{{ liveWarning }}</p>
 
     <div class="da-intel-layout">
       <NewsResultsTable

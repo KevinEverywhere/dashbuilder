@@ -136,7 +136,7 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
   {
     id: 'intel',
     label: 'Intel',
-    description: 'Region-filtered news and discovery.',
+    description: 'Hidden route stub — not in nav (redirects to About).',
   },
   {
     id: 'plan',
@@ -146,7 +146,7 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
   {
     id: 'views',
     label: 'Views',
-    description: 'Advanced charts, journey flows, and media carousel demos.',
+    description: 'Hidden route stub — advanced chart demos (not in nav).',
   },
   {
     id: 'stack',
@@ -160,7 +160,7 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
   },
 ];
 
-/** Screens shown in the proof-app tab bar. Views and Intel stay in the catalog but are hidden (DAS-164). */
+/** Screens shown in the proof-app tab bar. Intel and Views stay in the catalog but are hidden (DAS-164). */
 export const DESTINATION_ATLAS_NAV_SCREENS = DESTINATION_ATLAS_SCREENS.filter((screen) =>
   atlasScreenVisibleInNav(screen.id),
 );

@@ -4,7 +4,6 @@ import {
   CONSUMER_INTEGRATION_FIELDS,
   GOOGLE_MAPS_API_KEY,
   MAPTILER_API_KEY,
-  NEWS_API_KEY,
 } from './integration-catalog';
 import { resolveConsumerSecret, resolveGoogleMapsApiKey } from './resolve-consumer-secret';
 
@@ -13,7 +12,6 @@ describe('integration-catalog', () => {
     expect(CONSUMER_INTEGRATION_FIELDS.map((field) => field.envKey)).toEqual([
       GOOGLE_MAPS_API_KEY,
       MAPTILER_API_KEY,
-      NEWS_API_KEY,
     ]);
   });
 

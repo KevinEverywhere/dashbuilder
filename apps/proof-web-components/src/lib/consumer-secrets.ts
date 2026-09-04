@@ -13,7 +13,6 @@ import {
   maplibreTileUrlForStore,
   resolveAtlasGoogleMapsKey,
   resolveAtlasMapTilerKey,
-  resolveAtlasNewsKey,
   resolveAtlasSecret,
 } from './atlas-secrets';
 
@@ -33,7 +32,6 @@ export interface ConsumerSecretsApi {
   scoutAiReady: boolean;
   googleMapsApiKey: string;
   mapTilerApiKey: string;
-  newsApiKey: string;
   maplibreTileUrl?: string;
   stackKeyStatus: (envKeys: string[]) => Array<{ envKey: string; configured: boolean }>;
 }
@@ -122,7 +120,6 @@ export function getConsumerSecrets(): ConsumerSecretsApi {
     scoutAiReady: scoutAiProviderReady(hasConfiguredKey, resolveSecret),
     googleMapsApiKey: resolveAtlasGoogleMapsKey(store),
     mapTilerApiKey: resolveAtlasMapTilerKey(store),
-    newsApiKey: resolveAtlasNewsKey(store),
     maplibreTileUrl: maplibreTileUrlForStore(store),
     stackKeyStatus: (envKeys) => integrationKeyStatus(store, envKeys),
   };

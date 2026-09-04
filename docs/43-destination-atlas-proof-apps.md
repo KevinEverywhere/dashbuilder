@@ -4,11 +4,11 @@
 **Research:** [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126)  
 **Gap WC components:** [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127) app-language-select · [DAS-128](https://planetkevin.atlassian.net/browse/DAS-128) geo-map · [DAS-129](https://planetkevin.atlassian.net/browse/DAS-129) youtube-embed
 
-Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for 26 cities (`npm run authoring:fetch-360`); Barcelona, Nairobi, Rio, and Melbourne stay upload-your-own.
+Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for 26 cities (MP4s ship in `libs/destination-atlas/media/authoring-360/`, ~14 MB; `npm install` links them via `authoring:link-360`); Barcelona, Nairobi, Rio, and Melbourne stay upload-your-own.
 
 ## Product intent
 
-Users explore destinations worldwide: statistics and trends, searchable records, maps and globes, embedded video and 360° tours, regional news, and trip planning. The app is a **functional demo**, not a taxonomy kitchen sink.
+Users explore destinations worldwide: statistics and trends, searchable records, maps and globes, embedded video and 360° tours, and trip planning. The app is a **functional demo**, not a taxonomy kitchen sink.
 
 ### Multilingual apps (not multilingual RosettaDash)
 
@@ -17,7 +17,7 @@ RosettaDash component chrome and builder UI stay English-only. Developers build 
 - **`domain.i18n.app-language-select`** — sets the app base locale (BCP-47), emits `locale-change`
 - Developer-owned i18n (vue-i18n, ngx-translate, react-intl, etc.) wired to that event
 
-Distinct from **`visual.news.language-select`**, which filters news API language — not app UI locale.
+Distinct from **`domain.i18n.app-language-select`** (app UI locale). The RosettaDash palette also ships **`visual.news.*`** components for separate news-discovery dashboards (Storybook / custom exports) — not a Destination Atlas nav tab.
 
 ### Provider choice at component level
 
@@ -60,7 +60,7 @@ The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-
 | **Stack** | Infra demo | infra/* read-only panel; live BYOK key status — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
 | **Settings** | App locale + integrations | AppLanguageSelect; consumer BYOK vault — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
 
-**Nav (DAS-164):** two screens stay in code and are not in the tab bar (those paths redirect to About). They can return later — one when there is current news content, the other when it is redesigned. AI provider keys live under Settings only.
+**Nav (DAS-164):** Intel and Views stay in the route catalog for deep links but are **hidden from the tab bar**; `/intel` and `/views` redirect to About. AI provider keys live under Settings only.
 
 ### About page & scroll policy
 
@@ -74,7 +74,7 @@ Implemented in React proof: [DAS-130](https://planetkevin.atlassian.net/browse/D
 
 **Authoring** is separate from **Media**. Media is for watching flat YouTube embeds; a 360° destination choice on Media routes to Authoring.
 
-**360° library:** twenty-six cities autoload short MP4 clips from Wikimedia Commons stills (`npm run authoring:fetch-360`, catalog in `authoring-360-sources.json`). Barcelona, Nairobi, Rio, and Melbourne are upload-your-own. The **360° destination** pulldown lists all thirty cities; a collapsible JSON catalog panel shows shipped clips and gaps.
+**360° library:** twenty-six cities autoload short MP4 clips (shipped in `libs/destination-atlas/media/authoring-360/`, catalog in `authoring-360-sources.json`). `npm install` symlinks clips into proof apps and `demo:tour`; rebuild from Commons with `npm run authoring:fetch-360`. Barcelona, Nairobi, Rio, and Melbourne are upload-your-own. The **360° destination** pulldown lists all thirty cities; a collapsible JSON catalog panel shows shipped clips and gaps.
 
 - **Source pane** — auto-detects flat vs ~2:1 equirect:
   - **Flat (2D):** `FlatVideoViewport` — draggable crop rectangle, live output mirror
@@ -116,12 +116,11 @@ Branch: `feature/DAS-135-byok-destination-atlas`.
 **Implemented (proof-react):**
 
 - `@rosettadash/core/lib/byok` — `CONSUMER_INTEGRATION_FIELDS`, `ConsumerSecretsStore`, `resolveConsumerSecret()`
-- Settings → **Integration keys (BYOK)** (Admin): Google Maps, MapTiler, News API; encrypted browser vault
+- Settings → **Integration keys (BYOK)** (Admin): Google Maps and MapTiler; encrypted browser vault
 - Map reads BYOK keys (+ `VITE_*` fallback); MapLibre uses MapTiler style URL when configured
-- News API key is stored in Settings (live fetch is not on a nav screen today)
 - Stack `EnvConfig` shows per-key configured / missing status (`keyStatus` prop on `@rosettadash/react/infra/env`)
 
-**Env templates ([DAS-136](https://planetkevin.atlassian.net/browse/DAS-136)):** repo root `.env.example` (builder, AI BYOK, database, server); `apps/proof-react/.env.example` for `VITE_*` map/news fallbacks. Copy to `.env.local` — or use Settings BYOK vault at runtime.
+**Env templates ([DAS-136](https://planetkevin.atlassian.net/browse/DAS-136)):** repo root `.env.example` (builder, AI BYOK, database, server); `apps/proof-react/.env.example` for `VITE_*` map fallbacks. Copy to `.env.local` — or use Settings BYOK vault at runtime.
 
 ## Geo-map providers
 

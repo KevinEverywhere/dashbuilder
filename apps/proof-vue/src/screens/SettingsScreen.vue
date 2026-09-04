@@ -124,7 +124,7 @@ function submitFeedback() {
     >
       <Collapsible
         panel-title="Integration keys (BYOK)"
-        panel-summary="Google Maps, MapTiler, News API"
+        panel-summary="Google Maps, MapTiler, optional keys"
         :open="integrationsOpen"
         class="da-byok-collapsible"
         @open-change="integrationsOpen = $event"
@@ -133,7 +133,7 @@ function submitFeedback() {
           gate-label="Integration keys (BYOK)"
           :current-role="userRole"
           :allowed-roles="['admin']"
-          status-text="Admin can manage API keys for maps, news, and Stack"
+          status-text="Admin can manage API keys for maps, integrations, and Stack"
           :hidden-status-text="`Integration keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`"
         >
           <p v-if="!secrets.loaded" class="da-note">Loading encrypted key vault…</p>

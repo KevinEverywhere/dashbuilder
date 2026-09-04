@@ -179,8 +179,6 @@ export function App() {
                   setNewsRegion={atlas.setNewsRegion}
                   selectedArticleId={atlas.selectedArticleId}
                   setSelectedArticleId={atlas.setSelectedArticleId}
-                  setScreen={atlas.setScreen}
-                  setHighlightTarget={atlas.setHighlightTarget}
                 />
               ) : null}
               {atlas.screen === 'plan' ? <PlanScreen userRole={atlas.userRole} locale={atlas.locale} /> : null}

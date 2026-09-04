@@ -10,7 +10,6 @@ import {
   isAtlasKeyConfigured,
   resolveAtlasGoogleMapsKey,
   resolveAtlasMapTilerKey,
-  resolveAtlasNewsKey,
   resolveAtlasSecret,
   maplibreTileUrlForStore,
 } from '../lib/atlas-secrets';
@@ -40,7 +39,6 @@ export class ConsumerSecretsService {
 
   readonly googleMapsApiKey = computed(() => resolveAtlasGoogleMapsKey(this.store));
   readonly mapTilerApiKey = computed(() => resolveAtlasMapTilerKey(this.store));
-  readonly newsApiKey = computed(() => resolveAtlasNewsKey(this.store));
   readonly maplibreTileUrl = computed(() => maplibreTileUrlForStore(this.store));
 
   constructor() {

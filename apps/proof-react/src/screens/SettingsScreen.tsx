@@ -134,7 +134,7 @@ export function SettingsScreen({
       >
         <Collapsible
           title="Integration keys (BYOK)"
-          summary="Google Maps, MapTiler, News API"
+          summary="Google Maps, MapTiler, optional keys"
           open={integrationsOpen}
           onOpenChange={setIntegrationsOpen}
           className="da-byok-collapsible"
@@ -143,7 +143,7 @@ export function SettingsScreen({
             label="Integration keys (BYOK)"
             currentRole={userRole}
             allowedRoles={['admin']}
-            statusText="Admin can manage API keys for maps, news, and Stack"
+            statusText="Admin can manage API keys for maps, integrations, and Stack"
             hiddenStatusText={`Integration keys are read-only for ${roleLabel(userRole)}. Switch to Admin to configure BYOK.`}
           >
             {!secrets.loaded ? <p className="da-note">Loading encrypted key vault…</p> : null}

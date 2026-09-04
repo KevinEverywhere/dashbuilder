@@ -11,12 +11,16 @@ library clips (`/authoring-360/{id}.mp4`, padded 2:1 equirect from
 Commons stills). Barcelona, Nairobi, Rio, and Melbourne show an upload
 hint.
 
-**Requires local clips** (same as proof apps):
+**After clone:** `npm install` links the twenty-six shipped MP4s from
+`libs/destination-atlas/media/authoring-360/` (included in the repo).
+Then:
 
 ```bash
-npm run authoring:fetch-360
 npm run demo:tour
 ```
+
+Rebuild clips from Commons (optional): `npm run authoring:fetch-360`
+(ffmpeg + network).
 
 Opens [http://localhost:4330](http://localhost:4330).
 

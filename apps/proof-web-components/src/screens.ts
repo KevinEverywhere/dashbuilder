@@ -60,7 +60,6 @@ import { destinationMapView } from './lib/map-location.js';
 import { ATLAS_USER_ROLES, roleLabel, type AtlasUserRole } from './lib/roles.js';
 import { isSettingFieldTarget } from './lib/settings-highlight.js';
 import { themeLabel, type ThemePreference } from './lib/theme.js';
-import type { LiveNewsArticle } from './lib/news-api.js';
 
 const CURRENT_RUNTIME_ID: DestinationAtlasRuntimeId = 'web-components';
 
@@ -613,12 +612,8 @@ export function renderAuthoring(atlas: AtlasState): string {
     </section>`;
 }
 
-export function renderIntel(
-  atlas: AtlasState,
-  live: { articles: LiveNewsArticle[] | null; warning: string | null; mode: string },
-): string {
-  const source = live.mode === 'live' && live.articles?.length ? live.articles : MOCK_NEWS;
-  const filtered = source.filter((article) => {
+export function renderIntel(atlas: AtlasState): string {
+  const filtered = MOCK_NEWS.filter((article) => {
     const q = atlas.newsQuery.toLowerCase();
     const matchesQuery = !q || article.headline.toLowerCase().includes(q) || article.summary.toLowerCase().includes(q);
     const matchesRegion = !atlas.newsRegion || article.region === atlas.newsRegion;
@@ -629,11 +624,9 @@ export function renderIntel(
   return `
     <section class="da-panel">
       <h2>Intel</h2>
-      <p>Regional news discovery with mock headlines${live.mode === 'live' ? ' — live NewsAPI results' : ''}.</p>
-      ${live.warning ? `<p class="da-note da-note--warn">${escapeHtml(live.warning)}</p>` : ''}
-      ${live.mode === 'mock' && !getConsumerSecrets().newsApiKey ? `<p class="da-note">Add a News API key in <button type="button" class="da-locale-link" data-ref="open-integrations">Settings → Integrations</button> to attempt live headlines.</p>` : ''}
+      <p>Hidden route — not in Destination Atlas nav. Palette news-discovery demo for source parity.</p>
       <div class="da-stack">
-        <rd-role-gate label="News editor tools" status-text="Editor access" hidden-status-text="News filters require Editor or Admin." allowed-roles='["editor","admin"]' current-role="${attr(atlas.userRole)}">
+        <rd-role-gate label="Palette demo tools" status-text="Editor access" hidden-status-text="Filters require Editor or Admin." allowed-roles='["editor","admin"]' current-role="${attr(atlas.userRole)}">
           <rd-news-search-box label="Search" placeholder="Search news…" value="${attr(atlas.newsQuery)}" data-ref="news-search"></rd-news-search-box>
           <rd-news-region-select label="Region" placeholder="All regions" options='${jsonAttr(regionOptions)}' value="${attr(atlas.newsRegion)}" data-ref="news-region"></rd-news-region-select>
         </rd-role-gate>
@@ -716,7 +709,7 @@ export function renderViews(atlas: AtlasState, carouselIndex: number): string {
 
 export function renderStack(atlas: AtlasState): string {
   const secrets = getConsumerSecrets();
-  const STACK_ENV_KEYS = ['DATABASE_URL', 'GOOGLE_MAPS_KEY', 'NEWS_API_KEY', 'FEATURE_FLAGS'];
+  const STACK_ENV_KEYS = ['DATABASE_URL', 'GOOGLE_MAPS_KEY', 'FEATURE_FLAGS'];
   const keyStatus = secrets.stackKeyStatus(STACK_ENV_KEYS);
   const infra = [
     { label: 'Analytics DB', kind: 'PostgreSQL', envKey: 'DATABASE_URL', table: 'destinations' },
@@ -829,8 +822,8 @@ export function renderSettings(atlas: AtlasState, theme: ThemePreference): strin
         </div>
       </div>
       <div data-ref="integrations" class="${atlas.highlightTarget === 'integrations' ? 'rd-highlight-target' : ''}">
-        <rd-collapsible class="da-byok-collapsible" title="Integration keys (BYOK)" summary="Google Maps, MapTiler, News API"${atlas.integrationsOpen ? ' open' : ''}>
-          <rd-role-gate label="Integration keys (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage API keys for maps, news, and Stack" hidden-status-text="Integration keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">
+        <rd-collapsible class="da-byok-collapsible" title="Integration keys (BYOK)" summary="Google Maps, MapTiler, optional keys"${atlas.integrationsOpen ? ' open' : ''}>
+          <rd-role-gate label="Integration keys (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage API keys for maps, integrations, and Stack" hidden-status-text="Integration keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">
             <div class="da-byok-fields">${byokFields(secrets.integrationFields)}</div>
             ${byokVaultActions(secrets)}
           </rd-role-gate>

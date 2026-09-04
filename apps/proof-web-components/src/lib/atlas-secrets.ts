@@ -6,14 +6,13 @@ import {
   ConsumerSecretsStore,
   GOOGLE_MAPS_API_KEY,
   MAPTILER_API_KEY,
-  NEWS_API_KEY,
   resolveConsumerSecret,
   resolveGoogleMapsApiKey,
   type EnvFieldDefinition,
 } from '@rosettadash/core';
 import { getViteBuildEnv } from './build-env';
 
-export { GOOGLE_MAPS_API_KEY, MAPTILER_API_KEY, NEWS_API_KEY, CONSUMER_INTEGRATION_FIELDS };
+export { GOOGLE_MAPS_API_KEY, MAPTILER_API_KEY, CONSUMER_INTEGRATION_FIELDS };
 
 export function createAtlasSecretsStore(): ConsumerSecretsStore {
   return new ConsumerSecretsStore();
@@ -32,10 +31,6 @@ export function resolveAtlasGoogleMapsKey(store: ConsumerSecretsStore): string {
 
 export function resolveAtlasMapTilerKey(store: ConsumerSecretsStore): string {
   return resolveAtlasSecret(store, MAPTILER_API_KEY);
-}
-
-export function resolveAtlasNewsKey(store: ConsumerSecretsStore): string {
-  return resolveAtlasSecret(store, NEWS_API_KEY);
 }
 
 export function maplibreTileUrlForStore(store: ConsumerSecretsStore): string | undefined {

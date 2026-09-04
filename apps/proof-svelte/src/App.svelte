@@ -192,7 +192,6 @@
                 onNewsQueryChange={atlas.setNewsQuery}
                 onNewsRegionChange={atlas.setNewsRegion}
                 onSelectedArticleIdChange={atlas.setSelectedArticleId}
-                onOpenSettings={() => openSetting('integrations')}
               />
             {:else if atlas.screen === 'plan'}
               <PlanScreen userRole={atlas.userRole} locale={atlas.locale} />

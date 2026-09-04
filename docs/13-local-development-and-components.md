@@ -31,6 +31,13 @@ npm run setup:e2e
 npm run verify
 ```
 
+**Destination Atlas / Authoring 360°:** twenty-six short MP4 clips ship
+in `libs/destination-atlas/media/authoring-360/` (~14 MB). `npm install`
+runs `authoring:link-360` and symlinks them into each proof app and
+`demo:tour`. Regenerate from Wikimedia Commons: `npm run
+authoring:fetch-360` (ffmpeg + network). Barcelona, Nairobi, Rio, and
+Melbourne stay upload-your-own in Authoring.
+
 If step 2 is skipped, `npm run e2e` and `npm run verify:all` fail with:
 
 ```text

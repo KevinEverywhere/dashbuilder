@@ -63,7 +63,7 @@ const FEEDBACK_MESSAGE = 'Hope you like the app, please leave comments on github
       >
         <da-collapsible
           [panelTitle]="'Integration keys (BYOK)'"
-          [panelSummary]="'Google Maps, MapTiler, News API'"
+          [panelSummary]="'Google Maps, MapTiler, optional keys'"
           class="da-byok-collapsible"
           [open]="integrationsOpen()"
           (openChange)="integrationsOpen.set($event)"
@@ -72,7 +72,7 @@ const FEEDBACK_MESSAGE = 'Hope you like the app, please leave comments on github
             [userRole]="atlas.userRole()"
             [fields]="secrets.integrationFields"
             gateLabel="Integration keys (BYOK)"
-            gateStatusText="Admin can manage API keys for maps, news, and Stack"
+            gateStatusText="Admin can manage API keys for maps, integrations, and Stack"
             [gateHiddenStatusText]="
               'Integration keys are read-only for ' +
               roleLabel(atlas.userRole()) +

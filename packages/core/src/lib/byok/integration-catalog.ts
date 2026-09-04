@@ -3,13 +3,11 @@ import type { EnvFieldDefinition } from './types';
 /** Canonical env keys for Destination Atlas / consumer app integrations. */
 export const GOOGLE_MAPS_API_KEY = 'GOOGLE_MAPS_API_KEY';
 export const MAPTILER_API_KEY = 'MAPTILER_API_KEY';
-export const NEWS_API_KEY = 'NEWS_API_KEY';
 
 /** Legacy / demo aliases surfaced in Stack infra panels. */
 export const CONSUMER_SECRET_ALIASES: Record<string, string[]> = {
   [GOOGLE_MAPS_API_KEY]: ['GOOGLE_MAPS_KEY', 'VITE_GOOGLE_MAPS_API_KEY'],
   [MAPTILER_API_KEY]: ['VITE_MAPTILER_API_KEY'],
-  [NEWS_API_KEY]: ['VITE_NEWS_API_KEY'],
 };
 
 export const CONSUMER_INTEGRATION_FIELDS: EnvFieldDefinition[] = [
@@ -32,17 +30,6 @@ export const CONSUMER_INTEGRATION_FIELDS: EnvFieldDefinition[] = [
     category: 'integration',
     sensitive: true,
     placeholder: 'MapTiler key…',
-    optional: true,
-  },
-  {
-    id: 'integration-news',
-    envKey: NEWS_API_KEY,
-    label: 'News API key',
-    description:
-      'Enables live headline fetch on Intel when configured. Browser CORS may require a server proxy in production apps.',
-    category: 'integration',
-    sensitive: true,
-    placeholder: 'NewsAPI.org key…',
     optional: true,
   },
 ];
