@@ -740,6 +740,28 @@ rd-wasm-media {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.da-parity-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.da-parity-banner--live {
+  background: color-mix(in srgb, #16a34a 12%, var(--da-panel-bg));
+  border: 1px solid color-mix(in srgb, #16a34a 35%, transparent);
+}
+
+.da-parity-banner--offline {
+  background: color-mix(in srgb, #d97706 12%, var(--da-panel-bg));
+  border: 1px solid color-mix(in srgb, #d97706 35%, transparent);
+}
+
+.da-parity-live-table {
+  margin-top: 1rem;
+}
+
 .da-globe {
   margin-top: 0.75rem;
 }

@@ -6,6 +6,7 @@ import {
   mountMetaCompositionCoverage,
 } from '../../../../tools/storybook-shared/meta-compositions/mount-meta-composition.js';
 import { metaCompositionStoryConfig } from '../../../../tools/storybook-shared/meta-compositions/meta-composition-story-config.ts';
+import { mountFullStackOrdersDemo } from '../../../../tools/storybook-shared/full-stack-orders-demo.ts';
 import { storybookAggregateStoryParameters } from '../../../../tools/storybook-shared/storybook-actions.ts';
 import { DomStoryHost } from '../../../../tools/storybook-shared/dom-story-host.tsx';
 import '../../../../tools/storybook-shared/meta-compositions/meta-composition-styles.css';
@@ -64,6 +65,21 @@ export const WasmComputeLab = compositionStory('wasm-compute-lab');
 export const Vr3dGallery = compositionStory('vr-3d-gallery');
 export const DataPlatformPanel = compositionStory('data-platform');
 export const NavigationLayoutShell = compositionStory('navigation-shell');
+
+export const FullStackOrdersLive: Story = {
+  name: 'Full-stack orders (live API)',
+  render: () => (
+    <DomStoryHost mount={() => mountFullStackOrdersDemo({ runtime: 'react' })} />
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Live UI → Next.js parity server (:53103) → seeded PostgreSQL orders. Start the stack with parity:db:up and parity:servers:up.',
+      },
+    },
+  },
+};
 
 export const ComponentCoverageAudit: Story = {
   name: 'Component coverage audit',

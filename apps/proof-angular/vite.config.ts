@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { resolve } from 'node:path';
 import { ffmpegCoreVitePlugin, wasmIsolationHeaders } from '../../tools/vite/ffmpeg-core-vite-plugin.mjs';
+import { parityApiProxy } from '../../tools/vite/parity-api-proxy.ts';
 
 export default defineConfig({
   plugins: [
@@ -43,6 +44,7 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     headers: wasmIsolationHeaders(),
+    proxy: parityApiProxy(53101),
   },
   preview: {
     port: 4312,

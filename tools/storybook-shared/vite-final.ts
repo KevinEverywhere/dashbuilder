@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { mergeConfig, type AliasOptions, type UserConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { ffmpegCoreVitePlugin, wasmIsolationHeaders } from '../vite/ffmpeg-core-vite-plugin.mjs';
+import { parityApiProxy } from '../vite/parity-api-proxy.ts';
 
 const workspaceRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -61,9 +62,15 @@ export function rosettadashAliasEntries(): AliasOptions {
   return entries;
 }
 
+export interface RosettadashViteFinalOptions {
+  /** Host port for the idiomatic parity server — enables `/parity-api` dev proxy. */
+  parityServerPort?: number;
+}
+
 /** Resolve @rosettadash CSS subpaths and workspace packages for Storybook Vite. */
 export async function rosettadashViteFinal(
   config: UserConfig,
+  options: RosettadashViteFinalOptions = {},
 ): Promise<UserConfig> {
   return mergeConfig(config, {
     plugins: [
@@ -75,6 +82,9 @@ export async function rosettadashViteFinal(
     ],
     server: {
       headers: wasmIsolationHeaders(),
+      proxy: options.parityServerPort
+        ? parityApiProxy(options.parityServerPort)
+        : undefined,
     },
     preview: {
       headers: wasmIsolationHeaders(),

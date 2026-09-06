@@ -14,7 +14,7 @@ const config: StorybookConfig = {
   },
   features: rosettadashStorybookFeatures,
   async viteFinal(viteConfig) {
-    return rosettadashViteFinal(viteConfig);
+    return rosettadashViteFinal(viteConfig, { parityServerPort: 53101 });
   },
 };
 

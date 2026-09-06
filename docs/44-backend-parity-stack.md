@@ -264,6 +264,19 @@ Point the probe at the parity containers using the connection strings in
 | `packages/core/src/lib/export/server-database-adapter.ts` | The one seam that makes servers engine-agnostic |
 | `.parity/servers/**` | Generated apps (git-ignored) |
 
+## Full-stack demos in product surfaces (DAS-187)
+
+Once the stack is up, two surfaces prove UI → API → database end to end:
+
+| Surface | Runtime pairing | Where to look |
+|---------|-----------------|---------------|
+| **Storybook** → Catalog / Meta components | React → Next (:53103); Angular → Nest (:53101) | **Full-stack orders (live API)** story |
+| **Destination Atlas** → Stack tab | React proof → Next; Angular proof → Nest | Live `orders` DataTable + infra panel |
+
+Dev servers proxy `/parity-api` to the idiomatic host port so the browser never
+needs CORS on the generated servers. Shared fetch helpers live in
+`libs/destination-atlas/src/data/parity-stack.ts`.
+
 ## Security note
 
 Every credential in this stack is a local dev fixture: database passwords, the

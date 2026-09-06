@@ -59,7 +59,7 @@ The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-
 | **Media** | Flat YouTube + 360° routing | YoutubeEmbed, VideoMetadataPanel — 360° destinations open Authoring |
 | **Authoring** | Upload + WASM extract | Framework proofs: `FlatVideoViewport` or `EquirectSphereViewport`, AuthoringPlaybackBar, WasmMedia. WC proof: `<rd-video-source>`, `<rd-equirect-sphere-viewport>`, `<rd-flat-video-viewport>`, `<rd-wasm-media>` ([DAS-131](https://planetkevin.atlassian.net/browse/DAS-131), [DAS-141](https://planetkevin.atlassian.net/browse/DAS-141)) |
 | **Plan** | Trip + access | RoleGate, PersonInvite, RoleAssign, Timer, form inputs |
-| **Stack** | Infra demo | infra/* read-only panel; live BYOK key status — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
+| **Stack** | Infra demo + live parity API | infra/* read-only panel; seeded `orders` from idiomatic parity server — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135), [DAS-187](https://planetkevin.atlassian.net/browse/DAS-187) |
 | **Settings** | App locale + integrations | AppLanguageSelect; consumer BYOK vault — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
 
 **Nav (DAS-164):** Intel and Views stay in the route catalog for deep links but are **hidden from the tab bar**; `/intel` and `/views` redirect to About. AI provider keys live under Settings only.
