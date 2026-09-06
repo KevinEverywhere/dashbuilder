@@ -128,7 +128,29 @@ See [CI and Hosting](./12-ci-and-hosting.md) for troubleshooting hung tests or s
 2. **Design** — add components from the palette (+), edit properties in the inspector, connect ports (click output → input)
 3. **Save** — toolbar shows “Saved” after `PUT` to the API
 4. **Preview** — toggle Preview mode; mock data loads from `POST /api/preview/data`
-5. **Export** — toolbar **Export** → review files → **Download zip** (requires PostgreSQL + NestJS infra nodes and valid bindings for a full bundle)
+5. **Export** — toolbar **Export** → review files → **Download zip**
+   (requires PostgreSQL + NestJS infra nodes and valid bindings for a full
+   bundle)
+
+### API-backed table (PostgreSQL → Nest → Svelte)
+
+Minimal stack to prove **database rowset → REST route → UI fetch**:
+
+1. **Welcome** — choose **Svelte** UI, **Nest** server, **PostgreSQL**
+   database, and name the dashboard.
+2. **Canvas** — add **PostgreSQL**, **Nest Server**, and **Table** from the
+   palette.
+3. **Bind** — click PostgreSQL **rowset** output, then Table **data** input.
+4. **Inspector** — select PostgreSQL and set **Table** to your DB table name
+   (e.g. `sales`). An empty value falls back to the table component label.
+5. **Export** — open the wizard; expect files such as
+   `server/src/sales/sales.controller.ts`,
+   `src/lib/data/usePg1Data.svelte.ts`, and `src/Dashboard.svelte`.
+6. **Run exported app** — set `DATABASE_URL`, start the Nest server and Svelte
+   dev server; the dashboard fetches `GET /api/sales`.
+
+**Automated coverage:** `apps/server/src/app/export/svelte-nest-api-bundle.spec.ts`
+(unit) and `apps/client-e2e/src/builder-export.spec.ts` (Svelte stack e2e).
 
 ---
 

@@ -308,6 +308,14 @@ function mapEventBindings(
   });
 }
 
+function nonEmptyStringProperty(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function buildRoutes(composite: Composite, registry: ComponentRegistry) {
   const serverNode = composite.nodes.find((node) => node.type.startsWith('infra.server.'));
   if (!serverNode) {
@@ -325,16 +333,10 @@ function buildRoutes(composite: Composite, registry: ComponentRegistry) {
   const supabaseNode = composite.nodes.find((node) => node.type === 'infra.supabase');
   const mysqlNode = composite.nodes.find((node) => node.type === 'infra.mysql');
   const tableName =
-    (pgNode && typeof pgNode.properties['table'] === 'string' ? pgNode.properties['table'] : undefined) ??
-    (mongoNode && typeof mongoNode.properties['collection'] === 'string'
-      ? mongoNode.properties['collection']
-      : undefined) ??
-    (supabaseNode && typeof supabaseNode.properties['table'] === 'string'
-      ? supabaseNode.properties['table']
-      : undefined) ??
-    (mysqlNode && typeof mysqlNode.properties['table'] === 'string'
-      ? mysqlNode.properties['table']
-      : undefined) ??
+    (pgNode ? nonEmptyStringProperty(pgNode.properties['table']) : undefined) ??
+    (mongoNode ? nonEmptyStringProperty(mongoNode.properties['collection']) : undefined) ??
+    (supabaseNode ? nonEmptyStringProperty(supabaseNode.properties['table']) : undefined) ??
+    (mysqlNode ? nonEmptyStringProperty(mysqlNode.properties['table']) : undefined) ??
     tableNodes[0]?.label.toLowerCase().replace(/\s+/g, '-') ??
     'records';
 

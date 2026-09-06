@@ -223,4 +223,40 @@ describe('buildExportIR', () => {
 
     expect(ir.styles.framework).toBe('mui');
   });
+
+  it('falls back to the table label when postgres table property is blank', () => {
+    const table = registry.createNode('visual.table', { id: 't1', label: 'Sales Table' });
+    const postgres = registry.createNode('infra.postgresql', {
+      id: 'pg1',
+      properties: { connectionEnvKey: 'DATABASE_URL', table: '' },
+    });
+    const server = registry.createNode('infra.server.nest', { id: 's1' });
+
+    const ir = buildExportIR(
+      {
+        id: 'comp1',
+        name: 'Blank Table Property',
+        version: 2,
+        exportTargets: { ui: 'svelte', server: 'nest' },
+        nodes: [table, postgres, server],
+        bindings: [
+          {
+            id: 'b1',
+            sourceNodeId: 'pg1',
+            sourcePortId: 'rowset',
+            targetNodeId: 't1',
+            targetPortId: 'data',
+          },
+        ],
+      },
+      registry,
+    );
+
+    expect(ir.routes).toEqual([
+      expect.objectContaining({
+        method: 'GET',
+        path: '/api/sales-table',
+      }),
+    ]);
+  });
 });

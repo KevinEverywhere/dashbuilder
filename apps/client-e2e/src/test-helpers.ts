@@ -99,6 +99,28 @@ export async function fillWelcomeDashboardName(
   await input.fill(name);
 }
 
+/** Postgres + Nest + table with rowset binding and table name for API export. */
+export async function addPostgresqlApiBundle(
+  page: Page,
+  options?: { tableName?: string },
+): Promise<void> {
+  const tableName = options?.tableName ?? 'sales';
+  await addFromPalette(page, 'infra.postgresql');
+  await addFromPalette(page, 'infra.server.nest');
+  await addFromPalette(page, 'visual.table');
+  await expect(page.getByTestId('canvas-node')).toHaveCount(3);
+
+  const postgresNode = page.getByTestId('canvas-node').nth(0);
+  const tableNode = page.getByTestId('canvas-node').nth(2);
+
+  await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
+  await tableNode.getByTestId(/^port-input-.*-data$/).click();
+
+  await selectCanvasNodeHeader(page, postgresNode);
+  await expandInspectorSection(page, 'properties');
+  await page.getByTestId('inspector-prop-table').fill(tableName);
+}
+
 export async function openBuilder(
   page: Page,
   stack?: { ui?: string; server?: string; database?: string; name?: string },
