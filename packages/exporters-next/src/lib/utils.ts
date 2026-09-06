@@ -67,7 +67,10 @@ export function routeAppPath(globalPrefix: string, resourceName: string): string
 }
 
 export function routeImportPath(globalPrefix: string, resourceName: string): string {
-  const depth = 2 + globalPrefix.split('/').filter(Boolean).length + 1;
+  void resourceName;
+  // Route files live at src/app/<prefix>/<resource>/route.ts — three fixed
+  // segments plus one per nested globalPrefix segment (e.g. api/v1/orders → 4).
+  const depth = 2 + globalPrefix.split('/').filter(Boolean).length;
   return '../'.repeat(depth) + 'lib/database/pool';
 }
 

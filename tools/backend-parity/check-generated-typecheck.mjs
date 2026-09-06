@@ -9,8 +9,6 @@
  * against the real driver typings so a broken template cannot pass unnoticed.
  *
  * Only engines whose driver is installed at the repo root are checked.
- * `@supabase/supabase-js` is not a root dependency, so Supabase is reported as
- * skipped rather than silently passing.
  *
  * Requires the builder API to be running: npm run start:server
  */
@@ -20,6 +18,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import { BUILDER_API_BASE, workspaceRoot } from './seed-model.mjs';
+import { assertBuilderApi } from './assert-builder-api.mjs';
 import { DATABASE_PROMISES, buildParityComposite } from './parity-composites.mjs';
 
 const apiArgIndex = process.argv.indexOf('--api');
@@ -28,7 +27,7 @@ const apiBase = apiArgIndex >= 0 ? process.argv[apiArgIndex + 1] : BUILDER_API_B
 const outputRoot = join(workspaceRoot, '.parity', 'typecheck');
 
 /** Engines whose driver typings exist at the repo root. */
-const CHECKABLE = new Set(['postgresql', 'mysql', 'mongodb']);
+const CHECKABLE = new Set(['postgresql', 'mysql', 'mongodb', 'supabase']);
 
 function requireDriver(engine) {
   return CHECKABLE.has(engine);
@@ -58,6 +57,8 @@ async function fetchFiles(database, scoped) {
 
   return (await response.json()).files;
 }
+
+await assertBuilderApi(apiBase);
 
 rmSync(outputRoot, { recursive: true, force: true });
 

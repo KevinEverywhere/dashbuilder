@@ -13,7 +13,7 @@
  * Requires the builder API to be running: npm run start:server
  */
 
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import { BUILDER_API_BASE, PARITY_SERVER_CONTAINER_PORT, workspaceRoot } from './seed-model.mjs';
@@ -24,6 +24,47 @@ const apiArgIndex = process.argv.indexOf('--api');
 const apiBase = apiArgIndex >= 0 ? process.argv[apiArgIndex + 1] : BUILDER_API_BASE;
 
 const outputRoot = join(workspaceRoot, '.parity', 'servers');
+
+/**
+ * Wipe a generated server directory. Docker bind mounts and large node_modules
+ * trees can make a single rmSync(…, { recursive: true }) fail with ENOTEMPTY on
+ * macOS — fall back to emptying entries, then recreate the root.
+ */
+function resetDirectory(dir) {
+  const rmOptions = { recursive: true, force: true, maxRetries: 5, retryDelay: 200 };
+
+  try {
+    rmSync(dir, rmOptions);
+  } catch (error) {
+    if (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY' && error?.code !== 'EPERM') {
+      throw error;
+    }
+    emptyDirectory(dir);
+    try {
+      rmSync(dir, rmOptions);
+    } catch (secondError) {
+      throw new Error(
+        `Could not reset ${dir}.\n` +
+          `Stop parity server containers first: npm run parity:servers:down\n\n` +
+          `Underlying error: ${secondError.message}`,
+      );
+    }
+  }
+
+  mkdirSync(dir, { recursive: true });
+}
+
+function emptyDirectory(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      emptyDirectory(path);
+      rmSync(path, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    } else {
+      unlinkSync(path);
+    }
+  }
+}
 
 /**
  * Wrapper scaffolding per target. `start` is what the container runs.
@@ -76,8 +117,9 @@ const TARGET_SCAFFOLDS = {
       name: 'rosettadash-parity-express',
       private: true,
       scripts: { start: 'tsc -p tsconfig.json && node dist/index.js' },
-      dependencies: { express: '^4.21.2', pg: '^8.16.3' },
+      dependencies: { cors: '^2.8.5', express: '^4.21.2', pg: '^8.16.3' },
       devDependencies: {
+        '@types/cors': '^2.8.17',
         '@types/express': '^4.17.21',
         '@types/node': '^22.0.0',
         typescript: '~5.9.0',
@@ -173,6 +215,7 @@ const TARGET_SCAFFOLDS = {
       devDependencies: { '@types/node': '^22.0.0' },
     },
     extraFiles: {
+      '.npmrc': 'legacy-peer-deps=true\n',
       'app.vue': '<template>\n  <main>RosettaDash parity — Nuxt server export</main>\n</template>\n',
       'nuxt.config.ts': 'export default defineNuxtConfig({ devtools: { enabled: false } });\n',
     },
@@ -215,8 +258,7 @@ async function generateTarget(target) {
   const { files } = await fetchExport(SERVER_PROMISES[target].endpoint, composite);
 
   const targetRoot = join(outputRoot, target);
-  rmSync(targetRoot, { recursive: true, force: true });
-  mkdirSync(targetRoot, { recursive: true });
+  resetDirectory(targetRoot);
 
   for (const file of files) {
     const destination = join(targetRoot, file.path);

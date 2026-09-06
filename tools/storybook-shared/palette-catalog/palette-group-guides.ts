@@ -1,4 +1,7 @@
 /** Storybook display names — must match `name` in components-catalog.stories.* */
+
+import { parityStackGuideParagraph } from '../parity-stack-reference.js';
+
 export const PALETTE_GROUP_STORY_NAMES: Record<string, string> = {
   'form-inputs': 'Form Inputs',
   'data-display': 'Data Display',
@@ -132,7 +135,8 @@ export const PALETTE_GROUP_GUIDES: Record<string, PaletteGroupGuide> = {
     relationships:
       'Environment Config holds secrets and feature flags referenced by servers and ORMs. Database nodes point at connection env keys and table/collection names. Export wizards use these when generating Nest, Express, or Next backends.',
     learnMore:
-      'Pair with **API Servers** to see the full stack profile. Visual dashboards bind to APIs that these sources back — start from **Data Display** for the UI side.',
+      'Pair with **API Servers** to see the full stack profile. Visual dashboards bind to APIs that these sources back — start from **Data Display** for the UI side. ' +
+      parityStackGuideParagraph(),
     relatedGroupIds: ['api-servers', 'data-display'],
   },
   'api-servers': {
@@ -143,7 +147,8 @@ export const PALETTE_GROUP_GUIDES: Record<string, PaletteGroupGuide> = {
     relationships:
       'Each server node sets API prefix and routing conventions for generated code. Combined with Data Sources, they define the full server + database export target shown in the builder’s export wizard.',
     learnMore:
-      'Review **Data Sources** for persistence, then **Data Display** for what operators actually see. Single use: picked once per exported project stack.',
+      'Review **Data Sources** for persistence, then **Data Display** for what operators actually see. Single use: picked once per exported project stack. ' +
+      parityStackGuideParagraph(),
     relatedGroupIds: ['data-sources'],
   },
   'news-discovery': {

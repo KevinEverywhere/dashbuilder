@@ -23,8 +23,8 @@
 # Credentials here are local dev fixtures. Never reuse them anywhere real.
 #
 # Parity server containers listen on 8080 inside Docker (host ports 53101–53104).
-# PostgREST listens on 8081 inside the Supabase stack. Port 3000 is reserved for
-# the RosettaDash builder API on the host.
+# PostgREST listens on 3000 inside the Supabase stack (not exposed on the host).
+# Port 3000 on the host is reserved for the RosettaDash builder API.
 
 x-seed-env: &seed-env
   POSTGRES_DB: rosettadash
@@ -126,7 +126,6 @@ services:
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: web_anon
       PGRST_JWT_SECRET: rosettadash-local-parity-jwt-secret-key
-      PGRST_SERVER_PORT: '8081'
 
   parity-supabase:
     profiles: [db, supabase]
@@ -211,6 +210,8 @@ services:
     environment:
       DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
       PORT: '8080'
+      NUXT_TELEMETRY_DISABLED: '1'
+      NODE_OPTIONS: '--max-old-space-size=2048'
     ports:
       - '53104:8080'
     volumes:

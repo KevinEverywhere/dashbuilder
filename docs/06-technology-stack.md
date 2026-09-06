@@ -69,10 +69,10 @@ Five matching Storybook apps (ports 6006–6010) — [Storybook catalog](./38-st
 
 | Database | Client/driver direction |
 |----------|------------------------|
-| **MongoDB** | Official driver or Mongoose |
-| **PostgreSQL** | Prisma (preferred when no added cost) or `pg` |
+| **MongoDB** | Official `mongodb` driver (`server-database-adapter`) |
+| **PostgreSQL** | `pg` pool module (`server-database-adapter`) |
 | **Supabase** | `@supabase/supabase-js` |
-| **MySQL** | Prisma or `mysql2` |
+| **MySQL** | `mysql2` pool module (`server-database-adapter`) |
 
 ## Shared packages
 
@@ -122,8 +122,8 @@ Five matching Storybook apps (ports 6006–6010) — [Storybook catalog](./38-st
 | 2026-08-08 | Nx free tier for monorepo; repo is source of truth | DAS-2 |
 | 2026-08-08 | Single-user MVP; no auth initially | DAS-2 |
 | 2026-08-08 | Angular 22; standalone components for export default | DAS-2 |
-| 2026-08-08 | Prisma preferred for PG/MySQL export when no added cost | DAS-2 |
 | 2026-08-08 | Neutral design tokens (no brand preset) | DAS-2 |
+| 2026-09-06 | Export DB layers use pg / mysql2 / mongodb / supabase-js only (no Prisma/Mongoose yet) | DAS-186 |
 | 2026-08-08 | `development` branch is integration target for PRs | DAS-2 |
 | 2026-08-28 | Svelte + Web Components shipped as export targets and npm runtimes | — |
 | 2026-08-28 | Node 22.x for monorepo dev/CI; Playwright e2e shipped | — |

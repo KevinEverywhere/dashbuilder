@@ -124,10 +124,10 @@ interface GeneratedFile {
 
 | Database | Typical export artifacts |
 |----------|-------------------------|
-| **MongoDB** | Mongoose schema or native driver connection helper |
-| **PostgreSQL** | Prisma schema snippet or `pg` pool module |
+| **MongoDB** | Native driver connection helper (`mongodb`) |
+| **PostgreSQL** | `pg` pool module |
 | **Supabase** | `@supabase/supabase-js` client + RLS notes |
-| **MySQL** | Prisma or `mysql2` pool module |
+| **MySQL** | `mysql2` pool module |
 
 Database exporter receives `IRDataSource` entries with:
 

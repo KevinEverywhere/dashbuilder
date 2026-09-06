@@ -217,21 +217,24 @@ Express, Next, and Nuxt call it directly.
 
 `npm run parity:check:typecheck` compiles the emitted module for each engine
 against the real driver typings, in both plain and scoped form, so a template
-that merely looks right cannot pass. Supabase is reported as skipped rather
-than passing, because `@supabase/supabase-js` is not a root dependency.
+that merely looks right cannot pass. All four engines compile, including
+Supabase (`@supabase/supabase-js` is a root dependency).
 
 `ExportService.buildBundleExport` was fixed at the same time. A database target
 used to short-circuit the server, so a bundle with a MySQL target emitted no
 server at all. Bundles now carry UI, server, and database layers, de-duplicated
 by path.
 
-### Still documentation-only
+### Export drivers (implemented)
 
-Prisma and Mongoose are described as export options in
-`docs/06-technology-stack.md` and `docs/04-export-pipeline.md`, but no generator
-emits either. The generators emit `pg`, `mysql2`, `mongodb`, and
-`@supabase/supabase-js`. Either the generators should grow those options or the
-docs should drop the claim.
+Server and database exporters emit **`pg`**, **`mysql2`**, **`mongodb`**, and
+**`@supabase/supabase-js`** modules via
+`packages/core/src/lib/export/server-database-adapter.ts`. Use the local parity
+stack (`docs/44-backend-parity-stack.md`) to exercise each engine.
+
+Prisma and Mongoose are **not** generated today. If we add them later, they
+need their own exporters and parity checks — until then they do not appear in
+the technology stack docs as shipped options.
 
 ## Live probes
 

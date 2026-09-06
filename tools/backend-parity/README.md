@@ -54,7 +54,7 @@ tolerated.
 | Builder API | **3000** | Unchanged — `npm run start:server` |
 | Parity databases | 55432, 53306, 57017, 54321 | See `PARITY_PORTS` in `seed-model.mjs` |
 | Parity servers | 53101–53104 | Map to **8080** inside each container |
-| PostgREST (Supabase stack) | — | **8081** inside Docker; exposed via gateway on 54321 |
+| PostgREST (Supabase stack) | — | **3000** inside Docker; gateway on **54321** |
 
 Set `PARITY_BUILDER_API` if your builder is not on `:3000`.
 

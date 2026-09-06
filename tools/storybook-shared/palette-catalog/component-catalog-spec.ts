@@ -1,3 +1,4 @@
+import { parityStackGuideParagraph } from '../parity-stack-reference.js';
 import type { ComponentDefinition, PortDefinition } from '@rosettadash/core';
 
 export interface ComponentCatalogSubcomponent {
@@ -93,27 +94,35 @@ export const COMPONENT_CATALOG_EXTRAS: Partial<Record<string, ComponentCatalogEx
   },
   'infra.postgresql': {
     dependencies: ['Environment Config (connection env key)', 'pg driver in generated export'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.mongodb': {
     dependencies: ['Environment Config (connection env key)', 'mongodb driver in generated export'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.supabase': {
     dependencies: ['Environment Config (URL + anon key env keys)', '@supabase/supabase-js in export'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.mysql': {
     dependencies: ['Environment Config (connection env key)', 'mysql2 driver in generated export'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.server.nest': {
     dependencies: ['Database infra node', 'NestJS scaffold in export wizard'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.server.express': {
     dependencies: ['Database infra node', 'Express scaffold in export wizard'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.server.next': {
     dependencies: ['Database infra node', 'Next.js API routes in export wizard'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'infra.server.nuxt': {
     dependencies: ['Database infra node', 'Nuxt server routes in export wizard'],
+    assumptions: [parityStackGuideParagraph()],
   },
   'visual.news.results-table': {
     dependencies: ['News query/API rowset upstream of the table.'],

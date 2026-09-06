@@ -71,6 +71,7 @@ describe('generateNextInfraFiles', () => {
 
     const route = files.find((file) => file.path === 'server/src/app/api/sales/route.ts');
     expect(route?.content).toContain('export async function GET()');
+    expect(route?.content).toContain("from '../../../lib/database/pool'");
     expect(route?.content).toContain("queryRows(createDataClient(), 'sales')");
     expect(route?.content).toContain('NextResponse.json');
 

@@ -64,8 +64,8 @@ export const PARITY_PORTS = {
  */
 export const PARITY_SERVER_CONTAINER_PORT = 8080;
 
-/** PostgREST listen port inside the local Supabase parity stack. */
-export const PARITY_POSTGREST_PORT = 8081;
+/** PostgREST listen port inside the local Supabase parity stack (Docker network only). */
+export const PARITY_POSTGREST_PORT = 3000;
 
 /** Dev-only PostgREST signing secret. PostgREST requires at least 32 chars. */
 export const SUPABASE_JWT_SECRET = 'rosettadash-local-parity-jwt-secret-key';
