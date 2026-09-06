@@ -200,6 +200,7 @@ const {
                 :crop-height="cropHeight"
                 :output-width="outputWidth"
                 :output-height="outputHeight"
+                :lock-aspect-ratio="true"
                 :output-preview-host="outputPreviewHostRef"
                 :on-crop-change="onCropChange"
               />
@@ -298,8 +299,9 @@ const {
             <div v-else class="da-authoring-crop-controls" aria-label="Crop region controls">
               <h4 class="da-authoring-crop-controls__title">Crop region</h4>
               <p class="da-note da-authoring-crop-controls__hint">
-                Drag corners for any output size (updates export dimensions live). Pick a preset to snap to
-                320×240, 640×360, or 720×480.
+                Drag the square crop on source — corners stay locked to the
+                export aspect (default 480×480). Presets include 1:1, 4:3,
+                16:9, and 3:2.
               </p>
               <div class="da-authoring-crop-controls__grid">
                 <section class="rd-input-number">

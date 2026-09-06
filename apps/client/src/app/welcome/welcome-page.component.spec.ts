@@ -23,6 +23,15 @@ function selectReact(fixture: ComponentFixture<WelcomePageComponent>): void {
   fixture.detectChanges();
 }
 
+function fillDashboardName(fixture: ComponentFixture<WelcomePageComponent>, name: string): void {
+  const input = fixture.nativeElement.querySelector(
+    '[data-testid="welcome-dashboard-name"]',
+  ) as HTMLInputElement;
+  input.value = name;
+  input.dispatchEvent(new Event('input'));
+  fixture.detectChanges();
+}
+
 describe('WelcomePageComponent', () => {
   let fixture: ComponentFixture<WelcomePageComponent>;
   let router: Router;
@@ -69,8 +78,10 @@ describe('WelcomePageComponent', () => {
     expect((fixture.nativeElement.querySelector('[data-testid="welcome-continue"]') as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('enables continue after selecting a UI framework', () => {
+  it('enables continue after selecting a UI framework and dashboard name', () => {
     selectReact(fixture);
+    expect((fixture.nativeElement.querySelector('[data-testid="welcome-continue"]') as HTMLButtonElement).disabled).toBe(true);
+    fillDashboardName(fixture, 'Ops Dashboard');
     expect((fixture.nativeElement.querySelector('[data-testid="welcome-continue"]') as HTMLButtonElement).disabled).toBe(false);
     expect(fixture.nativeElement.querySelector('[data-testid="stack-section-toggle-server"]')).toBeTruthy();
   });
@@ -219,6 +230,7 @@ describe('WelcomePageComponent', () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     selectReact(fixture);
+    fillDashboardName(fixture, 'UI-only dashboard');
     expandSection(fixture, 'server');
     expandSection(fixture, 'database');
     fixture.nativeElement.querySelector('[data-testid="stack-server-none"]').click();
@@ -245,6 +257,7 @@ describe('WelcomePageComponent', () => {
     expandSection(fixture, 'ui');
     fixture.nativeElement.querySelector('[data-testid="stack-ui-svelte"]').click();
     fixture.detectChanges();
+    fillDashboardName(fixture, 'Destination Atlas');
     fixture.nativeElement.querySelector('[data-testid="welcome-continue"]').click();
 
     const pending = JSON.parse(sessionStorage.getItem(PENDING_STACK_KEY) ?? '{}');
@@ -286,7 +299,13 @@ describe('WelcomePageComponent', () => {
 
     expect(fixture.nativeElement.querySelector('[data-testid="welcome-page"]')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('[data-testid="welcome-resume-note"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="welcome-framework-prompt"]')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('[data-testid="welcome-framework-prompt"]')).toBeTruthy();
+    expandSection(fixture, 'ui');
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="stack-ui-web-components"]')?.classList.contains(
+        'welcome__option--selected',
+      ),
+    ).toBe(false);
     expect(navigateSpy).not.toHaveBeenCalled();
   });
 
@@ -345,6 +364,7 @@ describe('WelcomePageComponent', () => {
     fixture.detectChanges();
     fixture.nativeElement.querySelector('[data-testid="welcome-stack-change-new-project"]').click();
     fixture.detectChanges();
+    fillDashboardName(fixture, 'Vue dashboard');
     fixture.nativeElement.querySelector('[data-testid="welcome-start-fresh"]').click();
 
     expect(sessionStorage.getItem(BUILDER_SESSION_KEY)).toBeNull();
@@ -383,7 +403,7 @@ describe('WelcomePageComponent', () => {
     fixture = TestBed.createComponent(WelcomePageComponent);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="welcome-framework-prompt"]')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('[data-testid="welcome-framework-prompt"]')).toBeTruthy();
 
     fixture.nativeElement.querySelector('[data-testid="welcome-start-fresh"]').click();
     fixture.detectChanges();
@@ -398,7 +418,7 @@ describe('WelcomePageComponent', () => {
     expect(summaries.every((text) => text === 'Select')).toBe(true);
     expect(fixture.nativeElement.querySelector('[data-testid="welcome-framework-prompt"]')).toBeTruthy();
     expect((fixture.nativeElement.querySelector('[data-testid="welcome-continue"]') as HTMLButtonElement).disabled).toBe(
-      true,
+      false,
     );
     expect(fixture.nativeElement.querySelector('[data-testid="stack-section-panel-ui"]')).toBeTruthy();
   });

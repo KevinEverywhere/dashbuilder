@@ -1,5 +1,6 @@
 import { computed, onUnmounted, ref, watch, type Ref } from 'vue';
 import {
+  AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
@@ -63,16 +64,18 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
   const yaw = ref(25);
   const pitch = ref(-8);
   const horizontalFov = ref(75);
-  const outputWidth = ref(720);
-  const outputHeight = ref(480);
-  const outputPresetId = ref('720x480');
+const defaultOutput = getAuthoringOutputPreset(AUTHORING_DEFAULT_OUTPUT_PRESET_ID) ?? AUTHORING_OUTPUT_PRESETS[0];
+
+  const outputWidth = ref(defaultOutput.width);
+  const outputHeight = ref(defaultOutput.height);
+  const outputPresetId = ref(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
   const reverse = ref(false);
   const sourceWidth = ref<number | undefined>(undefined);
   const sourceHeight = ref<number | undefined>(undefined);
   const cropX = ref(0);
   const cropY = ref(0);
-  const cropWidth = ref(640);
-  const cropHeight = ref(360);
+  const cropWidth = ref(defaultOutput.width);
+  const cropHeight = ref(defaultOutput.height);
   const recordRange = ref<AuthoringRecordRange | null>(null);
   const previewRecording = ref<Blob | null>(null);
   const extractFormat = ref<'mp4' | 'webm'>('mp4');
@@ -448,10 +451,10 @@ export function useAuthoringScreen(options: UseAuthoringScreenOptions) {
     yaw.value = current.defaultYaw;
     pitch.value = current.defaultPitch;
     horizontalFov.value = current.defaultHorizontalFov;
-    const preset = getAuthoringOutputPreset('720x480');
-    outputPresetId.value = '720x480';
-    outputWidth.value = preset?.width ?? 720;
-    outputHeight.value = preset?.height ?? 480;
+    const preset = getAuthoringOutputPreset(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
+    outputPresetId.value = AUTHORING_DEFAULT_OUTPUT_PRESET_ID;
+    outputWidth.value = preset?.width ?? defaultOutput.width;
+    outputHeight.value = preset?.height ?? defaultOutput.height;
     outputSizeCommitToken.value += 1;
     sourceWidth.value = undefined;
     sourceHeight.value = undefined;

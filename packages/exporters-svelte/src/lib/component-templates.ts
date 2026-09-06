@@ -1,6 +1,12 @@
 import type { IRComponent } from '@rosettadash/core';
 import { SvelteExportError } from './types';
 import {
+  generateEquirectViewport,
+  generateLiveCapture,
+  generateVideoSource,
+  generateWasmMediaEquirect,
+} from './media-component-templates';
+import {
   generateThreeBarChart,
   generateThreeScatterPlot,
   generateThreeScenePointCloud,
@@ -12,6 +18,9 @@ import { joinLines } from './utils';
 const SUPPORTED_TYPES = new Set([
   'visual.input.text',
   'visual.input.select',
+  'visual.input.number',
+  'visual.input.checkbox',
+  'visual.input.textarea',
   'visual.input.date-range',
   'domain.time-preset',
   'visual.table',
@@ -32,6 +41,12 @@ const SUPPORTED_TYPES = new Set([
   'visual.wasm.worker-host',
   'visual.wasm.module',
   'visual.wasm.media',
+  'visual.media.video-source',
+  'visual.media.equirect-viewport',
+  'visual.media.live-capture',
+  'domain.role-gate',
+  'domain.person-invite',
+  'domain.role-assign',
   'logic.timer',
   'visual.news.language-select',
   'visual.news.region-select',
@@ -51,6 +66,12 @@ export function generateComponentFile(component: IRComponent, exportName: string
       return generateTextInput();
     case 'visual.input.select':
       return generateSelectInput();
+    case 'visual.input.number':
+      return generateNumberInput();
+    case 'visual.input.checkbox':
+      return generateCheckboxInput();
+    case 'visual.input.textarea':
+      return generateTextareaInput();
     case 'visual.input.date-range':
       return generateDateRangeFilter();
     case 'domain.time-preset':
@@ -90,7 +111,21 @@ export function generateComponentFile(component: IRComponent, exportName: string
     case 'visual.wasm.module':
       return generateWasmModule();
     case 'visual.wasm.media':
-      return generateWasmMedia();
+      return component.properties?.['operation'] === 'equirect-extract'
+        ? generateWasmMediaEquirect()
+        : generateWasmMedia();
+    case 'visual.media.video-source':
+      return generateVideoSource();
+    case 'visual.media.equirect-viewport':
+      return generateEquirectViewport();
+    case 'visual.media.live-capture':
+      return generateLiveCapture();
+    case 'domain.role-gate':
+      return generateRoleGate();
+    case 'domain.person-invite':
+      return generatePersonInvite();
+    case 'domain.role-assign':
+      return generateRoleAssign();
     case 'logic.timer':
       return generateTimer();
     case 'visual.news.language-select':
@@ -126,6 +161,86 @@ function generateTextInput(): string {
     ``,
     `<label class="field" for={id}>`,
     `  <input class="input" type="text" {id} {placeholder} {required} bind:value />`,
+    `</label>`,
+    ``,
+  ]);
+}
+
+function generateNumberInput(): string {
+  return joinLines([
+    `<script lang="ts">`,
+    `  let {`,
+    `    id,`,
+    `    placeholder = 'enter placeholder here',`,
+    `    required = false,`,
+    `    min,`,
+    `    max = 100,`,
+    `    step = 1,`,
+    `    value = $bindable(0),`,
+    `  }: {`,
+    `    id?: string;`,
+    `    placeholder?: string;`,
+    `    required?: boolean;`,
+    `    min?: number;`,
+    `    max?: number;`,
+    `    step?: number;`,
+    `    value?: number;`,
+    `  } = $props();`,
+    `</script>`,
+    ``,
+    `<label class="field" for={id}>`,
+    `  <input class="input" type="number" {id} {placeholder} {required} {min} {max} {step} bind:value />`,
+    `</label>`,
+    ``,
+  ]);
+}
+
+function generateCheckboxInput(): string {
+  return joinLines([
+    `<script lang="ts">`,
+    `  let {`,
+    `    id,`,
+    `    label = '',`,
+    `    defaultChecked = false,`,
+    `    value = $bindable(defaultChecked),`,
+    `  }: {`,
+    `    id?: string;`,
+    `    label?: string;`,
+    `    defaultChecked?: boolean;`,
+    `    value?: boolean;`,
+    `  } = $props();`,
+    `</script>`,
+    ``,
+    `<label class="field field--checkbox" for={id}>`,
+    `  <input class="checkbox" type="checkbox" {id} bind:checked={value} />`,
+    `  {#if label}`,
+    `    <span>{label}</span>`,
+    `  {/if}`,
+    `</label>`,
+    ``,
+  ]);
+}
+
+function generateTextareaInput(): string {
+  return joinLines([
+    `<script lang="ts">`,
+    `  let {`,
+    `    id,`,
+    `    placeholder = 'enter placeholder here',`,
+    `    required = false,`,
+    `    rows = 4,`,
+    `    value = $bindable(''),`,
+    `  }: {`,
+    `    id?: string;`,
+    `    placeholder?: string;`,
+    `    required?: boolean;`,
+    `    rows?: number;`,
+    `    value?: string;`,
+    `  } = $props();`,
+    `</script>`,
+    ``,
+    `<label class="field" for={id}>`,
+    `  <textarea class="textarea" {id} {placeholder} {required} {rows} bind:value></textarea>`,
     `</label>`,
     ``,
   ]);
@@ -857,6 +972,130 @@ function generateWasmModule(): string {
     `<section class="wasm-module" {id}>`,
     `  <h3>{label}</h3>`,
     `  <p class="wasm-module__export"><code>{entryExport}()</code></p>`,
+    `</section>`,
+    ``,
+  ]);
+}
+
+function generateRoleGate(): string {
+  return joinLines([
+    `<script lang="ts">`,
+    `  import type { Snippet } from 'svelte';`,
+    `  import { getCurrentRole } from '../auth/current-role.svelte.ts';`,
+    `  let {`,
+    `    id,`,
+    `    label = 'Protected section',`,
+    `    allowedRoles = [] as string[],`,
+    `    statusText = 'Visible',`,
+    `    hiddenStatusText = 'Hidden for current role',`,
+    `    children,`,
+    `  }: {`,
+    `    id?: string;`,
+    `    label?: string;`,
+    `    allowedRoles?: string[];`,
+    `    statusText?: string;`,
+    `    hiddenStatusText?: string;`,
+    `    children?: Snippet;`,
+    `  } = $props();`,
+    ``,
+    `  const role = getCurrentRole();`,
+    `  const hasRoleContext = role !== undefined && role !== '';`,
+    `  const visible = !hasRoleContext || allowedRoles.length === 0 || allowedRoles.includes(role);`,
+    `</script>`,
+    ``,
+    `<section`,
+    `  class="rd-role-gate {visible ? 'rd-role-gate--visible' : 'rd-role-gate--hidden'}"`,
+    `  {id}`,
+    `  data-testid="rd-role-gate"`,
+    `>`,
+    `  {#if label}`,
+    `    <span class="rd-field__label">{label}</span>`,
+    `  {/if}`,
+    `  {#if visible}`,
+    `    <p class="rd-role-gate__status" data-testid="rd-role-gate-visible">{statusText}</p>`,
+    `    {#if children}`,
+    `      {@render children()}`,
+    `    {:else}`,
+    `      <p>Protected content</p>`,
+    `    {/if}`,
+    `  {:else}`,
+    `    <p class="rd-role-gate__status rd-role-gate__status--hidden" data-testid="rd-role-gate-hidden">`,
+    `      {hiddenStatusText}`,
+    `    </p>`,
+    `  {/if}`,
+    `</section>`,
+    ``,
+  ]);
+}
+
+function generatePersonInvite(): string {
+  return joinLines([
+    `<script lang="ts">`,
+    `  let {`,
+    `    id,`,
+    `    title = 'Invite team member',`,
+    `    emailPlaceholder = 'name@company.com',`,
+    `    submitLabel = 'Send invite',`,
+    `    onSubmit,`,
+    `  }: {`,
+    `    id?: string;`,
+    `    title?: string;`,
+    `    emailPlaceholder?: string;`,
+    `    submitLabel?: string;`,
+    `    onSubmit?: (email: string) => void;`,
+    `  } = $props();`,
+    ``,
+    `  let email = $state('');`,
+    `</script>`,
+    ``,
+    `<section class="onboarding-step" {id}>`,
+    `  <h3>{title}</h3>`,
+    `  <label class="field">`,
+    `    <input class="input" type="email" placeholder={emailPlaceholder} bind:value={email} />`,
+    `  </label>`,
+    `  <button type="button" class="button" onclick={() => onSubmit?.(email)}>`,
+    `    {submitLabel}`,
+    `  </button>`,
+    `</section>`,
+    ``,
+  ]);
+}
+
+function generateRoleAssign(): string {
+  return joinLines([
+    `<script lang="ts">`,
+    `  let {`,
+    `    id,`,
+    `    title = 'Assign role',`,
+    `    confirmLabel = 'Confirm access',`,
+    `    summaryLabel = 'Review access before confirming',`,
+    `    roles = [] as Array<{ id: string; name: string }>,`,
+    `    onConfirm,`,
+    `  }: {`,
+    `    id?: string;`,
+    `    title?: string;`,
+    `    confirmLabel?: string;`,
+    `    summaryLabel?: string;`,
+    `    roles?: Array<{ id: string; name: string }>;`,
+    `    onConfirm?: (roleId: string) => void;`,
+    `  } = $props();`,
+    ``,
+    `  let selectedRoleId = $state(roles[0]?.id ?? '');`,
+    `</script>`,
+    ``,
+    `<section class="onboarding-step" {id}>`,
+    `  <h3>{title}</h3>`,
+    `  <p class="onboarding-step__summary">{summaryLabel}</p>`,
+    `  <label class="field">`,
+    `    <select class="input" bind:value={selectedRoleId}>`,
+    `      {#each roles as role (role.id)}`,
+    `        <option value={role.id}>{role.name}</option>`,
+    `      {/each}`,
+    `    </select>`,
+    `  </label>`,
+    `  <button type="button" class="button" onclick={() => onConfirm?.(selectedRoleId)}>`,
+    `    {confirmLabel}`,
+    `  </button>`,
     `</section>`,
     ``,
   ]);

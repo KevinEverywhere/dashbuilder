@@ -1,4 +1,5 @@
 import {
+  AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   authoringExtractDownloadName,
@@ -52,14 +53,14 @@ const state = {
   yaw: 25,
   pitch: -8,
   horizontalFov: 75,
-  outputWidth: 720,
+  outputWidth: 480,
   outputHeight: 480,
-  outputPresetId: '720x480',
+  outputPresetId: AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   reverse: false,
   cropX: 0,
   cropY: 0,
-  cropWidth: 640,
-  cropHeight: 360,
+  cropWidth: 480,
+  cropHeight: 480,
   recordRange: null as AuthoringRecordRange | null,
   previewRecording: null as Blob | null,
   extractFormat: 'mp4' as 'mp4' | 'webm',
@@ -330,6 +331,7 @@ function syncViewports(root: HTMLElement): void {
   const sphere = asSphereViewport(root.querySelector('[data-ref="auth-sphere-viewport"]'));
   flat?.setAttribute('output-width', String(state.outputWidth));
   flat?.setAttribute('output-height', String(state.outputHeight));
+  flat?.setAttribute('lock-aspect-ratio', '');
   sphere?.setAttribute('output-width', String(state.outputWidth));
   sphere?.setAttribute('output-height', String(state.outputHeight));
   sphere?.setAttribute('yaw', String(state.yaw));

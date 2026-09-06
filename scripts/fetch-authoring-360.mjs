@@ -1,5 +1,5 @@
 /**
- * DAS-181 — download Wikimedia Commons 2:1 stills and encode 8s
+ * DAS-181 / DAS-183 — download Wikimedia Commons 2:1 stills and encode 8s
  * silent MP4s for Destination Atlas Authoring.
  *
  * Usage: node scripts/fetch-authoring-360.mjs
@@ -22,6 +22,11 @@ const USER_AGENT =
   'RosettaDashDAS181/1.0 (kevin.ready@gmail.com; destination-atlas authoring clips)';
 
 const sources = JSON.parse(readFileSync(catalogPath, 'utf8'));
+const onlyArg = process.argv.indexOf('--only');
+const onlyIds =
+  onlyArg >= 0 && process.argv[onlyArg + 1]
+    ? new Set(process.argv[onlyArg + 1].split(',').map((id) => id.trim()).filter(Boolean))
+    : null;
 
 function commonsThumbUrl(title) {
   const file = title.startsWith('File:') ? title.slice(5) : title;
@@ -37,7 +42,17 @@ async function download(url, dest) {
   writeFileSync(dest, bytes);
 }
 
-function encodeMp4(stillPath, mp4Path) {
+function buildVideoFilter({ rotateDegrees = 0, inputProjection } = {}) {
+  if (inputProjection === 'cylindrical') {
+    return 'v360=input=cylindrical:output=equirect:w=2048:h=1024,setsar=1';
+  }
+  const rotate = Number(rotateDegrees) || 0;
+  const transpose =
+    rotate === 90 ? 'transpose=1,' : rotate === 270 ? 'transpose=2,' : rotate === 180 ? 'hflip,vflip,' : '';
+  return `${transpose}scale=2048:1024:force_original_aspect_ratio=decrease,pad=2048:1024:(ow-iw)/2:(oh-ih)/2,setsar=1`;
+}
+
+function encodeMp4(stillPath, mp4Path, source) {
   execFileSync(
     'ffmpeg',
     [
@@ -49,7 +64,7 @@ function encodeMp4(stillPath, mp4Path) {
       '-t',
       '8',
       '-vf',
-      'scale=2048:1024:force_original_aspect_ratio=decrease,pad=2048:1024:(ow-iw)/2:(oh-ih)/2,setsar=1',
+      buildVideoFilter(source),
       '-c:v',
       'libx264',
       '-pix_fmt',
@@ -69,11 +84,14 @@ mkdirSync(outDir, { recursive: true });
 mkdirSync(stillDir, { recursive: true });
 
 for (const source of sources) {
+  if (onlyIds && !onlyIds.has(source.destinationId)) {
+    continue;
+  }
   const stillPath = path.join(stillDir, `${source.destinationId}.jpg`);
   const mp4Path = path.join(outDir, `${source.destinationId}.mp4`);
   console.log(`\n${source.destinationId} — ${source.label}`);
   await download(commonsThumbUrl(source.commonsTitle), stillPath);
-  encodeMp4(stillPath, mp4Path);
+  encodeMp4(stillPath, mp4Path, source);
 }
 
 linkAuthoring360Media();

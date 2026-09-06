@@ -243,6 +243,20 @@
       </app-collapsible>
       </div>
 
+      @if (showDashboardNameField()) {
+        <label class="welcome__dashboard-name" for="welcome-dashboard-name">
+          Dashboard name
+          <input
+            id="welcome-dashboard-name"
+            type="text"
+            data-testid="welcome-dashboard-name"
+            placeholder="e.g. Destination Atlas"
+            [value]="dashboardName()"
+            (input)="dashboardName.set($any($event.target).value)"
+          />
+        </label>
+      }
+
       <footer class="welcome__footer">
         @if (hasExistingSession()) {
           <p class="welcome__resume-note" data-testid="welcome-resume-note">
@@ -263,7 +277,7 @@
               type="button"
               class="welcome__continue welcome__continue--secondary"
               data-testid="welcome-start-fresh"
-              [disabled]="!canContinue()"
+              [disabled]="!canStartFresh()"
               (click)="requestStartFresh()"
             >
               Start new project

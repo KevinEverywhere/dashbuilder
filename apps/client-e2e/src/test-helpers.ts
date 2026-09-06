@@ -90,20 +90,34 @@ export async function expandInspectorBindings(page: Page): Promise<void> {
   await expandInspectorSection(page, 'bindings');
 }
 
+export async function fillWelcomeDashboardName(
+  page: Page,
+  name = 'E2E Dashboard',
+): Promise<void> {
+  const input = page.getByTestId('welcome-dashboard-name');
+  await expect(input).toBeVisible();
+  await input.fill(name);
+}
+
 export async function openBuilder(
   page: Page,
-  stack?: { ui?: string; server?: string; database?: string },
+  stack?: { ui?: string; server?: string; database?: string; name?: string },
 ): Promise<void> {
   const pending = {
     ui: stack?.ui ?? 'react',
     server: stack?.server ?? 'nest',
     database: stack?.database ?? 'postgresql',
   };
+  const projectName = stack?.name ?? 'E2E Dashboard';
   await page.goto('/');
-  await page.evaluate((next) => {
-    sessionStorage.clear();
-    sessionStorage.setItem('rosettadash:pending-stack', JSON.stringify(next));
-  }, pending);
+  await page.evaluate(
+    ({ next, name }) => {
+      sessionStorage.clear();
+      sessionStorage.setItem('rosettadash:pending-stack', JSON.stringify(next));
+      sessionStorage.setItem('rosettadash:pending-project-name', name);
+    },
+    { next: pending, name: projectName },
+  );
   await page.goto('/builder');
   await expect(page.getByTestId('builder-loading')).toBeHidden({ timeout: 120_000 });
   await expect(page.getByTestId('builder-shell')).toBeVisible();
@@ -158,6 +172,7 @@ export async function openBuilderViaWelcome(page: Page, ui = 'react'): Promise<v
   await expect(page.getByTestId('welcome-page')).toBeVisible();
   await page.getByTestId('stack-section-toggle-ui').click();
   await page.getByTestId(`stack-ui-${ui}`).click();
+  await fillWelcomeDashboardName(page);
   await expect(page.getByTestId('welcome-continue')).toBeEnabled();
   await page.getByTestId('welcome-continue').click();
   await expect(page.getByTestId('builder-loading')).toBeHidden({ timeout: 120_000 });

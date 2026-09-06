@@ -245,6 +245,49 @@
 .builder__subtitle {
   font-size: 0.8125rem;
   color: var(--db-text-muted);
+
+  &--editable {
+    padding: 0.125rem 0.25rem;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    background: transparent;
+    font: inherit;
+    cursor: text;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--db-border);
+      background: var(--db-surface);
+      color: var(--db-text);
+      outline: none;
+    }
+  }
+
+  &--untitled {
+    color: var(--db-text);
+    font-style: italic;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 0.2em;
+  }
+}
+
+.builder__title-input {
+  min-width: 10rem;
+  max-width: 18rem;
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--db-accent);
+  border-radius: 0.25rem;
+  background: var(--db-panel-bg);
+  color: var(--db-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 15%);
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .builder__stack {
@@ -403,3 +446,4 @@
     max-width: 10rem;
   }
 }
+

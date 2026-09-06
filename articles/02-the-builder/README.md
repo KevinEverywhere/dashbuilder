@@ -1,5 +1,7 @@
 # The Builder: The Dashboard Component Factory
 
+![Every task begins with a single brick.](graphics/building.png)
+
 RosettaDash’s builder is an Angular client using a NestJS API, both local. From the repo root:
 
 ```bash
@@ -19,18 +21,19 @@ If you have a small screen, you will immediately see an alert saying that you ne
 
 ## Becoming Familiar with the Interface
 
-The sections of the interface are: the components are grouped on the left side of the screen in a palette. Next is the canvas, where components are placed by selecting the + button on their component. Once on the canvas, their details are available in the Inspector panel on the right. At the top of the screen, choices like design and preview, undo and redo, select and apply template, create, how it works, AI assist and export, and save and save to library provide the ways to see and work with the components, and how to create, export and save the components that you have created.
+The sections of the interface are: the components are grouped on the left side of the screen in a palette. Next is the canvas, where components are placed by selecting the + button on their component. Once on the canvas, their details are available in the Inspector panel on the right. At the top of the screen, choices like design and preview, undo and redo, create, how it works, AI assist and export, and save and save to library provide the ways to see and work with the components, and how to create, export and save the components that you have created.
 
-![Welcome — stack picker. UI model chosen, server and database still None.](graphics/01-welcome.png)
+![Components palette.](graphics/components-palettej.png)
 
-**Components.** On the left side, the components are arranged in groups. You will recognize many: a KPI (key performance indicator), a table,
-a date range, a grid, a chart. There are many more that you will not need for the first composite. Clicking the components header collapses it to the left side.
+**Components.** On the left side, the components are arranged in groups. You will recognize many: a KPI (key performance indicator), a table, a date range, a grid, a chart, and many others. Clicking the components header collapses it to the left side.
 
 **Canvas.** In the center of the app, you can place, snap, resize, and multi-select in the canvas. The canvas is for the positioning and sizing of the component elements for your exported component.
 
 ![Canvas with a binding — date range to table to chart.](graphics/02-canvas.png)
 
 **Inspector.** On the right side, the Inspector is activated when something is selected on the canvas. Properties, suggestions, data sources and other details are visible here.
+
+![Inspector details update as you interact with element.](graphics/inspector.png)
 
 **Preview.** Switch to Preview. Mock data comes from the local API. Click the filter. Watch the table.
 

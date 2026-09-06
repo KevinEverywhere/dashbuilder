@@ -1,6 +1,12 @@
 import type { IRComponent } from '@rosettadash/core';
 import { VueExportError } from './types';
 import {
+  generateEquirectViewport,
+  generateLiveCapture,
+  generateVideoSource,
+  generateWasmMediaEquirect,
+} from './media-component-templates';
+import {
   generateThreeBarChart,
   generateThreeScatterPlot,
   generateThreeScenePointCloud,
@@ -12,6 +18,9 @@ import { joinLines } from './utils';
 const SUPPORTED_TYPES = new Set([
   'visual.input.text',
   'visual.input.select',
+  'visual.input.number',
+  'visual.input.checkbox',
+  'visual.input.textarea',
   'visual.input.date-range',
   'domain.time-preset',
   'visual.table',
@@ -32,6 +41,12 @@ const SUPPORTED_TYPES = new Set([
   'visual.wasm.worker-host',
   'visual.wasm.module',
   'visual.wasm.media',
+  'visual.media.video-source',
+  'visual.media.equirect-viewport',
+  'visual.media.live-capture',
+  'domain.role-gate',
+  'domain.person-invite',
+  'domain.role-assign',
   'logic.timer',
   'visual.news.language-select',
   'visual.news.region-select',
@@ -51,6 +66,12 @@ export function generateComponentFile(component: IRComponent, exportName: string
       return generateTextInput(exportName);
     case 'visual.input.select':
       return generateSelectInput(exportName);
+    case 'visual.input.number':
+      return generateNumberInput(exportName);
+    case 'visual.input.checkbox':
+      return generateCheckboxInput(exportName);
+    case 'visual.input.textarea':
+      return generateTextareaInput(exportName);
     case 'visual.input.date-range':
       return generateDateRangeFilter(exportName);
     case 'domain.time-preset':
@@ -90,7 +111,21 @@ export function generateComponentFile(component: IRComponent, exportName: string
     case 'visual.wasm.module':
       return generateWasmModule(exportName);
     case 'visual.wasm.media':
-      return generateWasmMedia(exportName);
+      return component.properties?.['operation'] === 'equirect-extract'
+        ? generateWasmMediaEquirect(exportName)
+        : generateWasmMedia(exportName);
+    case 'visual.media.video-source':
+      return generateVideoSource(exportName);
+    case 'visual.media.equirect-viewport':
+      return generateEquirectViewport(exportName);
+    case 'visual.media.live-capture':
+      return generateLiveCapture(exportName);
+    case 'domain.role-gate':
+      return generateRoleGate(exportName);
+    case 'domain.person-invite':
+      return generatePersonInvite(exportName);
+    case 'domain.role-assign':
+      return generateRoleAssign(exportName);
     case 'logic.timer':
       return generateTimer(exportName);
     case 'visual.news.language-select':
@@ -125,6 +160,61 @@ function generateTextInput(name: string): string {
     `      :required="required"`,
     `      v-model="model"`,
     `    />`,
+    `  </label>`,
+    `</template>`,
+    ``,
+  ]);
+}
+
+function generateNumberInput(name: string): string {
+  return joinLines([
+    `<script setup lang="ts">`,
+    `const model = defineModel<number>({ default: 0 });`,
+    `withDefaults(`,
+    `  defineProps<{ id?: string; placeholder?: string; required?: boolean; min?: number; max?: number; step?: number }>(),`,
+    `  { placeholder: 'enter placeholder here', max: 100, step: 1 },`,
+    `);`,
+    `</script>`,
+    ``,
+    `<template>`,
+    `  <label class="field" :for="id">`,
+    `    <input class="input" type="number" :id="id" :placeholder="placeholder" :required="required" :min="min" :max="max" :step="step" v-model.number="model" />`,
+    `  </label>`,
+    `</template>`,
+    ``,
+  ]);
+}
+
+function generateCheckboxInput(name: string): string {
+  return joinLines([
+    `<script setup lang="ts">`,
+    `const model = defineModel<boolean>({ default: false });`,
+    `withDefaults(defineProps<{ id?: string; label?: string; defaultChecked?: boolean }>(), { label: '', defaultChecked: false });`,
+    `</script>`,
+    ``,
+    `<template>`,
+    `  <label class="field field--checkbox" :for="id">`,
+    `    <input class="checkbox" type="checkbox" :id="id" v-model="model" />`,
+    `    <span v-if="label">{{ label }}</span>`,
+    `  </label>`,
+    `</template>`,
+    ``,
+  ]);
+}
+
+function generateTextareaInput(name: string): string {
+  return joinLines([
+    `<script setup lang="ts">`,
+    `const model = defineModel<string>({ default: '' });`,
+    `withDefaults(`,
+    `  defineProps<{ id?: string; placeholder?: string; required?: boolean; rows?: number }>(),`,
+    `  { placeholder: 'enter placeholder here', required: false, rows: 4 },`,
+    `);`,
+    `</script>`,
+    ``,
+    `<template>`,
+    `  <label class="field" :for="id">`,
+    `    <textarea class="textarea" :id="id" :placeholder="placeholder" :required="required" :rows="rows" v-model="model" />`,
     `  </label>`,
     `</template>`,
     ``,
@@ -798,6 +888,136 @@ function generateWasmModule(_name: string): string {
     `  <section class="wasm-module" :id="id">`,
     `    <h3>{{ label }}</h3>`,
     `    <p class="wasm-module__export"><code>{{ entryExport }}()</code></p>`,
+    `  </section>`,
+    `</template>`,
+    ``,
+  ]);
+}
+
+function generateRoleGate(name: string): string {
+  return joinLines([
+    `<script setup lang="ts">`,
+    `import { computed } from 'vue';`,
+    `import { useCurrentRole } from '../auth/useCurrentRole';`,
+    ``,
+    `const props = withDefaults(`,
+    `  defineProps<{`,
+    `    id?: string;`,
+    `    label?: string;`,
+    `    allowedRoles?: string[];`,
+    `    statusText?: string;`,
+    `    hiddenStatusText?: string;`,
+    `  }>(),`,
+    `  {`,
+    `    label: 'Protected section',`,
+    `    allowedRoles: () => [],`,
+    `    statusText: 'Visible',`,
+    `    hiddenStatusText: 'Hidden for current role',`,
+    `  },`,
+    `);`,
+    ``,
+    `const role = useCurrentRole();`,
+    `const visible = computed(() => {`,
+    `  const hasRoleContext = role.value !== undefined && role.value !== '';`,
+    `  return !hasRoleContext || props.allowedRoles.length === 0 || props.allowedRoles.includes(role.value);`,
+    `});`,
+    `</script>`,
+    ``,
+    `<template>`,
+    `  <section`,
+    `    class="rd-role-gate"`,
+    `    :class="visible ? 'rd-role-gate--visible' : 'rd-role-gate--hidden'"`,
+    `    :id="id"`,
+    `    data-testid="rd-role-gate"`,
+    `  >`,
+    `    <span v-if="label" class="rd-field__label">{{ label }}</span>`,
+    `    <template v-if="visible">`,
+    `      <p class="rd-role-gate__status" data-testid="rd-role-gate-visible">{{ statusText }}</p>`,
+    `      <slot><p>Protected content</p></slot>`,
+    `    </template>`,
+    `    <p v-else class="rd-role-gate__status rd-role-gate__status--hidden" data-testid="rd-role-gate-hidden">`,
+    `      {{ hiddenStatusText }}`,
+    `    </p>`,
+    `  </section>`,
+    `</template>`,
+    ``,
+  ]);
+}
+
+function generatePersonInvite(name: string): string {
+  return joinLines([
+    `<script setup lang="ts">`,
+    `import { ref } from 'vue';`,
+    ``,
+    `withDefaults(`,
+    `  defineProps<{`,
+    `    id?: string;`,
+    `    title?: string;`,
+    `    emailPlaceholder?: string;`,
+    `    submitLabel?: string;`,
+    `  }>(),`,
+    `  { title: 'Invite team member', emailPlaceholder: 'name@company.com', submitLabel: 'Send invite' },`,
+    `);`,
+    ``,
+    `const emit = defineEmits<{ submit: [email: string] }>();`,
+    `const email = ref('');`,
+    `</script>`,
+    ``,
+    `<template>`,
+    `  <section class="onboarding-step" :id="id">`,
+    `    <h3>{{ title }}</h3>`,
+    `    <label class="field">`,
+    `      <input class="input" type="email" :placeholder="emailPlaceholder" v-model="email" />`,
+    `    </label>`,
+    `    <button type="button" class="button" @click="emit('submit', email)">{{ submitLabel }}</button>`,
+    `  </section>`,
+    `</template>`,
+    ``,
+  ]);
+}
+
+function generateRoleAssign(name: string): string {
+  return joinLines([
+    `<script setup lang="ts">`,
+    `import { ref, watch } from 'vue';`,
+    ``,
+    `const props = withDefaults(`,
+    `  defineProps<{`,
+    `    id?: string;`,
+    `    title?: string;`,
+    `    confirmLabel?: string;`,
+    `    summaryLabel?: string;`,
+    `    roles?: Array<{ id: string; name: string }>;`,
+    `  }>(),`,
+    `  {`,
+    `    title: 'Assign role',`,
+    `    confirmLabel: 'Confirm access',`,
+    `    summaryLabel: 'Review access before confirming',`,
+    `    roles: () => [],`,
+    `  },`,
+    `);`,
+    ``,
+    `const emit = defineEmits<{ confirm: [roleId: string] }>();`,
+    `const selectedRoleId = ref(props.roles[0]?.id ?? '');`,
+    ``,
+    `watch(`,
+    `  () => props.roles,`,
+    `  (roles) => {`,
+    `    selectedRoleId.value = roles[0]?.id ?? '';`,
+    `  },`,
+    `);`,
+    `</script>`,
+    ``,
+    `<template>`,
+    `  <section class="onboarding-step" :id="id">`,
+    `    <h3>{{ title }}</h3>`,
+    `    <p class="onboarding-step__summary">{{ summaryLabel }}</p>`,
+    `    <label class="field">`,
+    `      <select class="input" v-model="selectedRoleId">`,
+    `        <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>`,
+    `      </select>`,
+    `    </label>`,
+    `    <button type="button" class="button" @click="emit('confirm', selectedRoleId)">{{ confirmLabel }}</button>`,
     `  </section>`,
     `</template>`,
     ``,

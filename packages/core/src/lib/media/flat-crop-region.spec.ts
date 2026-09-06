@@ -2,6 +2,7 @@ import {
   centerCropForOutput,
   clampCropToSource,
   flatCropToCropRegion,
+  fitCropToOutputAspect,
   isEquirectSourceDimensions,
 } from './flat-crop-region';
 
@@ -9,6 +10,17 @@ describe('flat-crop-region', () => {
   it('detects equirect 2:1 sources', () => {
     expect(isEquirectSourceDimensions(3840, 1920)).toBe(true);
     expect(isEquirectSourceDimensions(1920, 1080)).toBe(false);
+  });
+
+  it('fits crop to export aspect', () => {
+    const crop = fitCropToOutputAspect(
+      { cropX: 0, cropY: 0, cropWidth: 640, cropHeight: 360 },
+      1920,
+      1080,
+      480,
+      480,
+    );
+    expect(crop.cropWidth / crop.cropHeight).toBeCloseTo(1, 2);
   });
 
   it('centers crop with output aspect', () => {

@@ -32,6 +32,12 @@ export default defineConfig({
     port: 4311,
     host: '0.0.0.0',
     headers: wasmIsolationHeaders(),
+    fs: {
+      allow: [resolve(__dirname, '../..')],
+    },
+    watch: {
+      ignored: ['**/node_modules/**', '!**/libs/destination-atlas/**'],
+    },
   },
   preview: {
     port: 4311,
@@ -39,7 +45,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['leaflet', '@googlemaps/js-api-loader', 'three'],
-    exclude: ['maplibre-gl', '@ffmpeg/ffmpeg', '@ffmpeg/util'],
+    exclude: [
+      'maplibre-gl',
+      '@ffmpeg/ffmpeg',
+      '@ffmpeg/util',
+      // Source alias — keep authoring-360-sources.json out of the prebundle cache.
+      resolve(__dirname, '../../libs/destination-atlas/src/index.ts'),
+    ],
   },
   worker: {
     format: 'es',

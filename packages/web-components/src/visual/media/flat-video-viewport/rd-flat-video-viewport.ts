@@ -1,4 +1,4 @@
-import { clampCropToSource, type FlatCropRect } from '@rosettadash/core';
+import { clampCropToSource, fitCropToOutputAspect, type FlatCropRect } from '@rosettadash/core';
 import { defineRosettaElement, readNumber } from '../../../lib/element-utils.js';
 import { applyCanvasContainDisplay } from '../contain-layout.js';
 import { startCanvasRecorder, stopCanvasRecorder, type CanvasRecorderSession } from '../canvas-recorder.js';
@@ -94,10 +94,15 @@ export class RdFlatVideoViewportElement extends HTMLElement {
       if (this.drag) {
         return;
       }
+      this.syncLockedCropFromAttributes();
       this.paintCrop();
       this.resizeOutputCanvas();
     }
     if (name === 'output-width' || name === 'output-height') {
+      if (this.drag) {
+        return;
+      }
+      this.syncLockedCropFromAttributes();
       this.resizeOutputCanvas();
     }
   }
@@ -158,7 +163,7 @@ export class RdFlatVideoViewportElement extends HTMLElement {
   }
 
   get lockAspectRatio(): boolean {
-    return this.hasAttribute('lock-aspect-ratio');
+    return this.getAttribute('lock-aspect-ratio') !== 'false';
   }
 
   async play(): Promise<void> {
@@ -284,8 +289,55 @@ export class RdFlatVideoViewportElement extends HTMLElement {
     }
   }
 
+  private syncLockedCropFromAttributes(): void {
+    if (!this.lockAspectRatio) {
+      return;
+    }
+    const fitted = fitCropToOutputAspect(
+      {
+        cropX: this.cropX,
+        cropY: this.cropY,
+        cropWidth: this.cropWidth,
+        cropHeight: this.cropHeight,
+      },
+      this.sourceWidth,
+      this.sourceHeight,
+      this.outputWidth,
+      this.outputHeight,
+    );
+    if (
+      fitted.cropX === this.cropX &&
+      fitted.cropY === this.cropY &&
+      fitted.cropWidth === this.cropWidth &&
+      fitted.cropHeight === this.cropHeight
+    ) {
+      return;
+    }
+    this.setAttribute('crop-x', String(fitted.cropX));
+    this.setAttribute('crop-y', String(fitted.cropY));
+    this.setAttribute('crop-width', String(fitted.cropWidth));
+    this.setAttribute('crop-height', String(fitted.cropHeight));
+    this.paintCrop();
+    this.dispatchEvent(
+      new CustomEvent('crop-change', {
+        detail: fitted,
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
   private emitCrop(next: FlatCropRect, silent = false): void {
-    const clamped = clampCropToSource(next, this.sourceWidth, this.sourceHeight);
+    let clamped = clampCropToSource(next, this.sourceWidth, this.sourceHeight);
+    if (this.lockAspectRatio) {
+      clamped = fitCropToOutputAspect(
+        clamped,
+        this.sourceWidth,
+        this.sourceHeight,
+        this.outputWidth,
+        this.outputHeight,
+      );
+    }
     this.setAttribute('crop-x', String(clamped.cropX));
     this.setAttribute('crop-y', String(clamped.cropY));
     this.setAttribute('crop-width', String(clamped.cropWidth));
@@ -484,7 +536,7 @@ export class RdFlatVideoViewportElement extends HTMLElement {
     if (!canvas) {
       return;
     }
-    applyPreviewCanvasLayout(canvas, this.cropWidth, this.cropHeight, this.outputPreviewHost);
+    applyPreviewCanvasLayout(canvas, this.outputWidth, this.outputHeight, this.outputPreviewHost);
   }
 }
 

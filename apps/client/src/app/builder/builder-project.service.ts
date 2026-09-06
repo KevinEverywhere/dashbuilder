@@ -17,7 +17,10 @@ import {
   readBuilderSession,
   readLibraryRestore,
   readPendingStackProfile,
+  readPendingProjectName,
+  clearPendingProjectName,
   writeActiveStackProfile,
+  writePendingStackProfile,
   type BuilderSession,
 } from '../welcome/stack-profile-session';
 
@@ -41,9 +44,11 @@ export class BuilderProjectService {
         });
         if (libraryRestore.stackProfile) {
           writeActiveStackProfile(libraryRestore.stackProfile);
+          writePendingStackProfile(libraryRestore.stackProfile);
         }
         this.state.dirty.set(true);
         this.state.saveStatus.set('idle');
+        await this.applySessionStackProfile();
         return;
       }
 
@@ -51,20 +56,56 @@ export class BuilderProjectService {
       if (session) {
         const restored = await this.tryRestore(session);
         if (restored) {
+          await this.applySessionStackProfile();
           return;
         }
       }
       await this.createNewWorkspace();
+      await this.applySessionStackProfile();
     } catch {
       if (!this.state.project()) {
         this.bootstrapLocalWorkspace();
       }
+      await this.applySessionStackProfile();
     } finally {
       this.state.loading.set(false);
     }
   }
 
-  async save(): Promise<void> {
+  isDefaultProjectName(name: string | undefined): boolean {
+    const normalized = name?.trim().toLowerCase();
+    return !normalized || normalized === 'untitled dashboard' || normalized === 'untitled';
+  }
+
+  async renameProject(name: string): Promise<void> {
+    const project = this.state.project();
+    if (!project) {
+      return;
+    }
+
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName === project.name) {
+      return;
+    }
+
+    this.state.errorMessage.set(null);
+
+    try {
+      const updatedProject = await firstValueFrom(
+        this.api.updateProject(project.id, { name: trimmedName }),
+      );
+      this.state.project.set({
+        ...project,
+        name: updatedProject.name,
+        updatedAt: updatedProject.updatedAt,
+      });
+    } catch (error) {
+      this.state.errorMessage.set(this.toMessage(error));
+      throw error;
+    }
+  }
+
+  async save(projectName?: string): Promise<void> {
     const project = this.state.project();
     const composite = this.state.composite();
     if (!project || !composite) {
@@ -75,6 +116,18 @@ export class BuilderProjectService {
     this.state.errorMessage.set(null);
 
     try {
+      const trimmedName = projectName?.trim();
+      if (trimmedName && trimmedName !== project.name) {
+        const updatedProject = await firstValueFrom(
+          this.api.updateProject(project.id, { name: trimmedName }),
+        );
+        this.state.project.set({
+          ...project,
+          name: updatedProject.name,
+          updatedAt: updatedProject.updatedAt,
+        });
+      }
+
       const payload = this.state.buildCompositePayload();
       const updated = await firstValueFrom(
         this.api.updateComposite(project.id, composite.id, payload),
@@ -101,9 +154,6 @@ export class BuilderProjectService {
 
       this.state.setProjectContext(project, composite);
       this.writeSession({ projectId: project.id, compositeId: composite.id });
-      if (project.stackProfile) {
-        writeActiveStackProfile(project.stackProfile);
-      }
       return true;
     } catch {
       return false;
@@ -112,16 +162,19 @@ export class BuilderProjectService {
 
   private async createNewWorkspace(): Promise<void> {
     const pendingStack = readPendingStackProfile();
-    const stackProfile: StackProfile = normalizeStackProfile(pendingStack ?? { ui: 'web-components' }) ?? {
+    const stackProfile: StackProfile = normalizeStackProfile(pendingStack ?? undefined) ?? {
       ui: 'web-components',
     };
     clearPendingStackProfile();
+
+    const pendingName = readPendingProjectName();
+    clearPendingProjectName();
 
     const exportTargets = stackProfileToExportTargets(stackProfile);
 
     const project = await firstValueFrom(
       this.api.createProject({
-        name: 'Untitled Dashboard',
+        name: pendingName ?? 'Untitled Dashboard',
         stackProfile,
       }),
     );
@@ -152,10 +205,13 @@ export class BuilderProjectService {
   /** Local-only workspace when the projects API is unavailable on load. */
   private bootstrapLocalWorkspace(): void {
     const pendingStack = readPendingStackProfile();
-    const stackProfile: StackProfile = normalizeStackProfile(pendingStack ?? { ui: 'web-components' }) ?? {
+    const stackProfile: StackProfile = normalizeStackProfile(pendingStack ?? undefined) ?? {
       ui: 'web-components',
     };
     clearPendingStackProfile();
+
+    const pendingName = readPendingProjectName();
+    clearPendingProjectName();
 
     const exportTargets = stackProfileToExportTargets(stackProfile);
     const now = new Date().toISOString();
@@ -169,7 +225,7 @@ export class BuilderProjectService {
     };
     const project: Project = {
       id: crypto.randomUUID(),
-      name: 'Untitled Dashboard',
+      name: pendingName ?? 'Untitled Dashboard',
       composites: [composite],
       stackProfile,
       createdAt: now,
@@ -178,6 +234,74 @@ export class BuilderProjectService {
 
     this.state.setProjectContext(project, composite);
     writeActiveStackProfile(stackProfile);
+  }
+
+  private async applySessionStackProfile(): Promise<void> {
+    const pending = readPendingStackProfile();
+    clearPendingStackProfile();
+    if (!pending) {
+      return;
+    }
+
+    const profile = normalizeStackProfile(pending);
+    if (!profile) {
+      return;
+    }
+
+    const project = this.state.project();
+    if (!project) {
+      return;
+    }
+
+    const current = normalizeStackProfile(project.stackProfile);
+    if (current && this.stackProfilesEqual(current, profile)) {
+      writeActiveStackProfile(profile);
+      return;
+    }
+
+    this.applyStackProfileToState(profile);
+
+    try {
+      await firstValueFrom(this.api.updateProject(project.id, { stackProfile: profile }));
+      const composite = this.state.composite();
+      if (composite) {
+        const updated = await firstValueFrom(
+          this.api.updateComposite(project.id, composite.id, this.state.buildCompositePayload()),
+        );
+        this.state.composite.set(updated);
+      }
+    } catch {
+      this.state.markDirty();
+    }
+  }
+
+  private applyStackProfileToState(profile: StackProfile): void {
+    const project = this.state.project();
+    const composite = this.state.composite();
+    if (!project || !composite) {
+      return;
+    }
+
+    const exportTargets = stackProfileToExportTargets(profile);
+    this.state.project.set({
+      ...project,
+      stackProfile: profile,
+    });
+    if (exportTargets) {
+      this.state.composite.set({
+        ...composite,
+        exportTargets: {
+          ...composite.exportTargets,
+          ...exportTargets,
+        },
+      });
+    }
+    writeActiveStackProfile(profile);
+    this.state.markDirty();
+  }
+
+  private stackProfilesEqual(left: StackProfile, right: StackProfile): boolean {
+    return JSON.stringify(normalizeStackProfile(left)) === JSON.stringify(normalizeStackProfile(right));
   }
 
   private toMessage(error: unknown): string {

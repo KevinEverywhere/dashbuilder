@@ -24,7 +24,6 @@ const MIN_OUTPUT_EDGE = 160;
 const MIN_EXPORT_FRAME_SCALE = 0.2;
 const MAX_EXPORT_FRAME_SCALE = 1;
 
-const SPHERE_RADIUS = 10;
 const MIN_HFOV = 30;
 const PLANET_STEREO_START = 125;
 const PLANET_MAX_HFOV = 360;
@@ -48,8 +47,28 @@ function displayFovToPlanetMix(displayFov: number): number {
   return clamp((displayFov - PLANET_STEREO_START) / (PLANET_MAX_HFOV - PLANET_STEREO_START), 0, 1);
 }
 
+/** Rectilinear camera HFOV for the unified shader (matches former sphere path below stereo). */
+function rectilinearHfovForDisplay(displayFov: number): number {
+  return displayFovToPlanetMix(displayFov) > 0 ? PLANET_STEREO_START : displayFov;
+}
+
 function planetMixToSpread(planetMix: number): number {
   return THREE.MathUtils.lerp(0.35, 11, planetMix);
+}
+
+function pinchZoomGain(displayFov: number): number {
+  return THREE.MathUtils.lerp(18, 40, displayFovToPlanetMix(displayFov));
+}
+
+function wheelZoomDelta(displayFov: number, deltaY: number, ctrlKey: boolean): number {
+  const inPlanet = displayFovToPlanetMix(displayFov) > 0;
+  if (ctrlKey) {
+    return deltaY * (inPlanet ? 0.15 : 0.06);
+  }
+  if (deltaY > 0) {
+    return inPlanet ? 8 : 3;
+  }
+  return inPlanet ? -8 : -3;
 }
 
 function setVerticalFovFromHorizontal(
@@ -193,8 +212,8 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       return;
     }
     if (name === 'yaw' || name === 'pitch' || name === 'horizontal-fov') {
-      this.applyFovProp?.();
       if (!this.userInteracting) {
+        this.applyFovProp?.();
         this.applyOrientationProps?.();
       }
       return;
@@ -379,9 +398,6 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     const videoSrc = this.getAttribute('video-src');
     const outputPreviewElement = this.outputPreviewHost;
 
-    const sphereScene = new THREE.Scene();
-    sphereScene.background = new THREE.Color('#05080a');
-
     const planetScene = new THREE.Scene();
     planetScene.background = new THREE.Color('#05080a');
 
@@ -483,10 +499,6 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       this.outputHostResizeObserver.observe(outputPreviewElement);
     }
 
-    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x11181e, side: THREE.BackSide });
-    const sphere = new THREE.Mesh(new THREE.SphereGeometry(SPHERE_RADIUS, 64, 32), sphereMaterial);
-    sphereScene.add(sphere);
-
     const planetUniforms = {
       map: { value: null as THREE.Texture | null },
       projectionMatrixInverse: { value: new THREE.Matrix4() },
@@ -515,19 +527,16 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       max: this.maxHorizontalFov,
     });
 
-    const usePlanetRenderer = () => displayFov > PLANET_STEREO_START;
-
-    const applySphereCamera = (aspect: number) => {
-      applyYawPitch(camera, viewYaw, viewPitch);
-      setVerticalFovFromHorizontal(camera, displayFov, aspect, PLANET_STEREO_START);
-    };
-
     const syncPlanetUniforms = (aspect: number) => {
       applyYawPitch(camera, viewYaw, viewPitch);
-      setVerticalFovFromHorizontal(camera, PLANET_STEREO_START, aspect, PLANET_STEREO_START);
-      camera.updateMatrixWorld(true);
-
       const planetMix = displayFovToPlanetMix(displayFov);
+      setVerticalFovFromHorizontal(
+        camera,
+        rectilinearHfovForDisplay(displayFov),
+        aspect,
+        PLANET_STEREO_START,
+      );
+      camera.updateMatrixWorld(true);
       planetUniforms.projectionMatrixInverse.value.copy(camera.projectionMatrixInverse);
       planetUniforms.cameraMatrixWorld.value.copy(camera.matrixWorld);
       cameraOriginScratch.setFromMatrixPosition(camera.matrixWorld);
@@ -586,45 +595,48 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       this.userInteracting = true;
-      const inPlanet = usePlanetRenderer();
-      const delta = event.ctrlKey
-        ? event.deltaY * (inPlanet ? 0.15 : 0.06)
-        : event.deltaY > 0
-          ? inPlanet
-            ? 8
-            : 3
-          : inPlanet
-            ? -8
-            : -3;
-      zoomDisplayFov(delta);
+      zoomDisplayFov(wheelZoomDelta(displayFov, event.deltaY, event.ctrlKey));
       window.setTimeout(() => {
         this.userInteracting = false;
       }, 150);
     };
 
     let pinchDistance = 0;
+    let activeTouchCount = 0;
+    const cancelPointerDrag = () => {
+      dragging = false;
+      dragPointerId = -1;
+    };
     const onTouchStart = (event: TouchEvent) => {
+      activeTouchCount = event.touches.length;
       if (event.touches.length === 2) {
         this.userInteracting = true;
+        cancelPointerDrag();
         pinchDistance = touchDistance(event.touches);
       }
     };
     const onTouchMove = (event: TouchEvent) => {
+      activeTouchCount = event.touches.length;
       if (event.touches.length !== 2 || pinchDistance <= 0) {
         return;
       }
       event.preventDefault();
+      cancelPointerDrag();
       const nextDistance = touchDistance(event.touches);
       const scale = nextDistance / pinchDistance;
       if (Math.abs(scale - 1) > 0.01) {
-        const inPlanet = usePlanetRenderer();
-        zoomDisplayFov((1 - scale) * (inPlanet ? 40 : 18));
+        zoomDisplayFov((1 - scale) * pinchZoomGain(displayFov));
         pinchDistance = nextDistance;
       }
     };
-    const onTouchEnd = () => {
-      pinchDistance = 0;
-      this.userInteracting = false;
+    const onTouchEnd = (event: TouchEvent) => {
+      activeTouchCount = event.touches.length;
+      if (event.touches.length < 2) {
+        pinchDistance = 0;
+      }
+      if (event.touches.length === 0) {
+        this.userInteracting = false;
+      }
     };
 
     let dragging = false;
@@ -636,6 +648,9 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       if (event.button !== 0) {
         return;
       }
+      if (event.pointerType === 'touch' && (activeTouchCount >= 2 || pinchDistance > 0)) {
+        return;
+      }
       this.userInteracting = true;
       dragging = true;
       dragPointerId = event.pointerId;
@@ -645,7 +660,11 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      if (!dragging || event.pointerId !== dragPointerId) {
+      if (
+        !dragging ||
+        event.pointerId !== dragPointerId ||
+        (event.pointerType === 'touch' && (activeTouchCount >= 2 || pinchDistance > 0))
+      ) {
         return;
       }
       const deltaX = event.clientX - lastDragX;
@@ -713,9 +732,6 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
         texture = new THREE.VideoTexture(this.video);
         texture.colorSpace = THREE.SRGBColorSpace;
         applyInteriorTextureFlip(texture, this.flipInterior);
-        sphereMaterial.map = texture;
-        sphereMaterial.color.set('#ffffff');
-        sphereMaterial.needsUpdate = true;
         planetUniforms.map.value = texture;
       };
       video.addEventListener('loadeddata', bindTexture, { once: true });
@@ -732,11 +748,7 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
       const height = this.clientHeight || 1;
       renderer.setSize(width, height, false);
       aspect = width / height;
-      if (usePlanetRenderer()) {
-        syncPlanetUniforms(aspect);
-      } else {
-        applySphereCamera(aspect);
-      }
+      syncPlanetUniforms(aspect);
       const prevRefW = this.referenceDisplayW;
       const prevRefH = this.referenceDisplayH;
       const prevDisplayW = this.exportDisplayW;
@@ -768,13 +780,8 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
     resize();
 
     const renderFrame = (targetAspect: number, targetRenderer: THREE.WebGLRenderer) => {
-      if (usePlanetRenderer()) {
-        syncPlanetUniforms(targetAspect);
-        targetRenderer.render(planetScene, quadCamera);
-      } else {
-        applySphereCamera(targetAspect);
-        targetRenderer.render(sphereScene, camera);
-      }
+      syncPlanetUniforms(targetAspect);
+      targetRenderer.render(planetScene, quadCamera);
     };
 
     let animationId = 0;
@@ -826,8 +833,6 @@ export class RdEquirectSphereViewportElement extends HTMLElement {
         this.video = null;
       }
       this.outputMirror = null;
-      sphere.geometry.dispose();
-      sphereMaterial.dispose();
       planetMaterial.dispose();
       renderer.dispose();
       outputMirrorWrap?.remove();

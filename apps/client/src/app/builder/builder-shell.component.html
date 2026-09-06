@@ -16,7 +16,32 @@
   <header class="builder__toolbar">
     <div class="builder__brand">
       <app-nav variant="toolbar" />
-      <span class="builder__subtitle">{{ state.project()?.name ?? 'Builder' }}</span>
+      @if (projectNameEditing()) {
+        <input
+          #projectNameInput
+          class="builder__title-input"
+          type="text"
+          data-testid="builder-project-name-input"
+          [value]="projectNameDraft()"
+          placeholder="Dashboard name"
+          aria-label="Dashboard name"
+          (input)="projectNameDraft.set($any($event.target).value)"
+          (keydown.enter)="commitProjectName()"
+          (keydown.escape)="cancelProjectNameEdit()"
+          (blur)="commitProjectName()"
+        />
+      } @else if (state.project(); as project) {
+        <button
+          type="button"
+          class="builder__subtitle builder__subtitle--editable"
+          [class.builder__subtitle--untitled]="isUntitledProjectName()"
+          data-testid="builder-project-name"
+          [title]="isUntitledProjectName() ? 'Click to name this dashboard' : 'Click to rename'"
+          (click)="startProjectNameEdit()"
+        >
+          {{ project.name }}
+        </button>
+      }
       @if (stackSummary(); as stack) {
         <span class="builder__stack" data-testid="builder-stack">{{ stack }}</span>
       }
@@ -232,6 +257,7 @@
 </div>
 
 <app-export-wizard [open]="exportWizardOpen()" (closed)="closeExportWizard()" />
+
 <app-ai-drawer [open]="aiDrawerOpen()" (closed)="closeAiDrawer()" />
 <app-creation-wizard
   (aiAssistRequested)="onCreationWizardAi($event)"

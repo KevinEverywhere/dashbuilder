@@ -1,6 +1,8 @@
 # Storybook: Making Sense of the Pieces
 
-RosettaDash ships five Storybook catalogs. They share one sidebar. The ports are 6006 (Web Components), 6007 (React), 6008 (Vue), 6009 (Angular), 6010 (Svelte). The header says `RosettaDash · {runtime} catalog`.
+![Storybook should simplify everything.](graphics/storybook-intro.png)
+
+Storybook simplifies. It lets people know how to work with shared assets. RosettaDash ships with five Storybook catalogs, one for each framework. The ports are 6006 (Web Components), 6007 (React), 6008 (Vue), 6009 (Angular), 6010 (Svelte). The header says `RosettaDash · {runtime} catalog`.
 
 Example:
 
@@ -18,11 +20,11 @@ Open <http://localhost:6007>. You land on **Getting Started → Start here**.
 
 **Catalog / Components** is one story per builder group, plus an all-components scroll, plus the npm `rd-*` layout atoms. The previews use the same visual language as the builder’s preview panel.
 
-![One Components page — a table, or a KPI, isolated.](graphics/02-components.png)
+![One Components page — a data display, isolated.](graphics/02-components.png)
 
 **Catalog / Meta components** are made up of multiple components. These ten recipes provide a preview of the Dashboard Atlas, which is created using all of the components.
 
-![One Meta recipe — diagram, preview, XML. A dashboard without Atlas.](graphics/03-meta.png)
+![One Meta recipe — diagram, preview, XML.](graphics/03-meta.png)
 
 ## Styling, briefly
 
@@ -30,4 +32,4 @@ Getting Started includes **Styling modes**: minimal, tokens, themed. That is how
 
 ## Next
 
-With Storybook, components have been presented in isolation. Next, Destination Atlas ties the pieces together in a functioning working application in all our target frameworks.
+Destination Atlas ties the pieces together in a functioning working application for each target frameworks.

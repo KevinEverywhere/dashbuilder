@@ -69,7 +69,7 @@ export function MediaScreen({
       <h2>Media</h2>
       <p>
         Watch flat destination videos here (YouTube). Authoring autoloads 360° library clips for
-        twenty-six cities; upload flat or 360° sources anytime for extract.
+        all thirty cities; upload flat or 360° sources anytime for extract.
       </p>
       <div className="rd-media-layout">
         <div className="rd-media-primary">

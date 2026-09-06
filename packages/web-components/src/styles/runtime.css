@@ -1778,11 +1778,11 @@ rd-flat-video-viewport .rd-flat-video-viewport__handle--se,
   margin: 0;
   padding: 0.45rem 0.55rem;
   border-radius: var(--rd-radius-sm, 0.375rem);
-  background: var(--rd-color-surface-muted, #f3f5f8);
+  background: var(--rd-color-surface-raised, var(--rd-color-surface, transparent));
   border: 1px solid var(--rd-color-border, #d9dee7);
   font-size: 0.72rem;
   line-height: 1.4;
-  color: var(--rd-color-muted, #5b667a);
+  color: var(--rd-color-text, #1a1a1a);
 }
 
 .rd-attribution-notice__kind {
@@ -1791,16 +1791,18 @@ rd-flat-video-viewport .rd-flat-video-viewport__handle--se,
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: var(--rd-color-muted, #5b667a);
 }
 
 .rd-attribution-notice__summary,
 .rd-attribution-notice__links,
 .rd-attribution-notice__license {
   margin: 0.15rem 0 0;
+  color: var(--rd-color-text, #1a1a1a);
 }
 
 .rd-attribution-notice__links a {
-  color: inherit;
+  color: var(--rd-color-accent, inherit);
   text-decoration: underline;
   text-underline-offset: 0.12em;
 }

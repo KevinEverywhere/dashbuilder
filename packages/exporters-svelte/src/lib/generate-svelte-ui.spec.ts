@@ -286,6 +286,53 @@ describe('generateSvelteUiFiles', () => {
     expect(files.some((file) => file.content.includes('wasm-media'))).toBe(true);
   });
 
+  it('generates Svelte equirect media pipeline with ffmpeg filter helper', () => {
+    const video = registry.createNode('visual.media.video-source', { id: 'vs1' });
+    const viewport = registry.createNode('visual.media.equirect-viewport', { id: 'ev1' });
+    const media = registry.createNode('visual.wasm.media', {
+      id: 'wm1',
+      properties: { operation: 'equirect-extract', extractionMode: 'flat-crop' },
+    });
+    const asset = registry.createNode('infra.wasm.asset', { id: 'wa1' });
+    const server = registry.createNode('infra.server.nest', { id: 's1' });
+
+    const ir = buildExportIR(
+      {
+        id: 'comp1',
+        name: 'Equirect Export',
+        version: 1,
+        exportTargets: { ui: 'svelte', server: 'nest' },
+        nodes: [video, viewport, media, asset, server],
+        bindings: [
+          {
+            id: 'b1',
+            sourceNodeId: 'ev1',
+            sourcePortId: 'crop-region',
+            targetNodeId: 'wm1',
+            targetPortId: 'crop-region',
+          },
+          {
+            id: 'b2',
+            sourceNodeId: 'vs1',
+            sourcePortId: 'video-file',
+            targetNodeId: 'wm1',
+            targetPortId: 'input-file',
+          },
+        ],
+      },
+      registry,
+    );
+
+    const files = generateSvelteUiFiles(ir);
+    expect(files.some((file) => file.path === 'src/media/equirect-filter.ts')).toBe(true);
+    const filterFile = files.find((file) => file.path === 'src/media/equirect-filter.ts');
+    expect(filterFile?.content).toContain('buildEquirectFlatCropFilter');
+    const mediaFile = files.find((file) => file.content.includes('@ffmpeg/ffmpeg'));
+    expect(mediaFile?.content).toContain('buildEquirectExtractFilter');
+    expect(mediaFile?.content).toContain('runEquirectExtract');
+    expect(files.find((file) => file.path === 'README.export.md')?.content).toContain('@ffmpeg/ffmpeg');
+  });
+
   it('rejects non-svelte UI targets', () => {
     const ir = buildExportIR(
       {

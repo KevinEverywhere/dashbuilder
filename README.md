@@ -83,8 +83,8 @@ Full guide: [docs/43-destination-atlas-proof-apps.md](docs/43-destination-atlas-
 
 After `npm install`, Authoring 360° clips and `demo:tour` media are
 linked automatically (`postinstall` → `authoring:link-360`). Clips live
-in `libs/destination-atlas/media/authoring-360/` (twenty-six MP4s,
-~14 MB, tracked in git).
+in `libs/destination-atlas/media/authoring-360/` (thirty MP4s,
+~15 MB, tracked in git).
 
 ## Component examples (Storybook)
 
@@ -168,7 +168,7 @@ npm run verify:all     # optional sanity check
 ```
 
 `npm install` also runs **`authoring:link-360`** (via `postinstall`): it
-symlinks the twenty-six shipped Authoring / tour MP4s from
+symlinks the thirty shipped Authoring / tour MP4s from
 `libs/destination-atlas/media/authoring-360/` into each proof app and
 `demo:tour`. Those clips are **in the repo** (~14 MB). To rebuild from
 Wikimedia Commons stills: `npm run authoring:fetch-360` (needs **ffmpeg**

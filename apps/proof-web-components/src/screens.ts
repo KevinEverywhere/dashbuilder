@@ -30,6 +30,7 @@ import {
   type AttributionNotice,
 } from '@destination-atlas';
 import {
+  AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   CLIENT_ROUTER_MODE_OPTIONS,
@@ -365,7 +366,7 @@ export function renderMedia(atlas: AtlasState): string {
   return `
     <section class="da-panel">
       <h2>Media</h2>
-      <p>Watch flat destination videos here (YouTube). Authoring autoloads 360° library clips for twenty-six cities; upload flat or 360° sources anytime for extract.</p>
+      <p>Watch flat destination videos here (YouTube). Authoring autoloads 360° library clips for all thirty cities; upload flat or 360° sources anytime for extract.</p>
       <div class="rd-media-layout">
         <div class="rd-media-primary">
           <rd-select-input label="Destination video (YouTube)" options='${jsonAttr(FLAT_VIDEO_DESTINATIONS.map((d) => ({ value: d.id, label: localizedDestinationName(d, atlas.locale) })))}' value="${attr(flatSelected?.id ?? '')}" data-ref="media-flat"></rd-select-input>
@@ -483,7 +484,8 @@ export function renderAuthoring(atlas: AtlasState): string {
             <rd-flat-video-viewport
               class="da-authoring-flat-viewport"
               hidden
-              output-width="720"
+              lock-aspect-ratio
+              output-width="480"
               output-height="480"
               data-ref="auth-flat-viewport"
             ></rd-flat-video-viewport>
@@ -494,7 +496,7 @@ export function renderAuthoring(atlas: AtlasState): string {
               yaw="25"
               pitch="-8"
               horizontal-fov="75"
-              output-width="720"
+              output-width="480"
               output-height="480"
               data-ref="auth-sphere-viewport"
             ></rd-equirect-sphere-viewport>
@@ -521,14 +523,15 @@ export function renderAuthoring(atlas: AtlasState): string {
               <div class="da-authoring-crop-controls" data-ref="auth-flat-controls" hidden aria-label="Crop region controls">
                 <h4 class="da-authoring-crop-controls__title">Crop region</h4>
                 <p class="da-note da-authoring-crop-controls__hint">
-                  Drag corners for any output size (updates export dimensions live). Pick a preset to snap to
-                  320×240, 640×360, or 720×480.
+                  Drag the square crop on source — corners stay locked to the
+                  export aspect (default 480×480). Presets include 1:1, 4:3,
+                  16:9, and 3:2.
                 </p>
                 <div class="da-authoring-crop-controls__grid">
                   <rd-number-input label="Crop X" value="0" min="0" step="1" data-ref="auth-crop-x"></rd-number-input>
                   <rd-number-input label="Crop Y" value="0" min="0" step="1" data-ref="auth-crop-y"></rd-number-input>
-                  <rd-number-input label="Crop width" value="640" min="2" step="2" data-ref="auth-crop-w"></rd-number-input>
-                  <rd-number-input label="Crop height" value="360" min="2" step="2" data-ref="auth-crop-h"></rd-number-input>
+                  <rd-number-input label="Crop width" value="480" min="2" step="2" data-ref="auth-crop-w"></rd-number-input>
+                  <rd-number-input label="Crop height" value="480" min="2" step="2" data-ref="auth-crop-h"></rd-number-input>
                 </div>
               </div>
             </div>
@@ -545,14 +548,14 @@ export function renderAuthoring(atlas: AtlasState): string {
                   <rd-select-input
                     class="da-media-extract-size-row__preset"
                     label="Export rectangle size"
-                    value="720x480"
+                    value="${AUTHORING_DEFAULT_OUTPUT_PRESET_ID}"
                     options='${jsonAttr(presetOptions)}'
                     data-ref="auth-output-preset"
                   ></rd-select-input>
                   <rd-number-input
                     class="da-media-extract-size-row__dim"
                     label="W"
-                    value="720"
+                    value="480"
                     min="160"
                     max="3840"
                     step="2"

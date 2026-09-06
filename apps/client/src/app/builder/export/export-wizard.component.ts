@@ -5,9 +5,11 @@ import {
   formatStylingProfileSummary,
   getCompatibleDatabaseStackOptions,
   getCompatibleServerStackOptions,
+  normalizeStackProfile,
   resolveEffectiveExportTargets,
   resolveEffectiveStylingProfile,
   resolveExportComposite,
+  stackProfileToExportTargets,
   stylingFrameworkLabel,
   type StackDatabaseChoice,
   type StackServerChoice,
@@ -106,6 +108,7 @@ export class ExportWizardComponent {
   protected readonly errorMessage = signal<string | null>(null);
 
   private targetsSeededForOpen = false;
+  private previewRequestId = 0;
 
   constructor() {
     effect(() => {
@@ -189,6 +192,7 @@ export class ExportWizardComponent {
       return;
     }
 
+    const requestId = ++this.previewRequestId;
     this.loading.set(true);
     this.bundle.set(null);
     this.validationIssues.set([]);
@@ -198,11 +202,19 @@ export class ExportWizardComponent {
       const composite = this.buildExportComposite();
       const stackProfile = this.state.project()?.stackProfile;
       const response = await firstValueFrom(this.exportApi.generateBundle(composite, stackProfile));
+      if (requestId !== this.previewRequestId) {
+        return;
+      }
       this.bundle.set(response);
     } catch (error) {
+      if (requestId !== this.previewRequestId) {
+        return;
+      }
       this.handleExportError(error);
     } finally {
-      this.loading.set(false);
+      if (requestId === this.previewRequestId) {
+        this.loading.set(false);
+      }
     }
   }
 
@@ -246,15 +258,28 @@ export class ExportWizardComponent {
   private seedTargetsFromState(): void {
     const project = this.state.project();
     const composite = this.state.composite();
-    const targets = resolveEffectiveExportTargets(composite?.exportTargets, project?.stackProfile);
+    const profileTargets = project?.stackProfile
+      ? stackProfileToExportTargets(normalizeStackProfile(project.stackProfile)!)
+      : undefined;
+    const compositeTargets = composite?.exportTargets;
+    const resolvedTargets =
+      profileTargets?.ui &&
+      compositeTargets?.ui &&
+      profileTargets.ui !== compositeTargets.ui
+        ? {
+            ui: profileTargets.ui,
+            server: profileTargets.server ?? compositeTargets.server,
+            database: profileTargets.database ?? compositeTargets.database,
+          }
+        : resolveEffectiveExportTargets(compositeTargets, project?.stackProfile);
     const allowedUi = this.uiTargetOptions();
-    const ui = allowedUi.some((option) => option.id === targets.ui)
-      ? targets.ui
+    const ui = allowedUi.some((option) => option.id === resolvedTargets.ui)
+      ? resolvedTargets.ui
       : (allowedUi[0]?.id ?? 'react');
 
     this.uiTarget.set(ui);
-    this.serverTarget.set(targets.server ?? 'none');
-    this.databaseTarget.set(targets.database ?? 'none');
+    this.serverTarget.set(resolvedTargets.server ?? 'none');
+    this.databaseTarget.set(resolvedTargets.database ?? 'none');
     this.clampInfraTargetsToUi(ui);
   }
 
@@ -292,11 +317,21 @@ export class ExportWizardComponent {
   }
 
   private handleExportError(error: unknown): void {
-    if (error instanceof HttpErrorResponse && error.status === 400) {
-      const body = error.error as ExportValidationErrorBody | undefined;
-      if (body?.issues?.length) {
-        this.validationIssues.set(body.issues);
-        this.errorMessage.set(body.message ?? 'Composite validation failed for export');
+    if (error instanceof HttpErrorResponse) {
+      const parsed = this.parseExportErrorBody(error);
+      if (parsed) {
+        this.validationIssues.set(parsed.issues ?? []);
+        this.errorMessage.set(parsed.message);
+        return;
+      }
+
+      if (error.status === 0) {
+        this.errorMessage.set('Export preview failed. Is the API running?');
+        return;
+      }
+
+      if (error.status >= 400) {
+        this.errorMessage.set(`Export preview failed (HTTP ${error.status}).`);
         return;
       }
     }
@@ -304,5 +339,39 @@ export class ExportWizardComponent {
     this.errorMessage.set(
       error instanceof Error ? error.message : 'Export preview failed. Is the API running?',
     );
+  }
+
+  private parseExportErrorBody(error: HttpErrorResponse): ExportValidationErrorBody | null {
+    const raw = error.error;
+    if (typeof raw === 'string' && raw.trim()) {
+      return { message: raw, issues: [] };
+    }
+    if (!raw || typeof raw !== 'object') {
+      return null;
+    }
+
+    const body = raw as Record<string, unknown>;
+    const nested =
+      body['message'] && typeof body['message'] === 'object' && !Array.isArray(body['message'])
+        ? (body['message'] as Record<string, unknown>)
+        : body;
+
+    const message = nested['message'];
+    const issues = nested['issues'];
+    if (typeof message === 'string' && message.trim()) {
+      return {
+        message,
+        issues: Array.isArray(issues) ? (issues as ValidationIssue[]) : [],
+      };
+    }
+
+    if (Array.isArray(issues) && issues.length > 0) {
+      return {
+        message: 'Composite validation failed for export',
+        issues: issues as ValidationIssue[],
+      };
+    }
+
+    return null;
   }
 }

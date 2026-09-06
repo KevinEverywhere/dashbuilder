@@ -1,6 +1,12 @@
 import type { IRComponent } from '@rosettadash/core';
 import { AngularExportError } from './types';
 import {
+  generateEquirectViewport,
+  generateLiveCapture,
+  generateVideoSource,
+  generateWasmMediaEquirect,
+} from './media-component-templates';
+import {
   generateThreeBarChart,
   generateThreeScatterPlot,
   generateThreeScenePointCloud,
@@ -12,6 +18,9 @@ import { joinLines, selectorFromClass } from './utils';
 const SUPPORTED_TYPES = new Set([
   'visual.input.text',
   'visual.input.select',
+  'visual.input.number',
+  'visual.input.checkbox',
+  'visual.input.textarea',
   'visual.input.date-range',
   'domain.time-preset',
   'visual.table',
@@ -32,6 +41,12 @@ const SUPPORTED_TYPES = new Set([
   'visual.wasm.worker-host',
   'visual.wasm.module',
   'visual.wasm.media',
+  'visual.media.video-source',
+  'visual.media.equirect-viewport',
+  'visual.media.live-capture',
+  'domain.role-gate',
+  'domain.person-invite',
+  'domain.role-assign',
   'logic.timer',
   'visual.news.language-select',
   'visual.news.region-select',
@@ -51,6 +66,12 @@ export function generateComponentFile(component: IRComponent, className: string)
       return generateTextInput(className);
     case 'visual.input.select':
       return generateSelectInput(className);
+    case 'visual.input.number':
+      return generateNumberInput(className);
+    case 'visual.input.checkbox':
+      return generateCheckboxInput(className);
+    case 'visual.input.textarea':
+      return generateTextareaInput(className);
     case 'visual.input.date-range':
       return generateDateRangeFilter(className);
     case 'domain.time-preset':
@@ -90,7 +111,21 @@ export function generateComponentFile(component: IRComponent, className: string)
     case 'visual.wasm.module':
       return generateWasmModule(className);
     case 'visual.wasm.media':
-      return generateWasmMedia(className);
+      return component.properties?.['operation'] === 'equirect-extract'
+        ? generateWasmMediaEquirect(className)
+        : generateWasmMedia(className);
+    case 'visual.media.video-source':
+      return generateVideoSource(className);
+    case 'visual.media.equirect-viewport':
+      return generateEquirectViewport(className);
+    case 'visual.media.live-capture':
+      return generateLiveCapture(className);
+    case 'domain.role-gate':
+      return generateRoleGate(className);
+    case 'domain.person-invite':
+      return generatePersonInvite(className);
+    case 'domain.role-assign':
+      return generateRoleAssign(className);
     case 'logic.timer':
       return generateTimer(className);
     case 'visual.news.language-select':
@@ -134,6 +169,113 @@ function generateTextInput(className: string): string {
     `  id = input<string>();`,
     `  placeholder = input('');`,
     `  required = input(false);`,
+    `  value = input<string>();`,
+    `  valueChange = output<string>();`,
+    `}`,
+    ``,
+  ]);
+}
+
+function generateNumberInput(className: string): string {
+  const selector = selectorFromClass(className);
+  return joinLines([
+    `import { Component, input, output } from '@angular/core';`,
+    ``,
+    `@Component({`,
+    `  selector: '${selector}',`,
+    `  standalone: true,`,
+    `  template: \``,
+    `    <label class="field" [attr.for]="id()">`,
+    `      <input`,
+    `        class="input"`,
+    `        type="number"`,
+    `        [id]="id()"`,
+    `        [placeholder]="placeholder()"`,
+    `        [required]="required()"`,
+    `        [min]="min()"`,
+    `        [max]="max()"`,
+    `        [step]="step()"`,
+    `        [value]="value() ?? 0"`,
+    `        (input)="valueChange.emit(+$any($event.target).value)"`,
+    `      />`,
+    `    </label>`,
+    `  \`,`,
+    `})`,
+    `export class ${className} {`,
+    `  id = input<string>();`,
+    `  placeholder = input('enter placeholder here');`,
+    `  required = input(false);`,
+    `  min = input<number>();`,
+    `  max = input(100);`,
+    `  step = input(1);`,
+    `  value = input<number>();`,
+    `  valueChange = output<number>();`,
+    `}`,
+    ``,
+  ]);
+}
+
+function generateCheckboxInput(className: string): string {
+  const selector = selectorFromClass(className);
+  return joinLines([
+    `import { Component, input, output } from '@angular/core';`,
+    ``,
+    `@Component({`,
+    `  selector: '${selector}',`,
+    `  standalone: true,`,
+    `  template: \``,
+    `    <label class="field field--checkbox" [attr.for]="id()">`,
+    `      <input`,
+    `        class="checkbox"`,
+    `        type="checkbox"`,
+    `        [id]="id()"`,
+    `        [checked]="value() ?? defaultChecked()"`,
+    `        (change)="valueChange.emit($any($event.target).checked)"`,
+    `      />`,
+    `      @if (label()) {`,
+    `        <span>{{ label() }}</span>`,
+    `      }`,
+    `    </label>`,
+    `  \`,`,
+    `})`,
+    `export class ${className} {`,
+    `  id = input<string>();`,
+    `  label = input('');`,
+    `  defaultChecked = input(false);`,
+    `  value = input<boolean>();`,
+    `  valueChange = output<boolean>();`,
+    `}`,
+    ``,
+  ]);
+}
+
+function generateTextareaInput(className: string): string {
+  const selector = selectorFromClass(className);
+  return joinLines([
+    `import { Component, input, output } from '@angular/core';`,
+    ``,
+    `@Component({`,
+    `  selector: '${selector}',`,
+    `  standalone: true,`,
+    `  template: \``,
+    `    <label class="field" [attr.for]="id()">`,
+    `      <textarea`,
+    `        class="textarea"`,
+    `        [id]="id()"`,
+    `        [placeholder]="placeholder()"`,
+    `        [required]="required()"`,
+    `        [rows]="rows()"`,
+    `        [value]="value() ?? ''"`,
+    `        (input)="valueChange.emit($any($event.target).value)"`,
+    `      ></textarea>`,
+    `    </label>`,
+    `  \`,`,
+    `})`,
+    `export class ${className} {`,
+    `  id = input<string>();`,
+    `  placeholder = input('enter placeholder here');`,
+    `  required = input(false);`,
+    `  rows = input(4);`,
     `  value = input<string>();`,
     `  valueChange = output<string>();`,
     `}`,
@@ -963,6 +1105,122 @@ function generateWasmModule(className: string): string {
     `  memoryPages = input(256);`,
     `  label = input('WASM Module');`,
     `  result = output<unknown>();`,
+    `}`,
+    ``,
+  ]);
+}
+
+function generateRoleGate(className: string): string {
+  const selector = selectorFromClass(className);
+  return joinLines([
+    `import { Component, computed, inject, input } from '@angular/core';`,
+    `import { CurrentRoleService } from '../auth/current-role.service';`,
+    ``,
+    `@Component({`,
+    `  selector: '${selector}',`,
+    `  standalone: true,`,
+    `  template: \``,
+    `    <section`,
+    `      class="rd-role-gate"`,
+    `      [class.rd-role-gate--visible]="visible()"`,
+    `      [class.rd-role-gate--hidden]="!visible()"`,
+    `      [id]="id()"`,
+    `      data-testid="rd-role-gate"`,
+    `    >`,
+    `      @if (label()) {`,
+    `        <span class="rd-field__label">{{ label() }}</span>`,
+    `      }`,
+    `      @if (visible()) {`,
+    `        <p class="rd-role-gate__status" data-testid="rd-role-gate-visible">{{ statusText() }}</p>`,
+    `        <ng-content><p>Protected content</p></ng-content>`,
+    `      } @else {`,
+    `        <p class="rd-role-gate__status rd-role-gate__status--hidden" data-testid="rd-role-gate-hidden">`,
+    `          {{ hiddenStatusText() }}`,
+    `        </p>`,
+    `      }`,
+    `    </section>`,
+    `  \`,`,
+    `})`,
+    `export class ${className} {`,
+    `  private readonly currentRole = inject(CurrentRoleService);`,
+    `  id = input<string>();`,
+    `  label = input('Protected section');`,
+    `  allowedRoles = input<string[]>([]);`,
+    `  statusText = input('Visible');`,
+    `  hiddenStatusText = input('Hidden for current role');`,
+    ``,
+    `  visible = computed(() => {`,
+    `    const role = this.currentRole.role();`,
+    `    const hasRoleContext = role !== undefined && role !== '';`,
+    `    const allowed = this.allowedRoles();`,
+    `    return !hasRoleContext || allowed.length === 0 || allowed.includes(role);`,
+    `  });`,
+    `}`,
+    ``,
+  ]);
+}
+
+function generatePersonInvite(className: string): string {
+  const selector = selectorFromClass(className);
+  return joinLines([
+    `import { Component, input, output, signal } from '@angular/core';`,
+    ``,
+    `@Component({`,
+    `  selector: '${selector}',`,
+    `  standalone: true,`,
+    `  template: \``,
+    `    <section class="onboarding-step" [id]="id()">`,
+    `      <h3>{{ title() }}</h3>`,
+    `      <label class="field">`,
+    `        <input class="input" type="email" [placeholder]="emailPlaceholder()" [value]="email()" (input)="email.set($any($event.target).value)" />`,
+    `      </label>`,
+    `      <button type="button" class="button" (click)="submit.emit(email())">{{ submitLabel() }}</button>`,
+    `    </section>`,
+    `  \`,`,
+    `})`,
+    `export class ${className} {`,
+    `  id = input<string>();`,
+    `  title = input('Invite team member');`,
+    `  emailPlaceholder = input('name@company.com');`,
+    `  submitLabel = input('Send invite');`,
+    `  email = signal('');`,
+    `  submit = output<string>();`,
+    `}`,
+    ``,
+  ]);
+}
+
+function generateRoleAssign(className: string): string {
+  const selector = selectorFromClass(className);
+  return joinLines([
+    `import { Component, input, output, signal } from '@angular/core';`,
+    ``,
+    `@Component({`,
+    `  selector: '${selector}',`,
+    `  standalone: true,`,
+    `  template: \``,
+    `    <section class="onboarding-step" [id]="id()">`,
+    `      <h3>{{ title() }}</h3>`,
+    `      <p class="onboarding-step__summary">{{ summaryLabel() }}</p>`,
+    `      <label class="field">`,
+    `        <select class="input" [value]="selectedRoleId()" (change)="selectedRoleId.set($any($event.target).value)">`,
+    `          @for (role of roles(); track role.id) {`,
+    `            <option [value]="role.id">{{ role.name }}</option>`,
+    `          }`,
+    `        </select>`,
+    `      </label>`,
+    `      <button type="button" class="button" (click)="confirm.emit(selectedRoleId())">{{ confirmLabel() }}</button>`,
+    `    </section>`,
+    `  \`,`,
+    `})`,
+    `export class ${className} {`,
+    `  id = input<string>();`,
+    `  title = input('Assign role');`,
+    `  confirmLabel = input('Confirm access');`,
+    `  summaryLabel = input('Review access before confirming');`,
+    `  roles = input<Array<{ id: string; name: string }>>([]);`,
+    `  selectedRoleId = signal('');`,
+    `  confirm = output<string>();`,
     `}`,
     ``,
   ]);

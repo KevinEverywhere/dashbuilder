@@ -4,7 +4,9 @@
 **Research:** [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126)  
 **Gap WC components:** [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127) app-language-select · [DAS-128](https://planetkevin.atlassian.net/browse/DAS-128) geo-map · [DAS-129](https://planetkevin.atlassian.net/browse/DAS-129) youtube-embed
 
-Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for 26 cities (MP4s ship in `libs/destination-atlas/media/authoring-360/`, ~14 MB; `npm install` links them via `authoring:link-360`); Barcelona, Nairobi, Rio, and Melbourne stay upload-your-own.
+Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for all 30
+cities (MP4s ship in `libs/destination-atlas/media/authoring-360/`,
+~15 MB; `npm install` links them via `authoring:link-360`).
 
 ## Product intent
 
@@ -74,7 +76,12 @@ Implemented in React proof: [DAS-130](https://planetkevin.atlassian.net/browse/D
 
 **Authoring** is separate from **Media**. Media is for watching flat YouTube embeds; a 360° destination choice on Media routes to Authoring.
 
-**360° library:** twenty-six cities autoload short MP4 clips (shipped in `libs/destination-atlas/media/authoring-360/`, catalog in `authoring-360-sources.json`). `npm install` symlinks clips into proof apps and `demo:tour`; rebuild from Commons with `npm run authoring:fetch-360`. Barcelona, Nairobi, Rio, and Melbourne are upload-your-own. The **360° destination** pulldown lists all thirty cities; a collapsible JSON catalog panel shows shipped clips and gaps.
+**360° library:** all thirty cities autoload short MP4 clips (shipped in
+`libs/destination-atlas/media/authoring-360/`, catalog in
+`authoring-360-sources.json`). `npm install` symlinks clips into proof
+apps and `demo:tour`; rebuild from Commons with
+`npm run authoring:fetch-360`. The **360° destination** pulldown lists
+all thirty cities; a collapsible JSON catalog panel shows shipped clips.
 
 - **Source pane** — auto-detects flat vs ~2:1 equirect:
   - **Flat (2D):** `FlatVideoViewport` — draggable crop rectangle, live output mirror

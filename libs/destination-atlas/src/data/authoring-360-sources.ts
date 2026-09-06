@@ -1,13 +1,17 @@
 import catalogJson from './authoring-360-sources.json';
 import { MOCK_DESTINATIONS } from './destinations.js';
 
-/** Wikimedia Commons 2:1 (or near) still used to build a short Authoring clip. */
+/** Wikimedia Commons still used to build a short Authoring clip. */
 export interface Authoring360Source {
   destinationId: string;
   commonsTitle: string;
   label: string;
   credit: string;
   license: string;
+  /** Clockwise correction before encode (equirect stills only). */
+  rotateDegrees?: number;
+  /** Wide cylindrical 360° pans reprojected to equirect via ffmpeg v360. */
+  inputProjection?: 'cylindrical';
 }
 
 export const AUTHORING_360_SOURCES: Authoring360Source[] = Array.isArray(catalogJson)

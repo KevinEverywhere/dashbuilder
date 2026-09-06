@@ -35,8 +35,8 @@ import {
   hasBuilderSession,
   readActiveStackProfile,
   readBuilderSession,
-  readPendingStackProfile,
   writeActiveStackProfile,
+  writePendingProjectName,
   writePendingStackProfile,
 } from './stack-profile-session';
 
@@ -69,6 +69,7 @@ export class WelcomePageComponent implements OnInit {
   });
 
   protected readonly uiChoice = signal<UiFrameworkChoice | null>(null);
+  protected readonly dashboardName = signal('');
   protected readonly serverChoice = signal<StackServerChoice | null>(null);
   protected readonly databaseChoice = signal<StackDatabaseChoice | null>(null);
   protected readonly stylingProfile = signal<StackStylingProfile | null>(null);
@@ -143,18 +144,11 @@ export class WelcomePageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const pending = readPendingStackProfile();
-    if (pending) {
-      this.hydrateFromProfile(pending);
-      return;
-    }
-
     if (hasBuilderSession()) {
       this.isReturningUser.set(true);
       const active = readActiveStackProfile();
       if (active) {
-        this.hydrateFromProfile(active);
-        this.captureBaseline();
+        this.baselineProfile = normalizeStackProfile(active) ?? null;
       }
     }
   }
@@ -168,7 +162,27 @@ export class WelcomePageComponent implements OnInit {
   }
 
   protected canContinue(): boolean {
-    return this.hasUiChoice();
+    if (this.hasExistingSession() && !this.hasUiChoice()) {
+      return true;
+    }
+    if (!this.hasUiChoice()) {
+      return false;
+    }
+    if (this.hasExistingSession()) {
+      return true;
+    }
+    return this.dashboardName().trim().length > 0;
+  }
+
+  protected canStartFresh(): boolean {
+    if (this.hasExistingSession() && !this.hasUiChoice()) {
+      return true;
+    }
+    return this.hasUiChoice() && this.dashboardName().trim().length > 0;
+  }
+
+  protected showDashboardNameField(): boolean {
+    return !this.hasExistingSession() || this.hasUiChoice();
   }
 
   protected isSectionOpen(section: WelcomeSection): boolean {
@@ -314,7 +328,7 @@ export class WelcomePageComponent implements OnInit {
 
   protected dismissStartFreshDialog(): void {
     this.confirmDialog.set(null);
-    this.resetStackSelections();
+    this.resetStackSelectors();
   }
 
   protected uiSectionSummary(): string {
@@ -346,12 +360,17 @@ export class WelcomePageComponent implements OnInit {
     return value === 'Select';
   }
 
-  private resetStackSelections(): void {
+  private resetStackSelectors(): void {
     this.uiChoice.set(null);
+    this.dashboardName.set('');
     this.serverChoice.set(null);
     this.databaseChoice.set(null);
     this.stylingProfile.set(null);
     this.openSections.set(new Set(['ui']));
+  }
+
+  private resetStackSelections(): void {
+    this.resetStackSelectors();
     this.baselineProfile = null;
     this.stackChangeTarget = null;
     this.pendingStackMutation = null;
@@ -364,30 +383,44 @@ export class WelcomePageComponent implements OnInit {
     const fresh = options?.fresh ?? false;
     const useBaselineStack = options?.useBaselineStack ?? false;
 
-    if (!this.hasUiChoice() && !useBaselineStack) {
+    if (useBaselineStack) {
+      if (!this.baselineProfile) {
+        return;
+      }
+    } else if (fresh) {
+      if (!this.canStartFresh()) {
+        return;
+      }
+    } else if (!this.canContinue()) {
+      return;
+    }
+
+    const profile = this.resolveStackProfileForNavigation({
+      fresh,
+      useBaselineStack,
+    });
+    if (!profile) {
       return;
     }
 
     if (fresh) {
       clearBuilderSession();
-      const profile =
-        normalizeStackProfile(
-          useBaselineStack && this.baselineProfile
-            ? this.baselineProfile
-            : this.buildProfile(),
-        ) ?? { ui: 'web-components' };
+    }
+
+    if (this.hasUiChoice() || fresh || !hasBuilderSession()) {
       writePendingStackProfile(profile);
-      void this.router.navigate(['/builder']);
-      return;
+      writeActiveStackProfile(profile);
     }
 
-    if (hasBuilderSession()) {
-      void this.router.navigate(['/builder']);
-      return;
+    const trimmedName = this.dashboardName().trim();
+    if (trimmedName && (!hasBuilderSession() || fresh)) {
+      writePendingProjectName(trimmedName);
     }
 
-    const profile = normalizeStackProfile(this.buildProfile()) ?? { ui: 'web-components' };
-    writePendingStackProfile(profile);
+    if (hasBuilderSession() && this.hasUiChoice() && !fresh) {
+      void this.persistStackToCurrentProject(trimmedName || undefined);
+    }
+
     void this.router.navigate(['/builder']);
   }
 
@@ -408,35 +441,55 @@ export class WelcomePageComponent implements OnInit {
       return;
     }
 
-    const snapshot = this.buildProfile();
     mutate();
-    if (
-      JSON.stringify(this.buildProfile()) === JSON.stringify(this.baselineProfile) ||
-      JSON.stringify(this.buildProfile()) === JSON.stringify(snapshot)
-    ) {
+    if (!this.hasUiChoice()) {
       return;
     }
 
-    this.hydrateFromProfile(snapshot);
+    const nextProfile = normalizeStackProfile(this.buildProfile());
+    if (JSON.stringify(nextProfile) === JSON.stringify(this.baselineProfile)) {
+      return;
+    }
+
+    this.resetStackSelectors();
     this.pendingStackMutation = mutate;
     this.confirmDialog.set('stack-change-target');
   }
 
-  private async persistStackToCurrentProject(): Promise<void> {
+  private async persistStackToCurrentProject(projectName?: string): Promise<void> {
     const session = readBuilderSession();
-    const profile = normalizeStackProfile(this.buildProfile());
+    const profile = this.hasUiChoice() ? normalizeStackProfile(this.buildProfile()) : null;
     if (!session || !profile) {
       return;
     }
 
     try {
       await firstValueFrom(
-        this.projectsApi.updateProject(session.projectId, { stackProfile: profile }),
+        this.projectsApi.updateProject(session.projectId, {
+          stackProfile: profile,
+          ...(projectName ? { name: projectName } : {}),
+        }),
       );
     } catch {
       // API may be down; keep the chosen stack locally so export and resume stay in sync.
     }
     writeActiveStackProfile(profile);
+  }
+
+  private resolveStackProfileForNavigation(options?: {
+    fresh?: boolean;
+    useBaselineStack?: boolean;
+  }): StackProfile | null {
+    if (options?.useBaselineStack && this.baselineProfile) {
+      return normalizeStackProfile(this.baselineProfile) ?? null;
+    }
+    if (this.hasUiChoice()) {
+      return normalizeStackProfile(this.buildProfile()) ?? null;
+    }
+    if (this.hasExistingSession() && this.baselineProfile && !options?.fresh) {
+      return normalizeStackProfile(this.baselineProfile) ?? null;
+    }
+    return null;
   }
 
   private isStackDirty(): boolean {
@@ -461,7 +514,10 @@ export class WelcomePageComponent implements OnInit {
   }
 
   private buildProfile(): StackProfile {
-    const ui = this.uiChoice() ?? 'web-components';
+    const ui = this.uiChoice();
+    if (!ui) {
+      throw new Error('UI framework must be selected before building a stack profile');
+    }
     return {
       ui,
       server: this.serverChoice() ?? 'none',

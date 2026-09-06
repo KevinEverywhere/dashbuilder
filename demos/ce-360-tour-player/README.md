@@ -6,12 +6,11 @@ existing `rd-*` atoms plus the **same Three.js interior sphere** as
 Destination Atlas Authoring (`rd-equirect-sphere-viewport`).
 
 Uses the **360° destination** pulldown — all thirty cities, labels
-like `Tokyo · 360°`. Twenty-six destinations play the local Authoring
-library clips (`/authoring-360/{id}.mp4`, padded 2:1 equirect from
-Commons stills). Barcelona, Nairobi, Rio, and Melbourne show an upload
-hint.
+like `Tokyo · 360°`. Every destination plays the local Authoring library
+clips (`/authoring-360/{id}.mp4`, padded 2:1 equirect from Commons
+stills).
 
-**After clone:** `npm install` links the twenty-six shipped MP4s from
+**After clone:** `npm install` links the thirty shipped MP4s from
 `libs/destination-atlas/media/authoring-360/` (included in the repo).
 Then:
 

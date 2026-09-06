@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
@@ -117,16 +118,19 @@ export function AuthoringScreen({
   const [yaw, setYaw] = useState(example?.defaultYaw ?? 25);
   const [pitch, setPitch] = useState(example?.defaultPitch ?? -8);
   const [horizontalFov, setHorizontalFov] = useState(example?.defaultHorizontalFov ?? 75);
-  const [outputWidth, setOutputWidth] = useState(720);
-  const [outputHeight, setOutputHeight] = useState(480);
-  const [outputPresetId, setOutputPresetId] = useState('720x480');
+  const defaultOutput =
+    AUTHORING_OUTPUT_PRESETS.find((entry) => entry.id === AUTHORING_DEFAULT_OUTPUT_PRESET_ID) ??
+    AUTHORING_OUTPUT_PRESETS[0];
+  const [outputWidth, setOutputWidth] = useState(defaultOutput.width);
+  const [outputHeight, setOutputHeight] = useState(defaultOutput.height);
+  const [outputPresetId, setOutputPresetId] = useState(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
   const [reverse, setReverse] = useState(false);
   const [sourceWidth, setSourceWidth] = useState<number | undefined>();
   const [sourceHeight, setSourceHeight] = useState<number | undefined>();
   const [cropX, setCropX] = useState(0);
   const [cropY, setCropY] = useState(0);
-  const [cropWidth, setCropWidth] = useState(640);
-  const [cropHeight, setCropHeight] = useState(360);
+  const [cropWidth, setCropWidth] = useState(defaultOutput.width);
+  const [cropHeight, setCropHeight] = useState(defaultOutput.height);
   const [recordRange, setRecordRange] = useState<AuthoringRecordRange | null>(null);
   const [previewRecording, setPreviewRecording] = useState<Blob | null>(null);
   const [extractFormat, setExtractFormat] = useState<'mp4' | 'webm'>('mp4');
@@ -217,10 +221,10 @@ export function AuthoringScreen({
     setYaw(example.defaultYaw);
     setPitch(example.defaultPitch);
     setHorizontalFov(example.defaultHorizontalFov);
-    const preset = getAuthoringOutputPreset('720x480');
-    setOutputPresetId('720x480');
-    setOutputWidth(preset?.width ?? 720);
-    setOutputHeight(preset?.height ?? 480);
+    const preset = getAuthoringOutputPreset(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
+    setOutputPresetId(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
+    setOutputWidth(preset?.width ?? defaultOutput.width);
+    setOutputHeight(preset?.height ?? defaultOutput.height);
     setOutputSizeCommitToken((token) => token + 1);
     setSourceWidth(undefined);
     setSourceHeight(undefined);
@@ -624,6 +628,7 @@ export function AuthoringScreen({
                 cropHeight={cropHeight}
                 outputWidth={outputWidth}
                 outputHeight={outputHeight}
+                lockAspectRatio
                 outputPreviewHost={outputPreviewHost}
                 onCropChange={handleFlatCropChange}
               />
@@ -753,8 +758,9 @@ export function AuthoringScreen({
                   <div className="da-authoring-crop-controls" aria-label="Crop region controls">
                     <h4 className="da-authoring-crop-controls__title">Crop region</h4>
                     <p className="da-note da-authoring-crop-controls__hint">
-                      Drag corners for any output size (updates export dimensions live). Pick a preset to snap to
-                      320×240, 640×360, or 720×480.
+                      Drag the square crop on source — corners stay locked to the
+                      export aspect (default 480×480). Presets include 1:1, 4:3,
+                      16:9, and 3:2.
                     </p>
                     <div className="da-authoring-crop-controls__grid">
                       <NumberInput label="Crop X" value={cropX} step={1} min={0} max={sourceWidth ?? 99999} onChange={(value) => updateFlatCrop({ cropX: value })} />

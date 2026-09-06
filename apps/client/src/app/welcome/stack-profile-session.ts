@@ -2,6 +2,7 @@ import type { Composite, StackProfile } from '@rosettadash/core';
 
 export const BUILDER_SESSION_KEY = 'rosettadash:session';
 export const PENDING_STACK_KEY = 'rosettadash:pending-stack';
+export const PENDING_PROJECT_NAME_KEY = 'rosettadash:pending-project-name';
 export const ACTIVE_STACK_KEY = 'rosettadash:active-stack';
 export const LIBRARY_RESTORE_KEY = 'rosettadash:library-restore';
 
@@ -35,6 +36,23 @@ export function writePendingStackProfile(profile: StackProfile): void {
 
 export function clearPendingStackProfile(): void {
   sessionStorage.removeItem(PENDING_STACK_KEY);
+}
+
+export function readPendingProjectName(): string | null {
+  const raw = sessionStorage.getItem(PENDING_PROJECT_NAME_KEY);
+  if (!raw) {
+    return null;
+  }
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+export function writePendingProjectName(name: string): void {
+  sessionStorage.setItem(PENDING_PROJECT_NAME_KEY, name.trim());
+}
+
+export function clearPendingProjectName(): void {
+  sessionStorage.removeItem(PENDING_PROJECT_NAME_KEY);
 }
 
 export function readBuilderSession(): BuilderSession | null {

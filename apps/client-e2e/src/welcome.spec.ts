@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openBuilderViaWelcome } from './test-helpers';
+import { openBuilderViaWelcome, fillWelcomeDashboardName } from './test-helpers';
 
 test.describe('Welcome page entry', () => {
   test('shows empty stack state, then continues after choosing a framework', async ({ page }) => {
@@ -16,6 +16,7 @@ test.describe('Welcome page entry', () => {
 
     await page.getByTestId('stack-section-toggle-ui').click();
     await page.getByTestId('stack-ui-react').click();
+    await fillWelcomeDashboardName(page);
     await expect(page.getByTestId('welcome-continue')).toBeEnabled();
 
     await page.getByTestId('stack-section-toggle-styling').click();
@@ -40,7 +41,7 @@ test.describe('Welcome page entry', () => {
     await page.goto('/');
     await expect(page.getByTestId('welcome-page')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId('welcome-resume-note')).toBeVisible();
-    await expect(page.getByTestId('welcome-framework-prompt')).toHaveCount(0);
+    await expect(page.getByTestId('welcome-framework-prompt')).toBeVisible();
     await expect(page.getByTestId('builder-shell')).toHaveCount(0);
 
     await page.getByTestId('welcome-continue').click();

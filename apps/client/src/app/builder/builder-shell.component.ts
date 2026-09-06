@@ -1,5 +1,14 @@
-import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
+import { serverStackLabel } from '@rosettadash/core';
 import { canEnterBuilder } from '../welcome/stack-profile-session';
 import { AppNavComponent } from '../shared/app-nav/app-nav.component';
 import { BuilderAssistanceService } from './builder-assistance.service';
@@ -56,13 +65,19 @@ export class BuilderShellComponent implements OnInit {
 
   protected readonly exportWizardOpen = signal(false);
   protected readonly aiDrawerOpen = signal(false);
+  protected readonly projectNameEditing = signal(false);
+  protected readonly projectNameDraft = signal('');
+  private readonly projectNameInput = viewChild<ElementRef<HTMLInputElement>>('projectNameInput');
 
   protected stackSummary(): string {
     const profile = this.state.project()?.stackProfile;
     if (!profile?.ui) {
       return '';
     }
-    const server = profile.server && profile.server !== 'none' ? profile.server : 'UI only';
+    const server =
+      profile.server && profile.server !== 'none'
+        ? serverStackLabel(profile.server)
+        : 'UI only';
     return `${profile.ui} · ${server}`;
   }
 
@@ -95,7 +110,54 @@ export class BuilderShellComponent implements OnInit {
     }
   }
 
+  protected isUntitledProjectName(): boolean {
+    return this.projectService.isDefaultProjectName(this.state.project()?.name);
+  }
+
+  protected startProjectNameEdit(): void {
+    const project = this.state.project();
+    if (!project || this.state.loading()) {
+      return;
+    }
+    this.projectNameDraft.set(project.name);
+    this.projectNameEditing.set(true);
+    setTimeout(() => {
+      const input = this.projectNameInput()?.nativeElement;
+      input?.focus();
+      input?.select();
+    });
+  }
+
+  protected cancelProjectNameEdit(): void {
+    this.projectNameEditing.set(false);
+    this.projectNameDraft.set('');
+  }
+
+  protected commitProjectName(): void {
+    if (!this.projectNameEditing()) {
+      return;
+    }
+    this.projectNameEditing.set(false);
+
+    const project = this.state.project();
+    if (!project) {
+      return;
+    }
+
+    const trimmed = this.projectNameDraft().trim();
+    if (!trimmed || trimmed === project.name) {
+      return;
+    }
+
+    void this.projectService.renameProject(trimmed);
+  }
+
   protected save(): void {
+    const project = this.state.project();
+    if (project && this.projectService.isDefaultProjectName(project.name)) {
+      this.startProjectNameEdit();
+      return;
+    }
     void this.projectService.save();
   }
 
@@ -191,7 +253,8 @@ export class BuilderShellComponent implements OnInit {
       this.state.loading() ||
       this.exportWizardOpen() ||
       this.aiDrawerOpen() ||
-      this.creationWizard.open()
+      this.creationWizard.open() ||
+      this.projectNameEditing()
     ) {
       return;
     }

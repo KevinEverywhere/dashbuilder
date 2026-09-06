@@ -1,7 +1,9 @@
 import type { ExportIR } from '@rosettadash/core';
 import { generateNumericFieldsRuntimeFile, irUsesNumericPresentation, numericPresentationCssLines } from '@rosettadash/core';
+import { collectExportRoleIds, irHasRoleGates } from '@rosettadash/core';
 import { buildDashboardContext } from './binding-resolver';
 import { generateComponentFile } from './component-templates';
+import { generateEquirectFilterHelperFile } from './media-component-templates';
 import type { GeneratedFile, VueExportOptions } from './types';
 import { VueExportError } from './types';
 import { componentExportName, composableName, joinLines, pascalFromId } from './utils';
@@ -74,6 +76,32 @@ export function generateVueUiFiles(
       encoding: 'utf-8',
       description: `Data composable for ${source.label}`,
     });
+  }
+
+  if (irHasEquirectMediaPipeline(ir)) {
+    files.push({
+      path: `${root}/media/equirect-filter.ts`,
+      content: generateEquirectFilterHelperFile(),
+      encoding: 'utf-8',
+      description: 'ffmpeg filter helpers for equirect subsection export',
+    });
+  }
+
+  if (irHasRoleGates(ir) || (ir.domain?.roles?.length ?? 0) > 0) {
+    files.push(
+      {
+        path: `${root}/auth/roles.ts`,
+        content: generateRolesFile(ir),
+        encoding: 'utf-8',
+        description: 'Domain role definitions for exported dashboard',
+      },
+      {
+        path: `${root}/auth/useCurrentRole.ts`,
+        content: generateUseCurrentRoleFile(collectExportRoleIds(ir)),
+        encoding: 'utf-8',
+        description: 'Stub composable for resolving the active user role',
+      },
+    );
   }
 
   files.push({
@@ -163,6 +191,10 @@ function generateTokensCss(ir: ExportIR): string {
     `.timer__header { display: flex; align-items: center; gap: 0.5rem; }`,
     `.timer__mode { font-size: 0.75rem; color: var(--db-muted); text-transform: capitalize; }`,
     `.timer__value { margin: 0; font-size: 1.125rem; font-weight: 600; font-variant-numeric: tabular-nums; }`,
+    `.rd-role-gate { padding: 1rem; border: 1px dashed var(--db-border); border-radius: 0.5rem; }`,
+    `.rd-role-gate--hidden { border-style: solid; }`,
+    `.rd-role-gate__status { margin: 0.35rem 0 0.5rem; font-size: 0.8125rem; font-weight: 600; }`,
+    `.rd-role-gate__status--hidden { color: var(--db-muted); }`,
     `/* styling: ${ir.styles.framework} · generated for ${ir.meta.compositeName} */`,
     ``,
   ]);
@@ -251,6 +283,7 @@ function generateReadme(ir: ExportIR): string {
     `- \`src/Dashboard.vue\` — composed page wired from builder bindings`,
     `- \`src/components/*.vue\` — P0 visual SFC components`,
     `- \`src/composables/*.ts\` — data composables targeting exported API routes`,
+    `- \`src/auth/*.ts\` — role definitions and current-role stub (when role gates exist)`,
     `- \`src/styles/tokens.css\` — neutral dashboard styling`,
     ``,
     `## Environment`,
@@ -262,6 +295,75 @@ function generateReadme(ir: ExportIR): string {
     `1. Copy the generated \`src/\` folder into your Vue 3 app.`,
     `2. Register \`Dashboard.vue\` on a route.`,
     `3. Ensure server routes referenced by composables are available.`,
+    irHasEquirectMediaPipeline(ir)
+      ? `4. Install ffmpeg.wasm for media pipelines: \`npm install @ffmpeg/ffmpeg @ffmpeg/util\`.`
+      : '',
+    ``,
+  ].filter(Boolean));
+}
+
+const EQUIRECT_MEDIA_TYPES = new Set([
+  'visual.media.video-source',
+  'visual.media.equirect-viewport',
+  'visual.media.live-capture',
+  'visual.wasm.media',
+]);
+
+function irHasEquirectMediaPipeline(ir: ExportIR): boolean {
+  return ir.components.some((component) => EQUIRECT_MEDIA_TYPES.has(component.type));
+}
+
+function generateRolesFile(ir: ExportIR): string {
+  const roleIds = collectExportRoleIds(ir);
+  const domainRoles = ir.domain?.roles ?? [];
+  const entries =
+    domainRoles.length > 0
+      ? domainRoles.map((role) => `  { id: '${role.id}', name: '${role.name.replace(/'/g, "\\'")}' },`)
+      : roleIds.map((roleId) => `  '${roleId}',`);
+
+  if (domainRoles.length > 0) {
+    return joinLines([
+      `export interface DomainRole {`,
+      `  id: string;`,
+      `  name: string;`,
+      `}`,
+      ``,
+      `export const DOMAIN_ROLES: DomainRole[] = [`,
+      ...entries,
+      `];`,
+      ``,
+    ]);
+  }
+
+  return joinLines([
+    `export const DOMAIN_ROLES = [`,
+    ...entries,
+    `] as const;`,
+    ``,
+    `export type DomainRole = (typeof DOMAIN_ROLES)[number];`,
+    ``,
+  ]);
+}
+
+function generateUseCurrentRoleFile(roleIds: string[]): string {
+  const fallback = roleIds[0] ?? 'viewer';
+  return joinLines([
+    `import { computed } from 'vue';`,
+    ``,
+    `const FALLBACK_ROLE = '${fallback}';`,
+    ``,
+    `export function useCurrentRole() {`,
+    `  return computed(() => {`,
+    `    if (typeof window === 'undefined') {`,
+    `      return import.meta.env.VITE_ROSETTADASH_ROLE ?? FALLBACK_ROLE;`,
+    `    }`,
+    `    return (`,
+    `      window.localStorage.getItem('rosettadash.role') ??`,
+    `      import.meta.env.VITE_ROSETTADASH_ROLE ??`,
+    `      FALLBACK_ROLE`,
+    `    );`,
+    `  });`,
+    `}`,
     ``,
   ]);
 }

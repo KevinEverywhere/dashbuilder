@@ -1,59 +1,17 @@
 [
   {
-    "destinationId": "tokyo",
-    "commonsTitle": "360 panorama of Roppongi Hills - October 2016.jpg",
-    "label": "Roppongi Hills",
-    "credit": "nesnad",
-    "license": "CC BY-SA 3.0"
-  },
-  {
-    "destinationId": "bangkok",
-    "commonsTitle": "Chao Mae Tuptim-Pano.jpg",
-    "label": "Chao Mae Tuptim shrine",
-    "credit": "Ddalbiez",
-    "license": "CC BY-SA 3.0"
-  },
-  {
-    "destinationId": "singapore",
-    "commonsTitle": "Singapore Marina Bay Aerial.jpg",
-    "label": "Marina Bay",
-    "credit": "Omar David Sandoval Sida",
+    "destinationId": "auckland",
+    "commonsTitle": "Mapillary (ZJMx16tnGzKpVaSTewDmdL) (ralley) 2021-12-18 06H48M23S000.jpg",
+    "label": "Ponsonby street (Mapillary)",
+    "credit": "ralley / Mapillary",
     "license": "CC BY-SA 4.0"
   },
   {
-    "destinationId": "seoul",
-    "commonsTitle": "Mapillary (1430628417853429, OgxLe4TrJdMX3AR9qc68Ez) (lisbethw1130) 2025-06-15 04H52M05S000.jpg",
-    "label": "Jongno street (Mapillary)",
-    "credit": "lisbethw1130 / Mapillary",
-    "license": "CC BY-SA 4.0"
-  },
-  {
-    "destinationId": "mumbai",
-    "commonsTitle": "Pano-20230403-Gateway-of-India.jpg",
-    "label": "Gateway of India",
-    "credit": "Fuzheado",
-    "license": "CC BY-SA 4.0"
-  },
-  {
-    "destinationId": "paris",
-    "commonsTitle": "Notre-Dame de Paris and Île de la Cité at dusk 140516 1.jpg",
-    "label": "Notre-Dame and Île de la Cité",
-    "credit": "DXR",
-    "license": "CC BY-SA 3.0"
-  },
-  {
-    "destinationId": "london",
-    "commonsTitle": "Isabella Plantation 1 360x180, London, UK - Diliff.jpg",
-    "label": "Isabella Plantation, Richmond Park",
-    "credit": "Diliff",
-    "license": "CC BY-SA 3.0"
-  },
-  {
-    "destinationId": "rome",
-    "commonsTitle": "Colosseo di Roma panoramic.jpg",
-    "label": "Colosseum",
-    "credit": "Wikimedia Commons contributors",
-    "license": "CC BY-SA 4.0"
+    "destinationId": "barcelona",
+    "commonsTitle": "Barcelona 42 2013.jpg",
+    "label": "Barcelona cityscape",
+    "credit": "Bengt Nyman",
+    "license": "CC BY 2.0"
   },
   {
     "destinationId": "berlin",
@@ -63,10 +21,10 @@
     "license": "CC BY-SA 4.0"
   },
   {
-    "destinationId": "marrakech",
-    "commonsTitle": "Mapillary (1650278691849015, oKjl-DJ9ZrT-YpVDYyOKUw) (navcities) 2019-12-21 12H23M32S000.jpg",
-    "label": "Medina street (Mapillary)",
-    "credit": "navcities / Mapillary",
+    "destinationId": "buenos-aires",
+    "commonsTitle": "Palier del Edif de Rentas Scalabrini Ortiz foto 360º.jpg",
+    "label": "Scalabrini Ortiz building",
+    "credit": "Wikimedia Commons contributors",
     "license": "CC BY-SA 4.0"
   },
   {
@@ -84,10 +42,66 @@
     "license": "CC BY-SA 4.0"
   },
   {
+    "destinationId": "cusco",
+    "commonsTitle": "Actual catedraĺ del Cusco, Plaza de armas.jpg",
+    "label": "Plaza de Armas",
+    "credit": "Johnattan Rupire",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "destinationId": "honolulu",
+    "commonsTitle": "2022-1025-manoa-heritage-center-7.jpg",
+    "label": "Mānoa Heritage Center",
+    "credit": "Fuzheado",
+    "license": "CC0"
+  },
+  {
     "destinationId": "lagos",
     "commonsTitle": "Mapillary (1042267023176121, s7as3bGFyjFn47EiKXzo5w) (moriwo) 2016-02-21 06H57M58S000.jpg",
     "label": "Lagos Island street (Mapillary)",
     "credit": "moriwo / Mapillary",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "destinationId": "london",
+    "commonsTitle": "Isabella Plantation 1 360x180, London, UK - Diliff.jpg",
+    "label": "Isabella Plantation, Richmond Park",
+    "credit": "Diliff",
+    "license": "CC BY-SA 3.0"
+  },
+  {
+    "destinationId": "los-angeles",
+    "commonsTitle": "Mapillary (uwrapid) 2025-09-24 20H38M40S000 (1905990993671464 at Snzvm60ICYDNW74Tj2Jbi3).jpg",
+    "label": "Downtown LA street (Mapillary)",
+    "credit": "uwrapid / Mapillary",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "destinationId": "marrakech",
+    "commonsTitle": "Mapillary (1650278691849015, oKjl-DJ9ZrT-YpVDYyOKUw) (navcities) 2019-12-21 12H23M32S000.jpg",
+    "label": "Medina street (Mapillary)",
+    "credit": "navcities / Mapillary",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "destinationId": "melbourne",
+    "commonsTitle": "Melbourne (AU), View from St Kilda Pier -- 2019 -- 1591.jpg",
+    "label": "CBD skyline from St Kilda Pier",
+    "credit": "Dietmar Rabich",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "destinationId": "mexico-city",
+    "commonsTitle": "Panorámica 360 con dron desde el Parque Ecológico Xochimilco.jpg",
+    "label": "Mexico City from Xochimilco (drone)",
+    "credit": "ProtoplasmaKid",
+    "license": "CC BY 4.0"
+  },
+  {
+    "destinationId": "mumbai",
+    "commonsTitle": "Pano-20230403-Gateway-of-India.jpg",
+    "label": "Gateway of India",
+    "credit": "Fuzheado",
     "license": "CC BY-SA 4.0"
   },
   {
@@ -98,53 +112,18 @@
     "license": "CC BY-SA 4.0"
   },
   {
-    "destinationId": "mexico-city",
-    "commonsTitle": "Plaza Bellas Artes Mexico City.jpg",
-    "label": "Palacio de Bellas Artes",
-    "credit": "Uwebart",
+    "destinationId": "paris",
+    "commonsTitle": "Notre-Dame de Paris and Île de la Cité at dusk 140516 1.jpg",
+    "label": "Notre-Dame and Île de la Cité",
+    "credit": "DXR",
     "license": "CC BY-SA 3.0"
   },
   {
-    "destinationId": "toronto",
-    "commonsTitle": "CC 2022-06-18 193-Pano (cropped lossless).jpg",
-    "label": "Downtown Toronto",
-    "credit": "Kiffer Creveling",
-    "license": "CC BY-SA 4.0"
-  },
-  {
-    "destinationId": "los-angeles",
-    "commonsTitle": "Fireboat 2 Pano (4600661842).jpg",
-    "label": "San Pedro fireboat",
-    "credit": "Matthew Dillon",
-    "license": "CC BY 2.0"
-  },
-  {
-    "destinationId": "vancouver",
-    "commonsTitle": "Vancouver - False Creek pano 02.jpg",
-    "label": "False Creek from Granville Bridge",
-    "credit": "Joe Mabel",
-    "license": "CC BY-SA 3.0"
-  },
-  {
-    "destinationId": "cusco",
-    "commonsTitle": "Actual catedraĺ del Cusco, Plaza de armas.jpg",
-    "label": "Plaza de Armas",
-    "credit": "Johnattan Rupire",
-    "license": "CC BY-SA 4.0"
-  },
-  {
-    "destinationId": "buenos-aires",
-    "commonsTitle": "Palier del Edif de Rentas Scalabrini Ortiz foto 360º.jpg",
-    "label": "Scalabrini Ortiz building",
-    "credit": "Wikimedia Commons contributors",
-    "license": "CC BY-SA 4.0"
-  },
-  {
-    "destinationId": "bogota",
-    "commonsTitle": "Cerro de Monserrate (56500).jpg",
-    "label": "Monserrate",
-    "credit": "AmiGueko",
-    "license": "CC BY-SA 3.0"
+    "destinationId": "rome",
+    "commonsTitle": "Belvedere – Panorama (Greg Zaal and Rico Cilliers via Poly Haven).jpg",
+    "label": "Rome from Villa Borghese",
+    "credit": "Greg Zaal / Rico Cilliers",
+    "license": "CC0"
   },
   {
     "destinationId": "santiago",
@@ -154,31 +133,45 @@
     "license": "CC BY 4.0"
   },
   {
-    "destinationId": "sydney",
-    "commonsTitle": "MG 0906-Pano (27015325944).jpg",
-    "label": "Sydney panorama",
-    "credit": "Tibor Kovacs",
-    "license": "CC BY 2.0"
-  },
-  {
-    "destinationId": "auckland",
-    "commonsTitle": "Mapillary (ZJMx16tnGzKpVaSTewDmdL) (ralley) 2021-12-18 06H48M23S000.jpg",
-    "label": "Ponsonby street (Mapillary)",
-    "credit": "ralley / Mapillary",
+    "destinationId": "seoul",
+    "commonsTitle": "Mapillary (1430628417853429, OgxLe4TrJdMX3AR9qc68Ez) (lisbethw1130) 2025-06-15 04H52M05S000.jpg",
+    "label": "Jongno street (Mapillary)",
+    "credit": "lisbethw1130 / Mapillary",
     "license": "CC BY-SA 4.0"
   },
   {
-    "destinationId": "queenstown",
-    "commonsTitle": "Lower Shotover River Bridge. Otago. (8690218313).jpg",
-    "label": "Lower Shotover Bridge",
-    "credit": "Bernard Spragg. NZ",
+    "destinationId": "singapore",
+    "commonsTitle": "Singapore Marina Bay Aerial.jpg",
+    "label": "Marina Bay",
+    "credit": "Omar David Sandoval Sida",
+    "license": "CC BY-SA 4.0"
+  },
+  {
+    "destinationId": "sydney",
+    "commonsTitle": "Sydney city from Garden Island.jpg",
+    "label": "Today's photo shoot was at Garden Island. There is a spot up at the top ",
+    "credit": "Wyncliffe",
     "license": "CC0"
   },
   {
-    "destinationId": "honolulu",
-    "commonsTitle": "2022-1025-manoa-heritage-center-7.jpg",
-    "label": "Mānoa Heritage Center",
-    "credit": "Fuzheado",
-    "license": "CC0"
+    "destinationId": "tokyo",
+    "commonsTitle": "360 panorama of Roppongi Hills - October 2016.jpg",
+    "label": "Roppongi Hills",
+    "credit": "nesnad",
+    "license": "CC BY-SA 3.0"
+  },
+  {
+    "destinationId": "toronto",
+    "commonsTitle": "Toronto 360 degrees (33630035284).jpg",
+    "label": "Downtown Toronto 360°",
+    "credit": "Peter Leth",
+    "license": "CC BY 2.0"
+  },
+  {
+    "destinationId": "vancouver",
+    "commonsTitle": "Skyline of Vancouver seen through volleyball nets at Spanish Banks.jpg",
+    "label": "Downtown skyline from Spanish Banks",
+    "credit": "Dllu",
+    "license": "CC BY-SA 4.0"
   }
 ]

@@ -46,6 +46,39 @@ export function isEquirectSourceDimensions(
   return Math.abs(sourceWidth / sourceHeight - 2) <= tolerance;
 }
 
+/** Resize a crop to match export aspect while keeping its center point. */
+export function fitCropToOutputAspect(
+  crop: FlatCropRect,
+  sourceWidth: number,
+  sourceHeight: number,
+  outputWidth: number,
+  outputHeight: number,
+): FlatCropRect {
+  const aspect = Math.max(0.01, outputWidth / outputHeight);
+  const centerX = crop.cropX + crop.cropWidth / 2;
+  const centerY = crop.cropY + crop.cropHeight / 2;
+  let cropWidth = Math.max(2, crop.cropWidth);
+  let cropHeight = Math.max(2, cropWidth / aspect);
+  if (cropHeight > sourceHeight) {
+    cropHeight = sourceHeight;
+    cropWidth = cropHeight * aspect;
+  }
+  if (cropWidth > sourceWidth) {
+    cropWidth = sourceWidth;
+    cropHeight = cropWidth / aspect;
+  }
+  return clampCropToSource(
+    {
+      cropX: Math.round(centerX - cropWidth / 2),
+      cropY: Math.round(centerY - cropHeight / 2),
+      cropWidth: Math.round(cropWidth),
+      cropHeight: Math.round(cropHeight),
+    },
+    sourceWidth,
+    sourceHeight,
+  );
+}
+
 /** Largest centered crop on the source that matches output aspect ratio. */
 export function centerCropForOutput(
   sourceWidth: number,

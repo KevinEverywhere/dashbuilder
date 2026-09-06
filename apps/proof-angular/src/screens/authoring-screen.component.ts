@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
@@ -176,6 +177,7 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                   [cropHeight]="cropHeight()"
                   [outputWidth]="outputWidth()"
                   [outputHeight]="outputHeight()"
+                  [lockAspectRatio]="true"
                   [outputPreviewElement]="outputPreviewElement()"
                   (cropChange)="onCropChange($event)"
                 />
@@ -267,8 +269,9 @@ function probeVideoFile(file: File): Promise<{ width: number; height: number }> 
                 <div class="da-authoring-crop-controls" aria-label="Crop region controls">
                   <h4 class="da-authoring-crop-controls__title">Crop region</h4>
                   <p class="da-note da-authoring-crop-controls__hint">
-                    Drag corners for any output size (updates export dimensions live). Pick a preset to snap to
-                    320×240, 640×360, or 720×480.
+                    Drag the square crop on source — corners stay locked to the
+                    export aspect (default 480×480). Presets include 1:1, 4:3,
+                    16:9, and 3:2.
                   </p>
                   <div class="da-authoring-crop-controls__grid">
                     <section class="rd-input-number">
@@ -512,16 +515,19 @@ export class AuthoringScreenComponent {
   readonly yaw = signal(25);
   readonly pitch = signal(-8);
   readonly horizontalFov = signal(75);
-  readonly outputWidth = signal(720);
-  readonly outputHeight = signal(480);
-  readonly outputPresetId = signal('720x480');
+  readonly defaultOutput =
+    AUTHORING_OUTPUT_PRESETS.find((entry) => entry.id === AUTHORING_DEFAULT_OUTPUT_PRESET_ID) ??
+    AUTHORING_OUTPUT_PRESETS[0];
+  readonly outputWidth = signal(this.defaultOutput.width);
+  readonly outputHeight = signal(this.defaultOutput.height);
+  readonly outputPresetId = signal(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
   readonly reverse = signal(false);
   readonly sourceWidth = signal<number | undefined>(undefined);
   readonly sourceHeight = signal<number | undefined>(undefined);
   readonly cropX = signal(0);
   readonly cropY = signal(0);
-  readonly cropWidth = signal(640);
-  readonly cropHeight = signal(360);
+  readonly cropWidth = signal(this.defaultOutput.width);
+  readonly cropHeight = signal(this.defaultOutput.height);
   readonly recordRange = signal<AuthoringRecordRange | null>(null);
   readonly previewRecording = signal<Blob | null>(null);
   readonly extractFormat = signal<'mp4' | 'webm'>('mp4');
@@ -664,10 +670,10 @@ export class AuthoringScreenComponent {
         this.yaw.set(example.defaultYaw);
         this.pitch.set(example.defaultPitch);
         this.horizontalFov.set(example.defaultHorizontalFov);
-        const preset = getAuthoringOutputPreset('720x480');
-        this.outputPresetId.set('720x480');
-        this.outputWidth.set(preset?.width ?? 720);
-        this.outputHeight.set(preset?.height ?? 480);
+        const preset = getAuthoringOutputPreset(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
+        this.outputPresetId.set(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
+        this.outputWidth.set(preset?.width ?? this.defaultOutput.width);
+        this.outputHeight.set(preset?.height ?? this.defaultOutput.height);
         this.outputSizeCommitToken.update((token) => token + 1);
         this.sourceWidth.set(undefined);
         this.sourceHeight.set(undefined);

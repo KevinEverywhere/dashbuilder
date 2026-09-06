@@ -1,4 +1,5 @@
 import {
+  AUTHORING_DEFAULT_OUTPUT_PRESET_ID,
   AUTHORING_OUTPUT_CUSTOM_ID,
   AUTHORING_OUTPUT_PRESETS,
   centerCropForOutput,
@@ -63,16 +64,18 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
   let yaw = $state(25);
   let pitch = $state(-8);
   let horizontalFov = $state(75);
-  let outputWidth = $state(720);
-  let outputHeight = $state(480);
-  let outputPresetId = $state('720x480');
+  const defaultOutput =
+    getAuthoringOutputPreset(AUTHORING_DEFAULT_OUTPUT_PRESET_ID) ?? AUTHORING_OUTPUT_PRESETS[0];
+  let outputWidth = $state(defaultOutput.width);
+  let outputHeight = $state(defaultOutput.height);
+  let outputPresetId = $state(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
   let reverse = $state(false);
   let sourceWidth = $state<number | undefined>(undefined);
   let sourceHeight = $state<number | undefined>(undefined);
   let cropX = $state(0);
   let cropY = $state(0);
-  let cropWidth = $state(640);
-  let cropHeight = $state(360);
+  let cropWidth = $state(defaultOutput.width);
+  let cropHeight = $state(defaultOutput.height);
   let recordRange = $state<AuthoringRecordRange | null>(null);
   let previewRecording = $state<Blob | null>(null);
   let extractFormat = $state<'mp4' | 'webm'>('mp4');
@@ -425,10 +428,10 @@ function createAuthoringScreenReactive(getLocale: () => string, getSelectedId: (
       yaw = current.defaultYaw;
       pitch = current.defaultPitch;
       horizontalFov = current.defaultHorizontalFov;
-      const preset = getAuthoringOutputPreset('720x480');
-      outputPresetId = '720x480';
-      outputWidth = preset?.width ?? 720;
-      outputHeight = preset?.height ?? 480;
+      const preset = getAuthoringOutputPreset(AUTHORING_DEFAULT_OUTPUT_PRESET_ID);
+      outputPresetId = AUTHORING_DEFAULT_OUTPUT_PRESET_ID;
+      outputWidth = preset?.width ?? defaultOutput.width;
+      outputHeight = preset?.height ?? defaultOutput.height;
       outputSizeCommitToken += 1;
       sourceWidth = undefined;
       sourceHeight = undefined;
