@@ -7,6 +7,14 @@
 # App (production-style build, no bind mount):
 #   docker compose --profile app up --build
 #   → http://localhost:8080 (UI + /api proxy)
+#
+# Backend parity stack (one container per promised database and server, seeded
+# with mock data and base users — see docs/44-backend-parity-stack.md):
+#   docker compose --profile db up -d        # PostgreSQL, MySQL, MongoDB, Supabase
+#   docker compose --profile servers up -d   # generated NestJS/Express/Next/Nuxt
+
+include:
+  - path: docker/compose.backends.yml
 
 services:
   rosettadash-dev:

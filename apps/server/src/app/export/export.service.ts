@@ -105,16 +105,16 @@ export class ExportService {
     const ir = this.buildIr(composite, stackProfile);
     const uiFiles = this.generateUiFiles(ir);
     const databaseFiles = this.generateDatabaseFiles(ir);
-    if (databaseFiles.length > 0) {
-      return { ir, files: [...uiFiles, ...databaseFiles] };
-    }
+    // DAS-185: a database target used to short-circuit the server, so a bundle
+    // with, say, a MySQL target silently emitted no server at all. The server
+    // exporters now handle every promised engine, so a bundle carries all three
+    // layers.
+    const serverFiles = this.shouldGenerateServerFiles(ir) ? this.generateServerFiles(ir) : [];
 
-    if (!this.shouldGenerateServerFiles(ir)) {
-      return { ir, files: uiFiles };
-    }
-
-    const serverFiles = this.generateServerFiles(ir);
-    return { ir, files: [...uiFiles, ...serverFiles] };
+    return {
+      ir,
+      files: dedupeByPath([...uiFiles, ...serverFiles, ...databaseFiles]),
+    };
   }
 
   private shouldGenerateServerFiles(ir: ExportIR): boolean {
@@ -171,4 +171,20 @@ export class ExportService {
         return generateNestInfraFiles(ir);
     }
   }
+}
+
+/**
+ * The UI, server, and database exporters each emit their own `.env.example`
+ * and README. First writer wins, which keeps the server's copy — it is built
+ * from the full `ir.envVars` set and so covers every layer.
+ */
+function dedupeByPath<T extends { path: string }>(files: T[]): T[] {
+  const seen = new Set<string>();
+  return files.filter((file) => {
+    if (seen.has(file.path)) {
+      return false;
+    }
+    seen.add(file.path);
+    return true;
+  });
 }

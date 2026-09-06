@@ -111,7 +111,9 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-targets')).toContainText('mongodb');
     await expect(page.getByTestId('export-wizard-files')).toContainText('database/src/mongo.client.ts');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('server/src/main.ts');
+    // DAS-185: bundles carry UI, server, and database layers together.
+    await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/main.ts');
+    await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/database/data-client.ts');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
@@ -139,7 +141,9 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-files')).toContainText(
       'database/src/supabase.client.ts',
     );
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('server/src/main.ts');
+    // DAS-185: bundles carry UI, server, and database layers together.
+    await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/main.ts');
+    await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/database/data-client.ts');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 
@@ -165,7 +169,9 @@ test.describe('Builder export wizard', () => {
     await expect(page.getByTestId('export-wizard-loading')).toBeHidden({ timeout: 30_000 });
     await expect(page.getByTestId('export-wizard-targets')).toContainText('mysql');
     await expect(page.getByTestId('export-wizard-files')).toContainText('database/src/mysql.pool.ts');
-    await expect(page.getByTestId('export-wizard-files')).not.toContainText('server/src/main.ts');
+    // DAS-185: bundles carry UI, server, and database layers together.
+    await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/main.ts');
+    await expect(page.getByTestId('export-wizard-files')).toContainText('server/src/database/data-client.ts');
     await expect(page.getByTestId('export-wizard-download')).toBeEnabled();
   });
 

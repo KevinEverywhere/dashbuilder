@@ -39,9 +39,9 @@ export async function probeDataSource(
     case 'infra.postgresql':
       return probePostgres(request, limit);
     case 'infra.mysql':
-      return { ok: false, message: 'MySQL live probe is not implemented yet — wiring structure was checked.' };
+      return probeMysql(request, limit);
     case 'infra.mongodb':
-      return { ok: false, message: 'MongoDB live probe is not implemented yet — wiring structure was checked.' };
+      return probeMongo(request, limit);
     case 'infra.supabase':
       return probeSupabase(request, limit);
     default:
@@ -94,6 +94,103 @@ async function probePostgres(
     return { ok: false, message };
   } finally {
     await client.end().catch(() => undefined);
+  }
+}
+
+async function probeMysql(
+  request: DataSourceProbeRequest,
+  limit: number,
+): Promise<DataSourceProbeResult> {
+  const table = request.table?.trim();
+  if (!table) {
+    return { ok: false, message: 'Table name is required for MySQL probe.' };
+  }
+
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table)) {
+    return { ok: false, message: 'Table name contains invalid characters.' };
+  }
+
+  let mysql: typeof import('mysql2/promise');
+  try {
+    mysql = await import('mysql2/promise');
+  } catch {
+    return {
+      ok: false,
+      message: 'MySQL driver (mysql2) is not installed on the builder server.',
+    };
+  }
+
+  let connection: Awaited<ReturnType<typeof mysql.createConnection>> | undefined;
+  try {
+    connection = await mysql.createConnection({
+      uri: request.connectionUrl.trim(),
+      ...(request.username?.trim() ? { user: request.username.trim() } : {}),
+      ...(request.password !== undefined ? { password: request.password } : {}),
+      connectTimeout: 8_000,
+    });
+    const [rows] = await connection.query(`SELECT * FROM \`${table}\` LIMIT ?`, [limit]);
+    const sampleRows = rows as Record<string, unknown>[];
+    return {
+      ok: true,
+      message: `Connected and read ${sampleRows.length} row(s) from "${table}".`,
+      rowCount: sampleRows.length,
+      sampleRows,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'MySQL connection failed.';
+    return { ok: false, message };
+  } finally {
+    await connection?.end().catch(() => undefined);
+  }
+}
+
+async function probeMongo(
+  request: DataSourceProbeRequest,
+  limit: number,
+): Promise<DataSourceProbeResult> {
+  const collection = request.collection?.trim() ?? request.table?.trim();
+  if (!collection) {
+    return { ok: false, message: 'Collection name is required for MongoDB probe.' };
+  }
+
+  let mongodb: typeof import('mongodb');
+  try {
+    mongodb = await import('mongodb');
+  } catch {
+    return {
+      ok: false,
+      message: 'MongoDB driver (mongodb) is not installed on the builder server.',
+    };
+  }
+
+  const client = new mongodb.MongoClient(request.connectionUrl.trim(), {
+    serverSelectionTimeoutMS: 8_000,
+    ...(request.username?.trim() && request.password !== undefined
+      ? { auth: { username: request.username.trim(), password: request.password } }
+      : {}),
+  });
+
+  try {
+    await client.connect();
+    // The database comes from the connection string, matching how the
+    // generated MongoDB export resolves it.
+    const sampleRows = (await client
+      .db()
+      .collection(collection)
+      .find({})
+      .limit(limit)
+      .toArray()) as Record<string, unknown>[];
+    return {
+      ok: true,
+      message: `Connected and read ${sampleRows.length} document(s) from "${collection}".`,
+      rowCount: sampleRows.length,
+      sampleRows,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'MongoDB connection failed.';
+    return { ok: false, message };
+  } finally {
+    await client.close().catch(() => undefined);
   }
 }
 

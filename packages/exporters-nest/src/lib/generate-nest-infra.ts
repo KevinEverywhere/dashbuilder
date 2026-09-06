@@ -1,12 +1,13 @@
-import type { ExportIR } from '@rosettadash/core';
+import type { ExportIR, ServerDatabaseSource } from '@rosettadash/core';
 import {
   collectExportRoleIds,
   generateScopeModuleSource,
+  generateServerDatabaseModuleSource,
   hasQueryScope,
   irHasOnboardingFlow,
   irHasRoleGates,
   resolveExportQueryScope,
-  scopedPostgresListRowsLines,
+  resolveServerDatabaseSource,
 } from '@rosettadash/core';
 import type { GeneratedFile, NestExportOptions, RouteResource } from './types';
 import { NestExportError } from './types';
@@ -14,8 +15,6 @@ import {
   generateEnvExample,
   joinLines,
   resolveGlobalPrefix,
-  resolvePostgresSources,
-  resolvePrimaryConnectionEnvKey,
   resolveRouteResources,
 } from './utils';
 
@@ -27,15 +26,17 @@ export function generateNestInfraFiles(
     throw new NestExportError(`Nest exporter cannot generate server target "${ir.targets.server}"`);
   }
 
-  const postgresSources = resolvePostgresSources(ir);
-  if (postgresSources.length === 0) {
-    throw new NestExportError('Nest infra export requires at least one PostgreSQL data source');
+  const database = resolveServerDatabaseSource(ir);
+  if (!database) {
+    throw new NestExportError(
+      'Nest infra export requires at least one database data source ' +
+        '(PostgreSQL, MySQL, MongoDB, or Supabase)',
+    );
   }
 
   const root = options.rootDir ?? 'server/src';
   const globalPrefix = resolveGlobalPrefix(ir);
   const routeResources = resolveRouteResources(ir);
-  const connectionEnvKey = resolvePrimaryConnectionEnvKey(ir);
   const roleIds = collectExportRoleIds(ir);
   const includeRoleAuth = irHasRoleGates(ir) || roleIds.length > 0;
   const includeOnboarding = irHasOnboardingFlow(ir);
@@ -65,17 +66,27 @@ export function generateNestInfraFiles(
       path: `${root}/database/database.module.ts`,
       content: generateDatabaseModule(),
       encoding: 'utf-8',
-      description: 'PostgreSQL pool module',
+      description: `${database.label} provider module`,
+    },
+    {
+      path: `${root}/database/data-client.ts`,
+      content: generateServerDatabaseModuleSource({
+        database,
+        scope: queryScope,
+        scopeImportPath: '../domain/scope',
+      }),
+      encoding: 'utf-8',
+      description: `${database.label} data access helper`,
     },
     {
       path: `${root}/database/database.service.ts`,
-      content: generateDatabaseService(connectionEnvKey, includeScopedQueries),
+      content: generateDatabaseService(),
       encoding: 'utf-8',
-      description: 'PostgreSQL query helper',
+      description: 'Injectable wrapper around the data client',
     },
     {
       path: 'README.export.server.md',
-      content: generateReadme(ir, globalPrefix, connectionEnvKey),
+      content: generateReadme(ir, globalPrefix, database),
       encoding: 'utf-8',
       description: 'Setup notes for exported NestJS server fragment',
     },
@@ -102,7 +113,7 @@ export function generateNestInfraFiles(
       resourceName: 'records',
       controllerName: 'RecordsController',
       moduleName: 'RecordsModule',
-      tableName: postgresSources[0]?.table ?? 'records',
+      tableName: database.source ?? 'records',
       method: 'GET' as const,
       globalPrefix,
     };
@@ -251,51 +262,30 @@ function generateDatabaseModule(): string {
   ]);
 }
 
-function generateDatabaseService(connectionEnvKey: string, scoped: boolean): string {
-  const scopeImport = scoped ? [`import { resolveRuntimeScope } from '../domain/scope';`, ``] : [];
-  const queryRowsBody = scoped
-    ? scopedPostgresListRowsLines({
-        queryReceiver: 'this.pool',
-        quoteIdentifierRef: 'this.quoteIdentifier',
-        indent: '    ',
-      })
-    : [
-        `    const result = await this.pool.query(`,
-        `      \`SELECT * FROM \${this.quoteIdentifier(tableName)} ORDER BY 1 LIMIT $1\`,`,
-        `      [limit],`,
-        `    );`,
-        `    return result.rows;`,
-      ];
-
+/**
+ * Nest-idiomatic wrapper. All engine specifics live in `data-client.ts`, so
+ * this class is identical whichever database the composite targets.
+ */
+function generateDatabaseService(): string {
   return joinLines([
     `import { Injectable, OnModuleDestroy } from '@nestjs/common';`,
-    `import { Pool } from 'pg';`,
-    ...scopeImport,
+    `import {`,
+    `  closeDataClient,`,
+    `  createDataClient,`,
+    `  queryRows,`,
+    `  type DataClient,`,
+    `} from './data-client';`,
+    ``,
     `@Injectable()`,
     `export class DatabaseService implements OnModuleDestroy {`,
-    `  private readonly pool: Pool;`,
+    `  private readonly client: DataClient = createDataClient();`,
     ``,
-    `  constructor() {`,
-    `    const connectionString = process.env['${connectionEnvKey}'];`,
-    `    if (!connectionString) {`,
-    `      throw new Error('Missing required environment variable: ${connectionEnvKey}');`,
-    `    }`,
-    `    this.pool = new Pool({ connectionString });`,
-    `  }`,
-    ``,
-    `  async queryRows(tableName: string, limit = 100): Promise<Record<string, unknown>[]> {`,
-    ...queryRowsBody,
+    `  queryRows(source: string, limit = 100): Promise<Record<string, unknown>[]> {`,
+    `    return queryRows(this.client, source, limit);`,
     `  }`,
     ``,
     `  async onModuleDestroy(): Promise<void> {`,
-    `    await this.pool.end();`,
-    `  }`,
-    ``,
-    `  private quoteIdentifier(value: string): string {`,
-    `    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) {`,
-    `      throw new Error(\`Unsafe SQL identifier: \${value}\`);`,
-    `    }`,
-    `    return \`"\${value.replace(/"/g, '""')}"\`;`,
+    `    await closeDataClient(this.client);`,
     `  }`,
     `}`,
     ``,
@@ -454,11 +444,20 @@ function generateOnboardingModule(): string {
   ]);
 }
 
-function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: string): string {
+function generateReadme(
+  ir: ExportIR,
+  globalPrefix: string,
+  database: ServerDatabaseSource,
+): string {
   const routes =
     ir.routes.length > 0
       ? ir.routes.map((route) => `- \`${route.method} ${route.path}\``)
       : [`- \`GET /${globalPrefix}/records\` (fallback when IR routes are empty)`];
+
+  const envKeys = [
+    database.connectionEnvKey,
+    ...(database.anonKeyEnvKey ? [database.anonKeyEnvKey] : []),
+  ];
 
   return joinLines([
     `# ${ir.meta.compositeName} — NestJS Server Export`,
@@ -468,7 +467,7 @@ function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: st
     `## Files`,
     ``,
     `- \`server/src/main.ts\` — NestJS bootstrap with \`/${globalPrefix}\` global prefix`,
-    `- \`server/src/database/*\` — PostgreSQL pool module using \`${connectionEnvKey}\``,
+    `- \`server/src/database/*\` — ${database.label} data access using \`${envKeys.join('`, `')}\``,
     `- \`server/src/*/*.controller.ts\` — list endpoints derived from ExportIR routes`,
     ...(irHasRoleGates(ir) || (ir.domain?.roles?.length ?? 0) > 0
       ? [`- \`server/src/auth/*\` — role guard stub using \`x-rosettadash-role\` header`]
@@ -485,9 +484,11 @@ function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: st
     `## Setup`,
     ``,
     `1. Copy the generated \`server/\` folder into your NestJS app (or use it as a starter).`,
-    `2. Install dependencies: \`npm install pg @types/pg\`.`,
-    `3. Copy \`.env.example\` to \`.env\` and set \`${connectionEnvKey}\`.`,
-    `4. Ensure the referenced PostgreSQL tables exist.`,
+    `2. Install dependencies: \`npm install ${database.dependencies.join(' ')}\`.`,
+    `3. Copy \`.env.example\` to \`.env\` and set \`${envKeys.join('`, `')}\`.`,
+    `4. Ensure the referenced ${database.label} ${
+      database.engine === 'mongodb' ? 'collections' : 'tables'
+    } exist.`,
     `5. Start the server and verify routes respond with row data.`,
     ``,
   ]);

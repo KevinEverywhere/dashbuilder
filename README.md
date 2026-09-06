@@ -193,6 +193,71 @@ npm run docker:app     # production-style build on http://localhost:8080
 
 Requires [Docker](https://docs.docker.com/get-docker/) with Compose v2.
 
+### Backend parity stack (databases and servers you can actually run)
+
+RosettaDash names four databases and four server frameworks as export targets.
+Those claims are backed by containers you can start from this repository —
+one per promise, each seeded with the same mock data the builder previews and
+with a known set of base users.
+
+Full guide: **[docs/44-backend-parity-stack.md](docs/44-backend-parity-stack.md)**.
+
+```bash
+npm run parity:db:up        # PostgreSQL, MySQL, MongoDB, Supabase (seeded)
+npm run parity:check:db     # assert the seeded rows and base users are there
+npm run parity:down         # stop everything
+```
+
+**Databases** — every container is seeded from
+`packages/ui-primitives/preview-content.json`, so container rows and builder
+preview rows are the same rows:
+
+| Promise | Image | Host port | Connection |
+|---------|-------|-----------|------------|
+| PostgreSQL | `postgres:16-bookworm` | 55432 | `DATABASE_URL` |
+| MySQL | `mysql:8.4` | 53306 | `MYSQL_URL` |
+| MongoDB | `mongo:7` | 57017 | `MONGODB_URI` |
+| Supabase | `postgres:16-bookworm` + `postgrest/postgrest:v12.2.3` + `nginx:1.27-alpine` | 54321 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
+
+Supabase is a stack rather than a single image, so it is assembled locally the
+way Supabase itself is. It answers on the same `/rest/v1` paths as the hosted
+product, which means no cloud account is needed to exercise the claim.
+
+**Base users** — seeded identically into all four databases, covering every
+role in [the domain model](docs/05-domain-model.md). Password for all of them
+is `rosettadash-dev`, and they exist only inside these containers:
+
+| Role | Emails |
+|------|--------|
+| `owner` | `owner@rosettadash.test` |
+| `admin` | `admin@rosettadash.test` |
+| `editor` | `editor@rosettadash.test`, `editor2@rosettadash.test` |
+| `viewer` | `viewer@rosettadash.test`, `viewer2@rosettadash.test` |
+
+**Servers** — each container runs the files the matching exporter actually
+emits, so a passing check means the generated code compiles, boots, connects,
+and returns seeded rows:
+
+| Promise | Runs on | Host port | Generated dependencies |
+|---------|---------|-----------|------------------------|
+| NestJS | `node:22-bookworm-slim` | 53101 | `@nestjs/*` 11, `pg` |
+| Express | `node:22-bookworm-slim` | 53102 | `express` 4, `pg` |
+| Next.js | `node:22-bookworm-slim` | 53103 | `next` 15, `react` 19, `pg` |
+| Nuxt | `node:22-bookworm-slim` | 53104 | `nuxt` 3, `pg` |
+
+```bash
+npm run start:server        # the builder API does the generating
+npm run parity:generate     # exporter output → .parity/servers/<target>
+npm run parity:servers:up   # boot all four generated servers
+npm run parity:check        # seeds + servers + the documented matrix
+```
+
+> `npm run parity:check:promises` compares the documented server × database
+> matrix against what the exporters will really generate, and fails naming any
+> combination the docs claim but the code refuses. All sixteen currently
+> generate; treat a future failure as either a missing exporter capability or an
+> overstated claim.
+
 ### Start the builder (client + server)
 
 You need **both** processes for save, preview, and export:
@@ -309,6 +374,15 @@ This repository is an [Nx](https://nx.dev) workspace (free tier, no Nx Cloud req
 | `storybook-svelte` | `apps/storybook-svelte` | Storybook — Svelte (port 6010) |
 | `exporters-*` | `packages/exporters-*` | UI / server / database code generators from ExportIR |
 
+Supporting directories that are not Nx projects:
+
+| Path | Description |
+|------|-------------|
+| `docker/` | Dockerfiles, nginx configs, and `compose.backends.yml` (included by the root `docker-compose.yml`) |
+| `docker/seed/` | Generated database seed scripts — committed, so a fresh clone can seed without running anything first |
+| `tools/backend-parity/` | Seed model, exporter-driven server generator, and the promise checks |
+| `.parity/servers/` | Generated, git-ignored server apps produced by `npm run parity:generate` |
+
 ## API (in-memory MVP)
 
 ### Projects & composites
@@ -377,6 +451,13 @@ Example body:
 | `npm run publish:npm:dry-run` | Pack, then `npm publish --dry-run` (no registry write) |
 | `npm run publish:npm` | Pack and publish the six scoped packages `--access public` |
 | `npm run publish:npm:product` | Thin unscoped `rosettadash@0.1.3` landing page (README + LICENSE) |
+| `npm run parity:db:up` | Start the four seeded database containers |
+| `npm run parity:generate` | Write real exporter output to `.parity/servers/<target>` |
+| `npm run parity:servers:up` | Start the four generated server containers |
+| `npm run parity:check` | Assert every backend promise holds (seeds, servers, matrix) |
+| `npm run parity:check:exporters` | Verify all 16 server × database combinations generate and compile (no Docker needed) |
+| `npm run parity:seed` | Regenerate `docker/seed/**` from the preview content |
+| `npm run parity:down` | Stop the parity stack |
 | `npm run verify` | Lint + typecheck + unit tests |
 | `npm run e2e` | Playwright E2E tests |
 | `npm run verify:all` | verify + e2e |
@@ -394,6 +475,7 @@ See [docs/README.md](docs/README.md) for the full index.
 - [npm consumer install](docs/39-npm-consumer-install.md)
 - [CI and hosting](docs/12-ci-and-hosting.md)
 - [Docker containers (local)](docs/14-docker-containers.md)
+- [Backend parity stack (databases and servers)](docs/44-backend-parity-stack.md)
 - [Builder guides & AI assist](docs/21-builder-creation-assistance.md)
 
 ## Workflow

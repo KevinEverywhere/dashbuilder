@@ -1,0 +1,224 @@
+# RosettaDash backend parity stack (DAS-185)
+#
+# One container per backend promise the docs and Storybook make, seeded with
+# deterministic mock data and a known set of base users so that every claim can
+# be tested instead of asserted.
+#
+# Databases (docs/06-technology-stack.md):
+#   postgres  · mysql  · mongo  · supabase (postgres + PostgREST + gateway)
+#
+# Servers (docs/04-export-pipeline.md), each running code emitted by the real
+# exporter for that target:
+#   nest  · express  · next  · nuxt
+#
+# This file is pulled into the root docker-compose.yml via `include`, so every
+# service here is reachable from the repository root:
+#
+#   npm run parity:seed          # regenerate seed scripts from preview content
+#   npm run parity:db:up         # all four database promises
+#   npm run parity:check:db      # assert seeded rows and base users
+#   npm run parity:servers:up    # generated server apps against Postgres
+#   npm run parity:check         # full promise report
+#
+# Credentials here are local dev fixtures. Never reuse them anywhere real.
+#
+# Parity server containers listen on 8080 inside Docker (host ports 53101–53104).
+# PostgREST listens on 8081 inside the Supabase stack. Port 3000 is reserved for
+# the RosettaDash builder API on the host.
+
+x-seed-env: &seed-env
+  POSTGRES_DB: rosettadash
+  POSTGRES_USER: rosettadash
+  POSTGRES_PASSWORD: rosettadash
+
+services:
+  # -------------------------------------------------------------------------
+  # Promise: PostgreSQL
+  # -------------------------------------------------------------------------
+  parity-postgres:
+    profiles: [db, postgres, servers]
+    image: postgres:16-bookworm
+    environment: *seed-env
+    ports:
+      - '55432:5432'
+    volumes:
+      - ./seed/postgres:/docker-entrypoint-initdb.d:ro
+      - parity_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U rosettadash -d rosettadash']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  # -------------------------------------------------------------------------
+  # Promise: MySQL
+  # -------------------------------------------------------------------------
+  parity-mysql:
+    profiles: [db, mysql]
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: rosettadash
+      MYSQL_USER: rosettadash
+      MYSQL_PASSWORD: rosettadash
+      MYSQL_ROOT_PASSWORD: rosettadash-root
+    ports:
+      - '53306:3306'
+    volumes:
+      - ./seed/mysql:/docker-entrypoint-initdb.d:ro
+      - parity_mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u rosettadash -prosettadash --silent']
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  # -------------------------------------------------------------------------
+  # Promise: MongoDB
+  # -------------------------------------------------------------------------
+  parity-mongo:
+    profiles: [db, mongo]
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: rosettadash
+      MONGO_INITDB_ROOT_PASSWORD: rosettadash
+      MONGO_INITDB_DATABASE: rosettadash
+    ports:
+      - '57017:27017'
+    volumes:
+      - ./seed/mongo:/docker-entrypoint-initdb.d:ro
+      - parity_mongo_data:/data/db
+    healthcheck:
+      test: ['CMD-SHELL', 'mongosh --quiet --eval "db.adminCommand({ ping: 1 }).ok" || exit 1']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  # -------------------------------------------------------------------------
+  # Promise: Supabase
+  #
+  # Supabase is a stack, not a single image, so the promise is implemented the
+  # way Supabase itself is: Postgres, PostgREST, and a gateway that exposes the
+  # /rest/v1 path the builder's Supabase probe already expects. Testing against
+  # this means no cloud account is needed to prove the claim.
+  # -------------------------------------------------------------------------
+  parity-supabase-db:
+    profiles: [db, supabase]
+    image: postgres:16-bookworm
+    environment: *seed-env
+    volumes:
+      - ./seed/supabase:/docker-entrypoint-initdb.d:ro
+      - parity_supabase_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U rosettadash -d rosettadash']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  parity-supabase-rest:
+    profiles: [db, supabase]
+    image: postgrest/postgrest:v12.2.3
+    depends_on:
+      parity-supabase-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://rosettadash:rosettadash@parity-supabase-db:5432/rosettadash
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_JWT_SECRET: rosettadash-local-parity-jwt-secret-key
+      PGRST_SERVER_PORT: '8081'
+
+  parity-supabase:
+    profiles: [db, supabase]
+    image: nginx:1.27-alpine
+    depends_on:
+      - parity-supabase-rest
+    ports:
+      - '54321:8000'
+    volumes:
+      - ./supabase-gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:8000/health || exit 1']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  # -------------------------------------------------------------------------
+  # Server promises. Each container runs the files the matching exporter
+  # actually emits — nothing is hand-written — so a passing check proves the
+  # generated code runs, not just that it compiles.
+  #
+  # The exporters generate against any of the four promised engines; these
+  # containers exercise the Postgres pairing. Run
+  # tools/backend-parity/check-promises.mjs to verify the whole
+  # server x database matrix still generates.
+  # -------------------------------------------------------------------------
+  parity-server-nest:
+    profiles: [servers, server-nest]
+    image: node:22-bookworm-slim
+    working_dir: /app
+    depends_on:
+      parity-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
+      PORT: '8080'
+    ports:
+      - '53101:8080'
+    volumes:
+      - ../.parity/servers/nest:/app
+    command: ['sh', '-c', 'npm install --no-audit --no-fund && npm start']
+
+  parity-server-express:
+    profiles: [servers, server-express]
+    image: node:22-bookworm-slim
+    working_dir: /app
+    depends_on:
+      parity-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
+      PORT: '8080'
+    ports:
+      - '53102:8080'
+    volumes:
+      - ../.parity/servers/express:/app
+    command: ['sh', '-c', 'npm install --no-audit --no-fund && npm start']
+
+  parity-server-next:
+    profiles: [servers, server-next]
+    image: node:22-bookworm-slim
+    working_dir: /app
+    depends_on:
+      parity-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
+      PORT: '8080'
+    ports:
+      - '53103:8080'
+    volumes:
+      - ../.parity/servers/next:/app
+    command: ['sh', '-c', 'npm install --no-audit --no-fund && npm start']
+
+  parity-server-nuxt:
+    profiles: [servers, server-nuxt]
+    image: node:22-bookworm-slim
+    working_dir: /app
+    depends_on:
+      parity-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
+      PORT: '8080'
+    ports:
+      - '53104:8080'
+    volumes:
+      - ../.parity/servers/nuxt:/app
+    command: ['sh', '-c', 'npm install --no-audit --no-fund && npm start']
+
+volumes:
+  parity_postgres_data:
+  parity_mysql_data:
+  parity_mongo_data:
+  parity_supabase_data:

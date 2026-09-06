@@ -47,6 +47,7 @@ See **[Planned Tickets](./11-planned-tickets.md)** for the full Jira ticket list
 35. [Storybook component catalog](./38-storybook-component-catalog.md) — per-runtime Storybook apps and ports (DAS-98)
 36. [npm consumer install](./39-npm-consumer-install.md) — scoped packages for ffmp3Console & siblings (DAS-99)
 37. [Destination Atlas proof apps](./43-destination-atlas-proof-apps.md) — DAS-120 consumer demos (five runtimes)
+38. [Backend parity stack](./44-backend-parity-stack.md) — one seeded container per promised database and server (DAS-185)
 
 ## Active work
 

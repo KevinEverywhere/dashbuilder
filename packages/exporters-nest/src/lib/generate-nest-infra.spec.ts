@@ -77,8 +77,16 @@ describe('generateNestInfraFiles', () => {
     expect(controller?.content).toContain("@Controller('sales')");
     expect(controller?.content).toContain("queryRows('sales')");
 
-    const database = files.find((file) => file.path === 'server/src/database/database.service.ts');
-    expect(database?.content).toContain("process.env['DATABASE_URL']");
+    const dataClient = files.find((file) => file.path === 'server/src/database/data-client.ts');
+    expect(dataClient?.content).toContain("process.env['DATABASE_URL']");
+    expect(dataClient?.content).toContain("import { Pool } from 'pg';");
+
+    // The injectable stays engine-agnostic and delegates to the data client.
+    const service = files.find(
+      (file) => file.path === 'server/src/database/database.service.ts',
+    );
+    expect(service?.content).toContain("from './data-client'");
+    expect(service?.content).not.toContain("from 'pg'");
 
     const env = files.find((file) => file.path === '.env.example');
     expect(env?.content).toContain('DATABASE_URL=');
@@ -105,7 +113,7 @@ describe('generateNestInfraFiles', () => {
     expect(() => generateNestInfraFiles(ir)).toThrow(/cannot generate server target "express"/);
   });
 
-  it('requires a PostgreSQL data source', () => {
+  it('requires at least one database data source', () => {
     const ir = buildExportIR(
       {
         id: 'comp1',
@@ -119,7 +127,76 @@ describe('generateNestInfraFiles', () => {
     );
 
     expect(() => generateNestInfraFiles(ir)).toThrow(NestExportError);
-    expect(() => generateNestInfraFiles(ir)).toThrow(/PostgreSQL data source/);
+    expect(() => generateNestInfraFiles(ir)).toThrow(/database data source/);
+  });
+
+  // DAS-185: the docs promise every server pairs with every database, but the
+  // exporter used to hard-require PostgreSQL and reject the other three.
+  describe('non-PostgreSQL database promises', () => {
+    function buildIrFor(
+      nodeType: string,
+      database: 'mysql' | 'mongodb' | 'supabase',
+      properties: Record<string, unknown>,
+    ) {
+      const dataSource = registry.createNode(nodeType, { id: 'db1', properties });
+
+      return buildExportIR(
+        {
+          id: `comp-${database}`,
+          name: `Sales via ${database}`,
+          version: 1,
+          exportTargets: { ui: 'angular', server: 'nest', database },
+          nodes: [
+            registry.createNode('visual.table', { id: 't1' }),
+            dataSource,
+            registry.createNode('infra.server.nest', { id: 's1' }),
+          ],
+          bindings: [
+            {
+              id: 'b1',
+              sourceNodeId: 'db1',
+              // Mongo exposes `documents` where the SQL engines expose `rowset`.
+              sourcePortId: dataSource.ports.outputs[0].id,
+              targetNodeId: 't1',
+              targetPortId: 'data',
+            },
+          ],
+        },
+        registry,
+        { generatedAt: '2026-08-08T00:00:00.000Z' },
+      );
+    }
+
+    it.each([
+      ['infra.mysql', 'mysql', { connectionEnvKey: 'MYSQL_URL', table: 'sales' }, "from 'mysql2/promise'", 'MYSQL_URL'],
+      ['infra.mongodb', 'mongodb', { connectionEnvKey: 'MONGODB_URI', collection: 'sales' }, "from 'mongodb'", 'MONGODB_URI'],
+      [
+        'infra.supabase',
+        'supabase',
+        { urlEnvKey: 'SUPABASE_URL', anonKeyEnvKey: 'SUPABASE_ANON_KEY', table: 'sales' },
+        "from '@supabase/supabase-js'",
+        'SUPABASE_URL',
+      ],
+    ] as const)(
+      'generates a %s-backed NestJS server',
+      (nodeType, database, properties, expectedImport, expectedEnvKey) => {
+        const files = generateNestInfraFiles(
+          buildIrFor(nodeType, database, properties as Record<string, unknown>),
+        );
+
+        const dataClient = files.find(
+          (file) => file.path === 'server/src/database/data-client.ts',
+        );
+        expect(dataClient?.content).toContain(expectedImport);
+        expect(dataClient?.content).toContain(`process.env['${expectedEnvKey}']`);
+        expect(dataClient?.content).toContain('export type DataClient');
+
+        const controller = files.find(
+          (file) => file.path === 'server/src/sales/sales.controller.ts',
+        );
+        expect(controller?.content).toContain("this.database.queryRows('sales')");
+      },
+    );
   });
 
   it('generates role guard stubs when role gates are present', () => {
@@ -197,7 +274,7 @@ describe('generateNestInfraFiles', () => {
 
     expect(paths).toContain('server/src/domain/scope.ts');
 
-    const database = files.find((file) => file.path === 'server/src/database/database.service.ts');
+    const database = files.find((file) => file.path === 'server/src/database/data-client.ts');
     expect(database?.content).toContain('resolveRuntimeScope');
     expect(database?.content).toContain('client_id');
     expect(database?.content).toContain('created_at >=');

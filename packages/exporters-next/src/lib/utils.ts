@@ -1,5 +1,5 @@
 import type { ExportIR, IRDataSource, IRRoute, QueryScope } from '@rosettadash/core';
-import { appendScopeEnvLines } from '@rosettadash/core';
+import { appendScopeEnvLines, resolveServerDatabaseSource } from '@rosettadash/core';
 import type { RouteResource } from './types';
 
 export function joinLines(lines: string[]): string {
@@ -29,8 +29,7 @@ export function resolvePostgresSources(ir: ExportIR): IRDataSource[] {
 }
 
 export function resolvePrimaryConnectionEnvKey(ir: ExportIR): string {
-  const postgres = resolvePostgresSources(ir)[0];
-  return postgres?.connectionEnvKey ?? 'DATABASE_URL';
+  return resolveServerDatabaseSource(ir)?.connectionEnvKey ?? 'DATABASE_URL';
 }
 
 export function routeResourceName(route: IRRoute, globalPrefix: string): string {
@@ -45,14 +44,13 @@ export function routeResourceName(route: IRRoute, globalPrefix: string): string 
 
 export function resolveRouteResources(ir: ExportIR): RouteResource[] {
   const globalPrefix = resolveGlobalPrefix(ir);
-  const postgresSources = resolvePostgresSources(ir);
-  const defaultTable = postgresSources[0]?.table ?? 'records';
+  // Reads whichever database promise the composite targets, not just Postgres.
+  const database = resolveServerDatabaseSource(ir);
+  const defaultTable = database?.source ?? 'records';
 
   return ir.routes.map((route) => {
     const resourceName = routeResourceName(route, globalPrefix);
-    const tableName = assertSafeTableName(
-      postgresSources.find((source) => source.table)?.table || defaultTable || 'records',
-    );
+    const tableName = assertSafeTableName(defaultTable || 'records');
 
     return {
       routeId: route.id,

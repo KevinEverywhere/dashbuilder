@@ -1,9 +1,10 @@
-import type { ExportIR } from '@rosettadash/core';
+import type { ExportIR, ServerDatabaseSource } from '@rosettadash/core';
 import {
   generateScopeModuleSource,
+  generateServerDatabaseModuleSource,
   hasQueryScope,
   resolveExportQueryScope,
-  scopedPostgresListRowsLines,
+  resolveServerDatabaseSource,
 } from '@rosettadash/core';
 import type { ExpressExportOptions, GeneratedFile, RouteResource } from './types';
 import { ExpressExportError } from './types';
@@ -11,7 +12,6 @@ import {
   generateEnvExample,
   joinLines,
   resolveGlobalPrefix,
-  resolvePostgresSources,
   resolvePrimaryConnectionEnvKey,
   resolveRouteResources,
 } from './utils';
@@ -26,9 +26,12 @@ export function generateExpressInfraFiles(
     );
   }
 
-  const postgresSources = resolvePostgresSources(ir);
-  if (postgresSources.length === 0) {
-    throw new ExpressExportError('Express infra export requires at least one PostgreSQL data source');
+  const database = resolveServerDatabaseSource(ir);
+  if (!database) {
+    throw new ExpressExportError(
+      'Express infra export requires at least one database data source ' +
+        '(PostgreSQL, MySQL, MongoDB, or Supabase)',
+    );
   }
 
   const root = options.rootDir ?? 'server/src';
@@ -47,19 +50,23 @@ export function generateExpressInfraFiles(
     },
     {
       path: `${root}/index.ts`,
-      content: generateIndexTs(globalPrefix, routeResources, postgresSources),
+      content: generateIndexTs(globalPrefix, routeResources, database),
       encoding: 'utf-8',
       description: 'Express bootstrap entry point',
     },
     {
       path: `${root}/database/pool.ts`,
-      content: generatePoolModule(connectionEnvKey, includeScopedQueries),
+      content: generateServerDatabaseModuleSource({
+        database,
+        scope: queryScope,
+        scopeImportPath: '../domain/scope',
+      }),
       encoding: 'utf-8',
-      description: 'PostgreSQL pool helper',
+      description: `${database.label} data access helper`,
     },
     {
       path: 'README.export.server.md',
-      content: generateReadme(ir, globalPrefix, connectionEnvKey),
+      content: generateReadme(ir, globalPrefix, database),
       encoding: 'utf-8',
       description: 'Setup notes for exported Express server fragment',
     },
@@ -79,7 +86,7 @@ export function generateExpressInfraFiles(
       routeId: 'fallback:list-records',
       resourceName: 'records',
       routerName: 'RecordsRouter',
-      tableName: postgresSources[0]?.table ?? 'records',
+      tableName: database.source ?? 'records',
       method: 'GET',
       globalPrefix,
     };
@@ -106,7 +113,7 @@ export function generateExpressInfraFiles(
 function generateIndexTs(
   globalPrefix: string,
   routeResources: RouteResource[],
-  postgresSources: { table?: string }[],
+  database: ServerDatabaseSource,
 ): string {
   const resources =
     routeResources.length > 0
@@ -115,7 +122,7 @@ function generateIndexTs(
           {
             resourceName: 'records',
             routerName: 'RecordsRouter',
-            tableName: postgresSources[0]?.table ?? 'records',
+            tableName: database.source ?? 'records',
           } as RouteResource,
         ];
 
@@ -125,20 +132,20 @@ function generateIndexTs(
   );
   const mounts = resources.map(
     (resource) =>
-      `  app.use('/${globalPrefix}/${resource.resourceName}', create${resource.routerName}(pool));`,
+      `  app.use('/${globalPrefix}/${resource.resourceName}', create${resource.routerName}(client));`,
   );
 
   return joinLines([
     `import cors from 'cors';`,
     `import express from 'express';`,
-    `import { createPool } from './database/pool';`,
+    `import { createDataClient } from './database/pool';`,
     ...imports,
     ``,
     `const app = express();`,
     `app.use(cors());`,
     `app.use(express.json());`,
     ``,
-    `const pool = createPool();`,
+    `const client = createDataClient();`,
     ...mounts,
     ``,
     `const port = Number(process.env.PORT) || 3000;`,
@@ -149,65 +156,19 @@ function generateIndexTs(
   ]);
 }
 
-function generatePoolModule(connectionEnvKey: string, scoped: boolean): string {
-  const scopeImport = scoped ? [`import { resolveRuntimeScope } from '../domain/scope';`, ``] : [];
-  const queryRowsBody = scoped
-    ? scopedPostgresListRowsLines({ queryReceiver: 'client', indent: '  ' })
-    : [
-        `  const result = await client.query(`,
-        `    \`SELECT * FROM \${quoteIdentifier(tableName)} ORDER BY 1 LIMIT $1\`,`,
-        `    [limit],`,
-        `  );`,
-        `  return result.rows;`,
-      ];
-
-  return joinLines([
-    `import { Pool } from 'pg';`,
-    ...scopeImport,
-    `let pool: Pool | undefined;`,
-    ``,
-    `export function createPool(): Pool {`,
-    `  if (pool) {`,
-    `    return pool;`,
-    `  }`,
-    `  const connectionString = process.env['${connectionEnvKey}'];`,
-    `  if (!connectionString) {`,
-    `    throw new Error('Missing required environment variable: ${connectionEnvKey}');`,
-    `  }`,
-    `  pool = new Pool({ connectionString });`,
-    `  return pool;`,
-    `}`,
-    ``,
-    `export async function queryRows(`,
-    `  client: Pool,`,
-    `  tableName: string,`,
-    `  limit = 100,`,
-    `): Promise<Record<string, unknown>[]> {`,
-    ...queryRowsBody,
-    `}`,
-    ``,
-    `function quoteIdentifier(value: string): string {`,
-    `  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) {`,
-    `    throw new Error(\`Unsafe SQL identifier: \${value}\`);`,
-    `  }`,
-    `  return \`"\${value.replace(/"/g, '""')}"\`;`,
-    `}`,
-    ``,
-  ]);
-}
-
 function generateRouteModule(resource: RouteResource): string {
   return joinLines([
     `import { Router } from 'express';`,
-    `import type { Pool } from 'pg';`,
-    `import { queryRows } from '../database/pool';`,
+    // DataClient comes from the generated database module, so the route shape
+    // is the same whichever database the composite targets.
+    `import { queryRows, type DataClient } from '../database/pool';`,
     ``,
-    `export function create${resource.routerName}(pool: Pool): Router {`,
+    `export function create${resource.routerName}(client: DataClient): Router {`,
     `  const router = Router();`,
     ``,
     `  router.get('/', async (_req, res, next) => {`,
     `    try {`,
-    `      const rows = await queryRows(pool, '${resource.tableName}');`,
+    `      const rows = await queryRows(client, '${resource.tableName}');`,
     `      res.json(rows);`,
     `    } catch (error) {`,
     `      next(error);`,
@@ -220,11 +181,18 @@ function generateRouteModule(resource: RouteResource): string {
   ]);
 }
 
-function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: string): string {
+function generateReadme(
+  ir: ExportIR,
+  globalPrefix: string,
+  database: ServerDatabaseSource,
+): string {
   const routes =
     ir.routes.length > 0
       ? ir.routes.map((route) => `- \`${route.method} ${route.path}\``)
       : [`- \`GET /${globalPrefix}/records\` (fallback when IR routes are empty)`];
+
+  const envKeys = [database.connectionEnvKey, ...(database.anonKeyEnvKey ? [database.anonKeyEnvKey] : [])];
+  const install = ['express', 'cors', ...database.dependencies, '@types/express', '@types/cors'];
 
   return joinLines([
     `# ${ir.meta.compositeName} — Express Server Export`,
@@ -234,7 +202,7 @@ function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: st
     `## Files`,
     ``,
     `- \`server/src/index.ts\` — Express bootstrap with \`/${globalPrefix}\` route prefix`,
-    `- \`server/src/database/pool.ts\` — PostgreSQL pool helper using \`${connectionEnvKey}\``,
+    `- \`server/src/database/pool.ts\` — ${database.label} data access using \`${envKeys.join('`, `')}\``,
     `- \`server/src/routes/*.ts\` — list endpoints derived from ExportIR routes`,
     `- \`.env.example\` — required environment variables`,
     ``,
@@ -245,9 +213,11 @@ function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: st
     `## Setup`,
     ``,
     `1. Copy the generated \`server/\` folder into your Express app (or use it as a starter).`,
-    `2. Install dependencies: \`npm install express cors pg @types/express @types/cors @types/pg\`.`,
-    `3. Copy \`.env.example\` to \`.env\` and set \`${connectionEnvKey}\`.`,
-    `4. Ensure the referenced PostgreSQL tables exist.`,
+    `2. Install dependencies: \`npm install ${install.join(' ')}\`.`,
+    `3. Copy \`.env.example\` to \`.env\` and set \`${envKeys.join('`, `')}\`.`,
+    `4. Ensure the referenced ${database.label} ${
+      database.engine === 'mongodb' ? 'collections' : 'tables'
+    } exist.`,
     `5. Start the server and verify routes respond with row data.`,
     ``,
   ]);

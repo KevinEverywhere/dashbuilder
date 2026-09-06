@@ -398,6 +398,7 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/KpiOnly.tsx')).toBe(true);
     expect(result.files.some((file) => file.path.includes('KpiCard'))).toBe(true);
+    // A visual-only composite has no data source, so no server layer.
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
     expect(result.files.some((file) => file.path.includes('DataTable'))).toBe(false);
   });
@@ -519,6 +520,7 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'server/src/index.ts')).toBe(true);
+    // Express emits index.ts; main.ts is Nest's entry point.
     expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
   });
 
@@ -549,7 +551,8 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'database/src/mongo.client.ts')).toBe(true);
-    expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
+    // DAS-185: the server layer is emitted alongside the database layer.
+    expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
   });
 
   it('returns combined React and Supabase database files for a valid composite', () => {
@@ -579,7 +582,8 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'database/src/supabase.client.ts')).toBe(true);
-    expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
+    // DAS-185: the server layer is emitted alongside the database layer.
+    expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
   });
 
   it('returns combined React and MySQL database files for a valid composite', () => {
@@ -609,7 +613,8 @@ describe('ExportService', () => {
 
     expect(result.files.some((file) => file.path === 'src/ExportMe.tsx')).toBe(true);
     expect(result.files.some((file) => file.path === 'database/src/mysql.pool.ts')).toBe(true);
-    expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(false);
+    // DAS-185: the server layer is emitted alongside the database layer.
+    expect(result.files.some((file) => file.path === 'server/src/main.ts')).toBe(true);
   });
 
   it('throws ExportBuildError for invalid composites', () => {

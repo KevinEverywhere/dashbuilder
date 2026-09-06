@@ -61,7 +61,10 @@ describe('Export target matrix', () => {
         );
         expect(paths).toContain(UI_ENTRY_FILES[ui]);
         expect(paths).toContain(DATABASE_ENTRY_FILES[database]);
-        expect(paths).not.toContain('server/src/main.ts');
+        // DAS-185: these fixtures declare `server: 'nest'`, and a database
+        // target used to short-circuit the server so no server was emitted at
+        // all. A bundle now carries the UI, server, and database layers.
+        expect(paths).toContain('server/src/main.ts');
 
         for (const excluded of UI_EXCLUDED_FILES[ui]) {
           expect(paths).not.toContain(excluded);

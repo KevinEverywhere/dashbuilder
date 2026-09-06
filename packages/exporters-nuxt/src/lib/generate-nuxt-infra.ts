@@ -1,9 +1,10 @@
-import type { ExportIR } from '@rosettadash/core';
+import type { ExportIR, ServerDatabaseSource } from '@rosettadash/core';
 import {
   generateScopeModuleSource,
+  generateServerDatabaseModuleSource,
   hasQueryScope,
   resolveExportQueryScope,
-  scopedPostgresListRowsLines,
+  resolveServerDatabaseSource,
 } from '@rosettadash/core';
 import type { GeneratedFile, NuxtExportOptions, RouteResource } from './types';
 import { NuxtExportError } from './types';
@@ -11,8 +12,6 @@ import {
   generateEnvExample,
   joinLines,
   resolveGlobalPrefix,
-  resolvePostgresSources,
-  resolvePrimaryConnectionEnvKey,
   resolveRouteResources,
   routeImportPath,
   routeServerPath,
@@ -26,15 +25,17 @@ export function generateNuxtInfraFiles(
     throw new NuxtExportError(`Nuxt exporter cannot generate server target "${ir.targets.server}"`);
   }
 
-  const postgresSources = resolvePostgresSources(ir);
-  if (postgresSources.length === 0) {
-    throw new NuxtExportError('Nuxt infra export requires at least one PostgreSQL data source');
+  const database = resolveServerDatabaseSource(ir);
+  if (!database) {
+    throw new NuxtExportError(
+      'Nuxt infra export requires at least one database data source ' +
+        '(PostgreSQL, MySQL, MongoDB, or Supabase)',
+    );
   }
 
   const root = options.rootDir ?? 'server';
   const globalPrefix = resolveGlobalPrefix(ir);
   const routeResources = resolveRouteResources(ir);
-  const connectionEnvKey = resolvePrimaryConnectionEnvKey(ir);
   const queryScope = resolveExportQueryScope(ir.domain, ir.meta.generatedAt);
   const includeScopedQueries = hasQueryScope(queryScope);
 
@@ -47,13 +48,17 @@ export function generateNuxtInfraFiles(
     },
     {
       path: `${root}/utils/database.ts`,
-      content: generateDatabaseModule(connectionEnvKey, includeScopedQueries),
+      content: generateServerDatabaseModuleSource({
+        database,
+        scope: queryScope,
+        scopeImportPath: './scope',
+      }),
       encoding: 'utf-8',
-      description: 'PostgreSQL pool helper',
+      description: `${database.label} data access helper`,
     },
     {
       path: 'README.export.server.md',
-      content: generateReadme(ir, globalPrefix, connectionEnvKey),
+      content: generateReadme(ir, globalPrefix, database),
       encoding: 'utf-8',
       description: 'Setup notes for exported Nuxt server fragment',
     },
@@ -66,7 +71,7 @@ export function generateNuxtInfraFiles(
           {
             routeId: 'fallback:list-records',
             resourceName: 'records',
-            tableName: postgresSources[0]?.table ?? 'records',
+            tableName: database.source ?? 'records',
             method: 'GET' as const,
             globalPrefix,
           },
@@ -93,66 +98,17 @@ export function generateNuxtInfraFiles(
   return files;
 }
 
-function generateDatabaseModule(connectionEnvKey: string, scoped: boolean): string {
-  const scopeImport = scoped ? [`import { resolveRuntimeScope } from './scope';`, ``] : [];
-  const queryRowsBody = scoped
-    ? [
-        `  const client = getPool();`,
-        ...scopedPostgresListRowsLines({ queryReceiver: 'client', indent: '  ' }),
-      ]
-    : [
-        `  const client = getPool();`,
-        `  const result = await client.query(`,
-        `    \`SELECT * FROM \${quoteIdentifier(tableName)} ORDER BY 1 LIMIT $1\`,`,
-        `    [limit],`,
-        `  );`,
-        `  return result.rows;`,
-      ];
-
-  return joinLines([
-    `import { Pool } from 'pg';`,
-    ...scopeImport,
-    ``,
-    `let pool: Pool | undefined;`,
-    ``,
-    `export function getPool(): Pool {`,
-    `  if (pool) {`,
-    `    return pool;`,
-    `  }`,
-    `  const connectionString = process.env['${connectionEnvKey}'];`,
-    `  if (!connectionString) {`,
-    `    throw new Error('Missing required environment variable: ${connectionEnvKey}');`,
-    `  }`,
-    `  pool = new Pool({ connectionString });`,
-    `  return pool;`,
-    `}`,
-    ``,
-    `export async function queryRows(`,
-    `  tableName: string,`,
-    `  limit = 100,`,
-    `): Promise<Record<string, unknown>[]> {`,
-    ...queryRowsBody,
-    `}`,
-    ``,
-    `function quoteIdentifier(value: string): string {`,
-    `  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) {`,
-    `    throw new Error(\`Unsafe SQL identifier: \${value}\`);`,
-    `  }`,
-    `  return \`"\${value.replace(/"/g, '""')}"\`;`,
-    `}`,
-    ``,
-  ]);
-}
-
 function generateRouteHandler(resource: RouteResource): string {
   const importPath = routeImportPath(resource.globalPrefix);
 
   return joinLines([
-    `import { queryRows } from '${importPath}';`,
+    // The data client memoizes, so resolving it per request is cheap and keeps
+    // the handler independent of which database the composite targets.
+    `import { createDataClient, queryRows } from '${importPath}';`,
     ``,
     `export default defineEventHandler(async () => {`,
     `  try {`,
-    `    return await queryRows('${resource.tableName}');`,
+    `    return await queryRows(createDataClient(), '${resource.tableName}');`,
     `  } catch (error) {`,
     `    throw createError({`,
     `      statusCode: 500,`,
@@ -164,11 +120,20 @@ function generateRouteHandler(resource: RouteResource): string {
   ]);
 }
 
-function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: string): string {
+function generateReadme(
+  ir: ExportIR,
+  globalPrefix: string,
+  database: ServerDatabaseSource,
+): string {
   const routes =
     ir.routes.length > 0
       ? ir.routes.map((route) => `- \`${route.method} ${route.path}\``)
       : [`- \`GET /${globalPrefix}/records\` (fallback when IR routes are empty)`];
+
+  const envKeys = [
+    database.connectionEnvKey,
+    ...(database.anonKeyEnvKey ? [database.anonKeyEnvKey] : []),
+  ];
 
   return joinLines([
     `# ${ir.meta.compositeName} — Nuxt Server Export`,
@@ -178,7 +143,7 @@ function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: st
     `## Files`,
     ``,
     `- \`server/api/*.get.ts\` or \`server/routes/*/*.get.ts\` — Nitro route handlers`,
-    `- \`server/utils/database.ts\` — PostgreSQL pool helper using \`${connectionEnvKey}\``,
+    `- \`server/utils/database.ts\` — ${database.label} data access using \`${envKeys.join('`, `')}\``,
     `- \`.env.example\` — required environment variables`,
     ``,
     `## Routes`,
@@ -188,9 +153,11 @@ function generateReadme(ir: ExportIR, globalPrefix: string, connectionEnvKey: st
     `## Setup`,
     ``,
     `1. Copy the generated \`server/\` tree into your Nuxt 3 project.`,
-    `2. Install dependencies: \`npm install nuxt pg\`.`,
-    `3. Copy \`.env.example\` to \`.env\` and set \`${connectionEnvKey}\`.`,
-    `4. Ensure the referenced PostgreSQL tables exist.`,
+    `2. Install dependencies: \`npm install nuxt ${database.dependencies.join(' ')}\`.`,
+    `3. Copy \`.env.example\` to \`.env\` and set \`${envKeys.join('`, `')}\`.`,
+    `4. Ensure the referenced ${database.label} ${
+      database.engine === 'mongodb' ? 'collections' : 'tables'
+    } exist.`,
     `5. Run \`npm run dev\` and verify routes respond with row data.`,
     ``,
   ]);

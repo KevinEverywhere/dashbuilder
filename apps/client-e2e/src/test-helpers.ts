@@ -107,18 +107,29 @@ export async function addPostgresqlApiBundle(
   const tableName = options?.tableName ?? 'sales';
   await addFromPalette(page, 'infra.postgresql');
   await addFromPalette(page, 'infra.server.nest');
+
+  const postgresNode = page.getByTestId('canvas-node').nth(0);
+
+  await selectCanvasNodeHeader(page, postgresNode);
+  await expect(page.getByTestId('inspector-suggestions')).toBeVisible();
+  await expandInspectorSection(page, 'suggestions');
+  await page.locator('[data-testid^="apply-suggestion-postgres-table:"]').click();
+  await expandInspectorSection(page, 'properties');
+  const tableInput = page.getByTestId('inspector-prop-table');
+  await expect(tableInput).toHaveValue('records');
+
+  if (tableName !== 'records') {
+    await tableInput.fill(tableName);
+    await expect(tableInput).toHaveValue(tableName);
+  }
+
   await addFromPalette(page, 'visual.table');
   await expect(page.getByTestId('canvas-node')).toHaveCount(3);
 
-  const postgresNode = page.getByTestId('canvas-node').nth(0);
   const tableNode = page.getByTestId('canvas-node').nth(2);
 
   await postgresNode.getByTestId(/^port-output-.*-rowset$/).click();
   await tableNode.getByTestId(/^port-input-.*-data$/).click();
-
-  await selectCanvasNodeHeader(page, postgresNode);
-  await expandInspectorSection(page, 'properties');
-  await page.getByTestId('inspector-prop-table').fill(tableName);
 }
 
 export async function openBuilder(
