@@ -62,6 +62,9 @@ tools/.venv-vlc/
 # Local test media and scratch files (authoring experiments, ffmpeg output)
 .local/
 
+# Agent / workflow scratch (Jira REST payloads, one-off JSON — never commit)
+.scratch/
+
 # Backend parity server apps — regenerated from the exporters on demand
 # (npm run parity:generate). The seed scripts in docker/seed/ ARE committed.
 .parity/

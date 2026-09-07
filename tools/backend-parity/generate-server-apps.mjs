@@ -25,43 +25,52 @@ const apiBase = apiArgIndex >= 0 ? process.argv[apiArgIndex + 1] : BUILDER_API_B
 
 const outputRoot = join(workspaceRoot, '.parity', 'servers');
 
+/** Left alone — Docker installs deps here; often root-owned on the bind mount. */
+const SKIP_ENTRY_NAMES = new Set(['node_modules', '.next', '.output', '.nuxt']);
+
 /**
- * Wipe a generated server directory. Docker bind mounts and large node_modules
- * trees can make a single rmSync(…, { recursive: true }) fail with ENOTEMPTY on
- * macOS — fall back to emptying entries, then recreate the root.
+ * Clear exporter output before rewriting. Keeps container-owned install/cache
+ * dirs so parity:generate still works after parity:servers:up.
  */
 function resetDirectory(dir) {
-  const rmOptions = { recursive: true, force: true, maxRetries: 5, retryDelay: 200 };
-
-  try {
-    rmSync(dir, rmOptions);
-  } catch (error) {
-    if (error?.code !== 'ENOTEMPTY' && error?.code !== 'EBUSY' && error?.code !== 'EPERM') {
-      throw error;
-    }
-    emptyDirectory(dir);
-    try {
-      rmSync(dir, rmOptions);
-    } catch (secondError) {
-      throw new Error(
-        `Could not reset ${dir}.\n` +
-          `Stop parity server containers first: npm run parity:servers:down\n\n` +
-          `Underlying error: ${secondError.message}`,
-      );
-    }
-  }
-
   mkdirSync(dir, { recursive: true });
+  emptyGeneratedEntries(dir);
 }
 
-function emptyDirectory(dir) {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+function emptyGeneratedEntries(dir) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return;
+    }
+    throw error;
+  }
+
+  const rmOptions = { recursive: true, force: true, maxRetries: 5, retryDelay: 200 };
+
+  for (const entry of entries) {
+    if (SKIP_ENTRY_NAMES.has(entry.name)) {
+      continue;
+    }
+
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      emptyDirectory(path);
-      rmSync(path, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
-    } else {
-      unlinkSync(path);
+    try {
+      if (entry.isDirectory()) {
+        emptyGeneratedEntries(path);
+        rmSync(path, rmOptions);
+      } else {
+        unlinkSync(path);
+      }
+    } catch (error) {
+      if (error?.code === 'EACCES' || error?.code === 'EPERM' || error?.code === 'EBUSY') {
+        console.warn(
+          `  warn: could not remove ${relative(workspaceRoot, path)} (${error.code}) — skipping`,
+        );
+        continue;
+      }
+      throw error;
     }
   }
 }
@@ -147,11 +156,13 @@ const TARGET_SCAFFOLDS = {
   next: {
     // The exporter writes to server/src/app/api/..., which is exactly Next's
     // src/app layout when `server` is treated as the project directory.
+    // Production build + start (not `next dev`) — dev file-watching breaks on
+    // Docker bind mounts, especially on external volumes.
     packageJson: {
       name: 'rosettadash-parity-next',
       private: true,
       scripts: {
-        start: `next dev server -H 0.0.0.0 -p ${PARITY_SERVER_CONTAINER_PORT}`,
+        start: `next build server && next start server -H 0.0.0.0 -p ${PARITY_SERVER_CONTAINER_PORT}`,
       },
       dependencies: {
         next: '^15.5.4',
@@ -205,11 +216,13 @@ const TARGET_SCAFFOLDS = {
   nuxt: {
     // The exporter writes to server/api/*.get.ts and server/utils/*, which is
     // already Nitro's expected layout at the project root.
+    // Production build + preview (not `nuxt dev`) — same bind-mount stability
+    // reasons as Next above.
     packageJson: {
       name: 'rosettadash-parity-nuxt',
       private: true,
       scripts: {
-        start: `nuxt dev --host 0.0.0.0 --port ${PARITY_SERVER_CONTAINER_PORT}`,
+        start: 'nuxt build && node .output/server/index.mjs',
       },
       dependencies: { nuxt: '^3.14.0', pg: '^8.16.3' },
       devDependencies: { '@types/node': '^22.0.0' },

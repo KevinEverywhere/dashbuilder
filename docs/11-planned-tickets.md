@@ -79,17 +79,39 @@ Forward-looking Jira ticket plan for RosettaDash.
 | [DAS-70](https://planetkevin.atlassian.net/browse/DAS-70) | `feature/DAS-70-byok-key-management` | BYOK key management — unified `/environment` page, encrypted storage, validation (Phase 19) |
 | [DAS-71](https://planetkevin.atlassian.net/browse/DAS-71) | `feature/DAS-71-app-lock-and-content-library` | App lock for env secrets + welcome stack reset |
 | [DAS-72](https://planetkevin.atlassian.net/browse/DAS-72) | `feature/DAS-72-app-lock-recovery-codes` | App lock recovery codes + forgot-password reset |
+| [DAS-73](https://planetkevin.atlassian.net/browse/DAS-73) | `feature/DAS-73-ai-assist-drawer` | AI assist drawer — Ollama-first, BYOK cloud, structured graph actions |
+| [DAS-74](https://planetkevin.atlassian.net/browse/DAS-74) | `feature/DAS-74-admin-control-panel` | Admin control panel, content library, feature toggles |
+| [DAS-90](https://planetkevin.atlassian.net/browse/DAS-90) | `feature/DAS-90-npm-package-prep` | npm prep docs — runtime/group/component import paths |
+| [DAS-93](https://planetkevin.atlassian.net/browse/DAS-93) | `feature/DAS-93-runtime-taxonomy-0-1-1-gate` | Full runtime taxonomy publish gate @ **0.1.1** |
+| [DAS-115](https://planetkevin.atlassian.net/browse/DAS-115) | `feature/DAS-115-storybook-taxonomy-docs-sync` | Storybook taxonomy docs sync — README, npm package READMEs |
+| [DAS-120](https://planetkevin.atlassian.net/browse/DAS-120) | `feature/DAS-120-destination-atlas-proof-apps` | Destination Atlas epic — five proof apps, shared library, WC gaps (DAS-121–159) — see [docs/43](./43-destination-atlas-proof-apps.md) |
 | [DAS-160](https://planetkevin.atlassian.net/browse/DAS-160) | `feature/DAS-160-readme-truth-and-npm-release` | Root README as current truth; npm/GitHub publish docs and `publish:npm` |
 | [DAS-161](https://planetkevin.atlassian.net/browse/DAS-161) | `feature/DAS-161-destination-atlas-library-30` | 30-city Destination Atlas library, 10-year history, scrolling place lists |
+| [DAS-163](https://planetkevin.atlassian.net/browse/DAS-163) | `feature/DAS-163-hide-unfinished-atlas-tabs` | Hide unfinished Atlas tabs; agent ticket discipline |
+| [DAS-168](https://planetkevin.atlassian.net/browse/DAS-168) | `feature/DAS-168-page-embed-weather-demo` | Page-embed React weather widget demo |
+| [DAS-169](https://planetkevin.atlassian.net/browse/DAS-169) | `feature/DAS-169-composite-widget-demos` | Composite widget demos across five runtimes + custom elements |
+| [DAS-172](https://planetkevin.atlassian.net/browse/DAS-172) | `feature/DAS-172-builder-select-resize-inspector` | Canvas select/resize fixes; real preview content wired |
+| [DAS-174](https://planetkevin.atlassian.net/browse/DAS-174) | `feature/DAS-174-builder-template-pulldown` | Builder templates, text input sizing, load errors |
+| [DAS-176](https://planetkevin.atlassian.net/browse/DAS-176) | `feature/DAS-176-articles-in-repo` | Article series moved into `articles/` |
+| [DAS-177](https://planetkevin.atlassian.net/browse/DAS-177) | `feature/DAS-177-wc-proof-pure-custom-elements` | Native WC Authoring; docs and article pass |
+| [DAS-178](https://planetkevin.atlassian.net/browse/DAS-178) | `feature/DAS-178-wc-authoring-ce-parity` | WC Authoring viewports, mirror extract, role access |
+| [DAS-179](https://planetkevin.atlassian.net/browse/DAS-179) | `feature/DAS-179-authoring-parity-all-runtimes` | Native Vue/Svelte Authoring parity across all runtimes |
+| [DAS-180](https://planetkevin.atlassian.net/browse/DAS-180) | `feature/DAS-180-docs-storybook-authoring` | Docs, Storybook, and Svelte Authoring fixes |
+| [DAS-181](https://planetkevin.atlassian.net/browse/DAS-181) | `feature/DAS-181-360-library-articles` | 360 library, articles, tour sphere, attributions |
+| [DAS-182](https://planetkevin.atlassian.net/browse/DAS-182) | `feature/DAS-182-360-missing-content` | Shipped 360 clips; missing-content message in all proofs |
+| [DAS-183](https://planetkevin.atlassian.net/browse/DAS-183) | `feature/DAS-183-360-clips-export-parity` | 360 clips, builder naming, export parity |
+| [DAS-184](https://planetkevin.atlassian.net/browse/DAS-184) | `feature/DAS-184-svelte-nest-export-tests` | Svelte + Nest API export wiring proved in tests |
+| [DAS-185](https://planetkevin.atlassian.net/browse/DAS-185) | `feature/DAS-185-docker-backend-parity` | Backend parity stack — Docker DBs, seeded data, generated servers, `parity:check` — [docs/44](./44-backend-parity-stack.md) |
+| [DAS-186](https://planetkevin.atlassian.net/browse/DAS-186) | `feature/DAS-186-backend-parity-integration` | Parity wired into Storybook; builder live DB probes; Docker green |
+| [DAS-187](https://planetkevin.atlassian.net/browse/DAS-187) | `feature/DAS-187-full-stack-backend-demos` | Live full-stack demos — Storybook **Full-stack orders**, React/Angular Atlas Stack |
 
 ## Active work
 
 | Ticket | Branch | Status |
 |--------|--------|--------|
 | [DAS-162](https://planetkevin.atlassian.net/browse/DAS-162) | `feature/DAS-162-readme-npm-013-truth` | README and npm landing page match published `@rosettadash/*@0.1.3` |
-| [DAS-74](https://planetkevin.atlassian.net/browse/DAS-74) | `feature/DAS-74-admin-control-panel` | Admin control panel + content library |
-| [DAS-90](https://planetkevin.atlassian.net/browse/DAS-90) | `feature/DAS-90-npm-package-prep` | npm prep docs (`rosettadash` public API) — docs only |
-| [DAS-171](https://planetkevin.atlassian.net/browse/DAS-171) | `feature/DAS-171-refine-articles-demos-images` | Refine article series for demos and image placement (drafts live in sibling `docs/`) |
+| [DAS-171](https://planetkevin.atlassian.net/browse/DAS-171) | `feature/DAS-171-refine-articles-demos-images` | Refine article series for demos and image placement |
+| [DAS-188](https://planetkevin.atlassian.net/browse/DAS-188) | `feature/DAS-188-docs-backend-parity-articles` | Docs + articles sync for servers, databases, and API parity (follow-on to DAS-185–187) |
 
 ## npm library follow-ups (after DAS-90 docs; see [Post–DAS-90 plan](./36-npm-post-90-plan.md))
 
@@ -97,7 +119,7 @@ Forward-looking Jira ticket plan for RosettaDash.
 |--------|---------|
 | [DAS-91](https://planetkevin.atlassian.net/browse/DAS-91) | Build + identical `exports` for runtime packages — **done** |
 | [DAS-92](https://planetkevin.atlassian.net/browse/DAS-92) | Public `--rd-*` / `rd-*` stylesheet contract — **done** |
-| [DAS-93](https://planetkevin.atlassian.net/browse/DAS-93) | Full taxonomy on all runtime packages @ **0.1.1** — **in progress** (`feature/DAS-93-runtime-taxonomy-0-1-1-gate`) |
+| [DAS-93](https://planetkevin.atlassian.net/browse/DAS-93) | Full taxonomy on all runtime packages @ **0.1.1** — **done** |
 | [DAS-94](https://planetkevin.atlassian.net/browse/DAS-94) | Hand-maintained recipe helpers (`LinkList`, `AccordionLinkList`) — **done** |
 | [DAS-95](https://planetkevin.atlassian.net/browse/DAS-95) | E2E: compact layout `openBuilder` palette-ready race |
 | [DAS-98](https://planetkevin.atlassian.net/browse/DAS-98) | Per-framework Storybook catalogs — **done** |
@@ -113,30 +135,28 @@ Forward-looking Jira ticket plan for RosettaDash.
 | [DAS-112](https://planetkevin.atlassian.net/browse/DAS-112) | Per-framework Storybook sidebar alignment (React, Vue, Angular, Svelte) — **done** |
 | [DAS-113](https://planetkevin.atlassian.net/browse/DAS-113) | Storybook meta composition tightening — panel tabs and selection highlighting — **done** |
 | [DAS-114](https://planetkevin.atlassian.net/browse/DAS-114) | Storybook Controls, Actions, and Interactions — operationalize addon panels — **done** |
-| [DAS-115](https://planetkevin.atlassian.net/browse/DAS-115) | Storybook taxonomy docs sync — README, npm package READMEs, catalog docs — **in progress** (`feature/DAS-115-storybook-taxonomy-docs-sync`) |
+| [DAS-115](https://planetkevin.atlassian.net/browse/DAS-115) | Storybook taxonomy docs sync — README, npm package READMEs, catalog docs — **done** |
 | [DAS-116](https://planetkevin.atlassian.net/browse/DAS-116) | `@rosettadash/react` full taxonomy @ 0.1.1 — **done** (merged to `development`) |
 | [DAS-117](https://planetkevin.atlassian.net/browse/DAS-117) | `@rosettadash/angular` full taxonomy @ 0.1.1 — **done** (merged to `development`) |
 | [DAS-118](https://planetkevin.atlassian.net/browse/DAS-118) | `@rosettadash/vue` full taxonomy @ 0.1.1 — **done** (merged to `development`) |
 | [DAS-119](https://planetkevin.atlassian.net/browse/DAS-119) | `@rosettadash/svelte` full taxonomy @ 0.1.1 — **done** (merged to `development`) |
 
-### DAS-93 deferred follow-ups (post epic merge)
+### Deferred follow-ups (post DAS-93 / DAS-120)
 
 | Item | Scope | Notes |
 |------|-------|-------|
 | Angular runtime TestBed specs | `@rosettadash/angular` | Match React RTL depth (deferred) |
 | Storybook runtime catalog smoke | ports 6007–6010 | Spot-check generated atoms (deferred) |
-| **Destination Atlas proof apps** | [DAS-120](https://planetkevin.atlassian.net/browse/DAS-120) | Five **identical** Nx apps under `apps/` — current/historic world-location explorer (not kitchen sink): [DAS-121](https://planetkevin.atlassian.net/browse/DAS-121) WC, [DAS-122](https://planetkevin.atlassian.net/browse/DAS-122) React, [DAS-123](https://planetkevin.atlassian.net/browse/DAS-123) Angular, [DAS-124](https://planetkevin.atlassian.net/browse/DAS-124) Vue, [DAS-125](https://planetkevin.atlassian.net/browse/DAS-125) Svelte. Research [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126); gap WC [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127)–[129](https://planetkevin.atlassian.net/browse/DAS-129). About + ScrollRegion: [DAS-130](https://planetkevin.atlassian.net/browse/DAS-130). Authoring tab shell: [DAS-131](https://planetkevin.atlassian.net/browse/DAS-131). Authoring sphere + ffmpeg.wasm: [DAS-132](https://planetkevin.atlassian.net/browse/DAS-132). Client routing: [DAS-134](https://planetkevin.atlassian.net/browse/DAS-134). Consumer BYOK: [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135). Env reference: [DAS-136](https://planetkevin.atlassian.net/browse/DAS-136). See [docs/43](./43-destination-atlas-proof-apps.md). |
+| **Destination Atlas proof apps** | [DAS-120](https://planetkevin.atlassian.net/browse/DAS-120) | **Shipped** — five proof apps (`proof-*` on ports 4310–4314), shared library, gap WCs (DAS-127–129), Authoring/Media/Stack tabs through DAS-159. See [docs/43](./43-destination-atlas-proof-apps.md). Research ticket [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126) was informal; work landed in DAS-121–159. |
 
-**DAS-93 gate (this branch):** extend `pack:consumer` + `publish:npm` for all six scoped packages @ 0.1.1; pin runtime `web-components` deps; framework export parity (116–119 merged).
+**DAS-93 gate:** merged — `pack:consumer` + `publish:npm` for all six scoped packages @ 0.1.1; framework export parity (DAS-116–119).
 
-**Order:** merge DAS-90 → DAS-91 → DAS-92 → DAS-94 + DAS-116–119 → **DAS-93 gate** → publish `0.1.1` → DAS-120 proof apps.
+**Order (historical):** DAS-90 → DAS-91 → DAS-92 → DAS-94 + DAS-116–119 → **DAS-93 gate** → publish `0.1.1` → **DAS-120 proof apps (done)** → **DAS-185–187 backend parity (done)** → **DAS-188 docs/articles (active)**.
 
 ## Planned (not yet ticketed)
 
 | Phase | Summary | Doc |
 |-------|---------|-----|
-| Post–DAS-93 | **[DAS-120](https://planetkevin.atlassian.net/browse/DAS-120)** Destination Atlas — five identical proof apps; provider-selectable geo-map; app-language-select for developer i18n | DAS-121–125, DAS-126–129 · [docs/43](./43-destination-atlas-proof-apps.md) |
-| 20 — AI assist | Natural-language component creation in builder | [AI & BYOK Integration](./20-ai-and-byok-integration.md) |
 | 21 — Demo dashboards | Three animated example dashboards (discuss before build) | [Demo Dashboards](./22-demo-dashboards.md) |
 
 ## Delivery status
@@ -158,11 +178,15 @@ Forward-looking Jira ticket plan for RosettaDash.
 - **Phase 17 welcome onboarding UX:** complete (DAS-68)
 - **Phase 18 builder creation assistance:** complete (DAS-69)
 - **Phase 19 BYOK key management:** complete (DAS-70)
-- **DAS-71 app lock:** complete (merged); content library remains on DAS-71
-- **DAS-72 app lock recovery codes:** complete (branch ready)
+- **DAS-71 app lock:** complete (merged)
+- **DAS-72 app lock recovery codes:** complete
 - **DAS-73 AI assist drawer:** complete
-- **DAS-74 admin control panel:** in progress
-- **Phase 21 animated demo dashboards:** planned — discuss after Phase 20
+- **DAS-74 admin control panel + content library:** complete
+- **npm taxonomy @ 0.1.1 (DAS-93 gate):** complete
+- **Destination Atlas proof apps (DAS-120 epic):** complete — [docs/43](./43-destination-atlas-proof-apps.md)
+- **Backend parity stack (DAS-185–DAS-187):** complete — Docker DBs, generated servers, live Storybook + Atlas Stack demos — [docs/44](./44-backend-parity-stack.md)
+- **DAS-188 docs/articles sync:** in progress
+- **Phase 21 animated demo dashboards:** planned
 
 ## Phase 6 — complete
 
@@ -250,9 +274,9 @@ See [Builder Creation Assistance](./21-builder-creation-assistance.md).
 
 See [AI & BYOK Integration](./20-ai-and-byok-integration.md).
 
-## DAS-73 — AI assist drawer (in progress)
+## DAS-73 — AI assist drawer (complete)
 
-1. Ollama-first AI drawer, structured graph actions, BYOK cloud — DAS-73
+1. ~~Ollama-first AI drawer, structured graph actions, BYOK cloud~~ — DAS-73
 
 See [AI & BYOK Integration](./20-ai-and-byok-integration.md).
 
@@ -262,17 +286,29 @@ See [AI & BYOK Integration](./20-ai-and-byok-integration.md).
 
 See [App Lock](./24-app-lock.md).
 
-## DAS-71 — Content library (planned)
+## DAS-71 — Content library (complete via DAS-74)
 
-1. User-controlled content library — [spec](./23-content-library.md)
+1. ~~User-controlled content library~~ — shipped on DAS-74 admin control panel
 
 See [Content Library](./23-content-library.md).
 
-## Phase 20 — AI-assisted component creation (in progress)
+## Phase 20 — AI-assisted component creation (complete)
 
-1. AI assistant drawer, structured graph actions, Ollama free local + BYOK cloud — DAS-73
+1. ~~AI assistant drawer, structured graph actions, Ollama free local + BYOK cloud~~ — DAS-73
 
 See [AI & BYOK Integration](./20-ai-and-byok-integration.md).
+
+## Backend parity stack (complete)
+
+1. ~~Docker DBs + generated servers + `parity:check`~~ — DAS-185
+2. ~~Storybook parity reference, builder live probes~~ — DAS-186
+3. ~~Live full-stack orders demos (Storybook + Atlas Stack)~~ — DAS-187
+
+See [Backend parity stack](./44-backend-parity-stack.md).
+
+## DAS-188 — Docs and articles sync (in progress)
+
+1. Align docs and `articles/` with backend parity and live API demos — DAS-188
 
 ## Phase 21 — Animated demo dashboards (planned)
 

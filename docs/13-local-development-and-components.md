@@ -5,7 +5,7 @@ This guide covers **everything you need running locally** (client, server, tests
 ## Prerequisites
 
 | Requirement | Version / notes |
-|-------------|-----------------|
+| ------------- | ----------------- |
 | Node.js | 22.x (matches CI) |
 | npm | Comes with Node |
 | Git | For branching workflow |
@@ -59,10 +59,10 @@ npm start
 This runs `client` and `server` in parallel via Nx.
 
 | Service | URL | Purpose |
-|---------|-----|---------|
-| Builder UI | http://localhost:4200 | Palette, canvas, inspector, preview, export |
-| REST API | http://localhost:3000/api | Projects, preview mock data, export |
-| Health | http://localhost:3000/api/health | Quick “is the API up?” check |
+| --------- | ----- | --------- |
+| Builder UI | <http://localhost:4200> | Palette, canvas, inspector, preview, export |
+| REST API | <http://localhost:3000/api> | Projects, preview mock data, export |
+| Health | <http://localhost:3000/api/health> | Quick “is the API up?” check |
 
 The Angular dev server proxies `/api/*` → `http://localhost:3000`, so the browser always calls relative `/api/...` URLs.
 
@@ -76,7 +76,7 @@ curl http://localhost:3000/api/health
 curl -I http://localhost:4200
 ```
 
-In the browser: open http://localhost:4200 → wait for “Loading project…” to finish → palette and canvas appear.
+In the browser: open <http://localhost:4200> → wait for “Loading project…” to finish → palette and canvas appear.
 
 ### Run client and server separately (optional)
 
@@ -106,6 +106,71 @@ Without the server you will see errors in the toolbar or a stuck loading state.
 
 ---
 
+## Backend parity stack (optional)
+
+Separate from the builder dev loop: **seeded databases in Docker** and
+**generated server apps** that prove export output serves real rows.
+
+| Step | Command | Notes |
+| ------ | --------- | ------- |
+| 1 | `npm run parity:db:up` | Postgres :55432, MySQL :53306, Mongo :57017, Supabase :54321 |
+| 2 | `npm run start:server` | Builder API :3000 — **blocks the terminal**; use a second shell for steps 3–4 |
+| 3 | `npm run parity:generate` | Calls export API; writes `.parity/servers/` |
+| 4 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
+| 5 | `npm run parity:check` | Seeds + servers + documented matrix |
+
+Full reference: [Backend parity stack](./44-backend-parity-stack.md).
+
+**Live UI demos (DAS-187):** React proof Stack → Next; Angular proof Stack →
+Nest; Storybook **Full-stack orders (live API)**. Proof dev servers proxy
+`/parity-api` to the matching host port.
+
+---
+
+## Backend parity stack (optional)
+
+Separate from the builder dev loop: **seeded databases in Docker** and
+**generated server apps** that prove export output serves real rows.
+
+| Step | Command | Notes |
+| ------ | --------- | ------- |
+| 1 | `npm run parity:db:up` | Postgres :55432, MySQL :53306, Mongo :57017, Supabase :54321 |
+| 2 | `npm run start:server` | Builder API :3000 — **blocks the terminal**; use a second shell for steps 3–4 |
+| 3 | `npm run parity:generate` | Calls export API; writes `.parity/servers/` |
+| 4 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
+| 5 | `npm run parity:check` | Seeds + servers + documented matrix |
+
+Full reference: [Backend parity stack](./44-backend-parity-stack.md).
+
+**Live UI demos (DAS-187):** React proof Stack → Next; Angular proof Stack →
+Nest; Storybook **Full-stack orders (live API)**. Proof dev servers proxy
+`/parity-api` to the matching host port.
+
+<!-- DAS- 188 SUGGESTED: Backend parity stack (optional section)
+---
+
+## Backend parity stack (optional)
+
+Separate from the builder dev loop: **seeded databases in Docker** and
+**generated server apps** that prove export output serves real rows.
+
+| Step | Command | Notes |
+|------|---------|-------|
+| 1 | `npm run parity:db:up` | Postgres :55432, MySQL :53306, Mongo :57017, Supabase :54321 |
+| 2 | `npm run start:server` | Builder API :3000 — **blocks the terminal**; use a second shell for steps 3–4 |
+| 3 | `npm run parity:generate` | Calls export API; writes `.parity/servers/` |
+| 4 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
+| 5 | `npm run parity:check` | Seeds + servers + documented matrix |
+
+Full reference: [Backend parity stack](./44-backend-parity-stack.md).
+
+**Live UI demos (DAS-187):** React proof Stack → Next; Angular proof Stack →
+Nest; Storybook **Full-stack orders (live API)**. Proof dev servers proxy
+`/parity-api` to the matching host port.
+-->
+
+---
+
 ## Quality checks before commit
 
 ```bash
@@ -124,7 +189,7 @@ See [CI and Hosting](./12-ci-and-hosting.md) for troubleshooting hung tests or s
 
 ## Builder workflow (manual smoke test)
 
-1. Open http://localhost:4200
+1. Open <http://localhost:4200>
 2. **Design** — add components from the palette (+), edit properties in the inspector, connect ports (click output → input)
 3. **Save** — toolbar shows “Saved” after `PUT` to the API
 4. **Preview** — toggle Preview mode; mock data loads from `POST /api/preview/data`
@@ -253,7 +318,7 @@ npm run e2e
 ## Project map (quick reference)
 
 | Task | Location |
-|------|----------|
+| ------ | ---------- |
 | Component definitions | `packages/core/src/lib/registry/` |
 | Composite validation | `packages/core/src/lib/validation/` |
 | Palette (auto from registry) | `apps/client/src/app/builder/palette/` |
@@ -274,7 +339,7 @@ npm run e2e
 ## Common issues
 
 | Symptom | Likely cause | Fix |
-|---------|--------------|-----|
+| --------- | -------------- | ----- |
 | Stuck on “Loading project…” | Server not running or not reachable | Start `npm run start:server` or full `npm start`; check `curl localhost:3000/api/health` |
 | Preview shows “default” data only | Preview API failed | Confirm server is up; check browser network tab for `POST /api/preview/data` |
 | Export wizard shows validation errors | Composite not export-ready | Add PostgreSQL + NestJS infra, bind required ports (e.g. `rowset` → table `data`) |
@@ -291,7 +356,7 @@ npm run e2e
 The builder applies a few optimizations when graphs grow beyond ~50 nodes:
 
 | Area | Behavior |
-|------|----------|
+| ------ | ---------- |
 | **Canvas drag/resize** | Batched layout updates (`updateNodesLayoutBatch`) — one nodes pass per pointer frame |
 | **Selection / bindings** | Computed `Set` lookups instead of per-node linear scans |
 | **Canvas rendering** | Viewport culling hides off-screen nodes (selected nodes always render) |

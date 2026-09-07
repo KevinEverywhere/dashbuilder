@@ -35,7 +35,13 @@ tree.
 
 ## Five proofs, one library
 
-Destination Atlas ships five times — same thirty cities, same screen names, one shared library at `libs/destination-atlas`.
+Destination Atlas ships five times — same thirty cities, same screen
+names, one shared library consumed by every proof app.
+
+<!-- DAS- 188 SUGGESTED: replace Five proofs paragraph above
+Destination Atlas ships five times — same thirty cities, same screen
+names, one shared library consumed by every proof app.
+-->
 
 | Runtime | Command | Port |
 | --------- | --------- | ------ |
@@ -70,7 +76,15 @@ That is a realistic pattern: reuse what already works, wire it in one app frame,
 
 ![Purposeful mix — Svelte shell with an embedded Vue Globe screen.](graphics/03-mix.png)
 
-The smaller demos under `demos/` do the same at card scale: a React host page, a Vue host page, a custom-element 360° tour.
+The smaller card demos do the same at widget scale: a React host page,
+a Vue host page, a custom-element 360° tour — each launched with an
+`npm run demo:*` script from the repo root.
+
+<!-- DAS -188 SUGGESTED: replace demos sentence above
+The smaller card demos do the same at widget scale: a React host page,
+a Vue host page, a custom-element 360° tour — each launched with an
+`npm run demo:*` script from the repo root.
+-->
 
 ![A demo widget on a host page — npm import at card scale.](graphics/04-demo.png)
 
@@ -80,8 +94,13 @@ Clone the repo. Run the proof for the framework you use day to day, or run `npm 
 
 ## The Full List of npm commands for launching apps
 
-Run these from the repo root (`rosettadash/`). Each command starts a dev
-server; open the URL in your browser.
+Run these from the cloned repo root. Each command starts a dev server;
+open the URL in your browser.
+
+<!-- DAS -188 SUGGESTED: replace subsection intro above
+Run these from the cloned repo root. Each command starts a dev server;
+open the URL in your browser.
+-->
 
 ### Builder and API
 
@@ -95,6 +114,44 @@ server; open the URL in your browser.
 
 `npm start` runs client and server together. Use the split commands when
 you only need one side.
+
+### Backend parity stack (optional)
+
+Proves exported server code against seeded databases in Docker. Requires
+**two terminals** — `start:server` blocks the first.
+
+| Command | Purpose |
+| --------- | --------- |
+| `npm run parity:db:up` | PostgreSQL :55432, MySQL :53306, Mongo :57017, Supabase gateway :54321 |
+| `npm run start:server` | Builder API :3000 (terminal A — keep running) |
+| `npm run parity:generate` | Regenerate runnable server apps from export output |
+| `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
+| `npm run parity:check` | Assert seeds, servers, and documented matrix |
+| `npm run parity:down` | Stop parity containers |
+
+Live full-stack demos: React proof Stack → Next; Angular proof Stack → Nest;
+Storybook **Full-stack orders (live API)**. Same `orders` seed data in every
+database; generated servers on ports 53101–53104.
+
+<!-- DAS -188 SUGGESTED: Backend parity stack (insert as new subsection)
+### Backend parity stack (optional)
+
+Proves exported server code against seeded databases in Docker. Requires
+**two terminals** — `start:server` blocks the first.
+
+| Command | Purpose |
+| --------- | --------- |
+| `npm run parity:db:up` | PostgreSQL :55432, MySQL :53306, Mongo :57017, Supabase gateway :54321 |
+| `npm run start:server` | Builder API :3000 (terminal A — keep running) |
+| `npm run parity:generate` | Regenerate runnable server apps from export output |
+| `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
+| `npm run parity:check` | Assert seeds, servers, and documented matrix |
+| `npm run parity:down` | Stop parity containers |
+
+Live full-stack demos: React proof Stack → Next; Angular proof Stack → Nest;
+Storybook **Full-stack orders (live API)**. Same `orders` seed data in every
+database; generated servers on ports 53101–53104.
+-->
 
 ### Destination Atlas proofs
 
@@ -124,7 +181,13 @@ One catalog per runtime (ports 6006–6010). All share the same sidebar;
 
 ### Card demos
 
-Standalone widget hosts under `demos/` (ports 4320–4331):
+Standalone widget demos — eleven card-scale hosts (ports 4320–4331):
+
+<!-- DAS- 188 SUGGESTED: replace Card demos intro above
+### Card demos
+
+Standalone widget demos — eleven card-scale hosts (ports 4320–4331):
+-->
 
 | Command | Runtime | URL |
 | --------- | --------- | ------ |

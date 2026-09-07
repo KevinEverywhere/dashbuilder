@@ -63,10 +63,10 @@ console.log(
 );
 
 const failures = [];
-const deadline = Date.now() + timeoutMs;
 
 for (const target of targets) {
   const url = `http://127.0.0.1:${target.port}/api/${PARITY_TABLE}`;
+  const deadline = Date.now() + timeoutMs;
   const result = await waitForRows(url, deadline);
 
   if (!result.ok) {

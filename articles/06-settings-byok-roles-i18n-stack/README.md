@@ -31,6 +31,74 @@ Only Editor and Admin have access to the Plan tab. This is the roles gate in act
 
 Stack is Admin only. A read-only grid of the infra nodes from the builder article: env keys, Postgres, Mongo, MySQL, Supabase, Nest, Express, Next, Nuxt. Choosing a server or a database in the builder generates stubs and `.env` templates. Connection strings stay in env vars, not in the exported source.
 
+On the **React** and **Angular** proofs, the Stack tab can go one step
+further: it loads seeded `orders` rows from a generated API backed by
+PostgreSQL in Docker — the same path export gives you (UI → server →
+database). The infra grid above still applies; the live table shows that
+path working, not just the export-wizard labels.
+
+**Try it locally** — two terminals. The builder API blocks its shell:
+
+```bash
+npm run parity:db:up
+npm run start:server          # terminal A — leave running
+npm run parity:generate       # terminal B
+npm run parity:servers:up
+```
+
+Open Stack as **Admin** on the proof that matches your server choice:
+
+```bash
+npm run proof:react           # talks to Next.js on :53103
+# or: nx serve proof-angular  # talks to NestJS on :53101
+```
+
+A green banner and a **Seeded orders** table mean the export is serving
+rows. If Docker is not up, the tab explains what to run instead of
+erroring out.
+
+This article uses the **Svelte** proof (`npm run proof:svelte`, port 4314)
+for Settings and Plan. Svelte Stack shows the infra grid only — use React
+or Angular when you want the live orders demo. From the cloned repo root,
+`parity:db:up` seeds four databases in Docker; `parity:generate` and
+`parity:servers:up` boot generated Nest, Express, Next, and Nuxt apps that
+serve the same `orders` rows the builder previews (ports 53101–53104).
+
+<!-- DAS- 188 SUGGESTED: Stack live API (promote when ready)
+On the **React** and **Angular** proofs, the Stack tab can go one step
+further: it loads seeded `orders` rows from a generated API backed by
+PostgreSQL in Docker — the same path export gives you (UI → server →
+database). The infra grid above still applies; the live table shows that
+path working, not just the export-wizard labels.
+
+**Try it locally** — two terminals. The builder API blocks its shell:
+
+```bash
+npm run parity:db:up
+npm run start:server          # terminal A — leave running
+npm run parity:generate       # terminal B
+npm run parity:servers:up
+```
+
+Open Stack as **Admin** on the proof that matches your server choice:
+
+```bash
+npm run proof:react           # talks to Next.js on :53103
+# or: nx serve proof-angular  # talks to NestJS on :53101
+```
+
+A green banner and a **Seeded orders** table mean the export is serving
+rows. If Docker is not up, the tab explains what to run instead of
+erroring out.
+
+This article uses the **Svelte** proof (`npm run proof:svelte`, port 4314)
+for Settings and Plan. Svelte Stack shows the infra grid only — use React
+or Angular when you want the live orders demo. From the cloned repo root,
+`parity:db:up` seeds four databases in Docker; `parity:generate` and
+`parity:servers:up` boot generated Nest, Express, Next, and Nuxt apps that
+serve the same `orders` rows the builder previews (ports 53101–53104).
+-->
+
 ![Stack — Admin-only grid of invisible infra. Env row reflects the vault.](graphics/03-stack.png)
 
 ![Optional detail — a key marked configured after save, or a Viewer staring at a locked vault.](graphics/04-detail.png)

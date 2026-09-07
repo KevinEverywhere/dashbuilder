@@ -63,11 +63,13 @@ async function capture05(page) {
 }
 
 async function capture06(page) {
-  const b = 'http://localhost:4314';
-  await pageShot(page, `${b}/settings?role=admin`, graphicsPath('06', '01-settings.png'), 2500);
-  await pageShot(page, `${b}/plan?role=editor`, graphicsPath('06', '02-plan.png'), 2500);
-  await pageShot(page, `${b}/stack?role=admin`, graphicsPath('06', '03-stack.png'), 2500);
-  await pageShot(page, `${b}/settings?role=viewer`, graphicsPath('06', '04-detail.png'), 2500);
+  const svelte = 'http://localhost:4314';
+  const react = 'http://localhost:4311';
+  await pageShot(page, `${svelte}/settings?role=admin`, graphicsPath('06', '01-settings.png'), 2500);
+  await pageShot(page, `${svelte}/plan?role=editor`, graphicsPath('06', '02-plan.png'), 2500);
+  // Stack live API demo ships on React proof (DAS-187); capture with parity stack up.
+  await pageShot(page, `${react}/stack?role=admin`, graphicsPath('06', '03-stack.png'), 4000);
+  await pageShot(page, `${svelte}/settings?role=viewer`, graphicsPath('06', '04-detail.png'), 2500);
 }
 
 async function openBuilder(page) {

@@ -194,10 +194,13 @@ services:
     environment:
       DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
       PORT: '8080'
+      NEXT_TELEMETRY_DISABLED: '1'
     ports:
       - '53103:8080'
     volumes:
       - ../.parity/servers/next:/app
+      - parity_next_node_modules:/app/node_modules
+      - parity_next_next_cache:/app/server/.next
     command: ['sh', '-c', 'npm install --no-audit --no-fund && npm start']
 
   parity-server-nuxt:
@@ -210,12 +213,15 @@ services:
     environment:
       DATABASE_URL: postgresql://rosettadash:rosettadash@parity-postgres:5432/rosettadash
       PORT: '8080'
+      NITRO_PORT: '8080'
+      NITRO_HOST: '0.0.0.0'
+      NODE_ENV: production
       NUXT_TELEMETRY_DISABLED: '1'
-      NODE_OPTIONS: '--max-old-space-size=2048'
     ports:
       - '53104:8080'
     volumes:
       - ../.parity/servers/nuxt:/app
+      - parity_nuxt_node_modules:/app/node_modules
     command: ['sh', '-c', 'npm install --no-audit --no-fund && npm start']
 
 volumes:
@@ -223,3 +229,6 @@ volumes:
   parity_mysql_data:
   parity_mongo_data:
   parity_supabase_data:
+  parity_next_node_modules:
+  parity_next_next_cache:
+  parity_nuxt_node_modules:

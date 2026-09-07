@@ -1,5 +1,10 @@
 # Articles
 
+<!-- D-AS-188 SUGGESTED: update series metadata when docs pass is merged
+**Current ticket:** [DAS-188](https://planetkevin.atlassian.net/browse/DAS-188)
+**Branch:** `feature/DAS-188-docs-backend-parity-articles`
+-->
+
 RosettaDash article series. Kevin writes the introduction; articles
 01–07 are draft-ready in their folders.
 
@@ -11,7 +16,7 @@ Series planning notes stay in the workspace
 that file.
 
 | Folder | Article |
-|--------|---------|
+| -------- | --------- |
 | [00-introduction](./00-introduction/) | Kevin writes |
 | [01-components-that-travel](./01-components-that-travel/) | Components that Travel |
 | [02-the-builder](./02-the-builder/) | The Builder |

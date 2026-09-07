@@ -4,7 +4,12 @@ Destination Atlas provides information about thirty cities, five per inhabited c
 
 ![Destination Atlas awaits.](graphics/destination-atlas-intro.png)
 
-Five proof apps share one library, `libs/destination-atlas`, and the same screen names. This article uses the Angular proof:
+Five proof apps share one Destination Atlas library and the same screen names. This article uses the Angular proof:
+
+<!-- DAS -188 SUGGESTED: replace opening sentence above
+Five proof apps share one Destination Atlas library and the same screen
+names. This article uses the Angular proof:
+-->
 
 ```bash
 npm run proof:angular
@@ -28,10 +33,7 @@ The workbench layout appears again in the Maps and Settings articles.
 
 ![About — why the explorer exists, and the runtime matrix with “You are here.”](graphics/02-about.png)
 
-**Overview.** KPIs, a line chart, a bar chart, chips, badges, and a
-grid. This is the dashboard shape most teams already know how to
-request. The factory has to deliver this screen before the rest of
-the app counts.
+**Overview.** KPIs, a line chart, a bar chart, chips, badges, and a grid. This may be the dashboard shape most teams recognize.
 
 ![Overview — KPIs, line, bar. The dashboard everyone already knows how to ask for.](graphics/03-overview.png)
 
@@ -48,12 +50,15 @@ Those three screens are the focus of this article, on one runtime.
 
 The other tabs are named here and covered in later articles.
 
-**Maps** — 2D providers and a 3D globe. **Media** and **Authoring**
-— watch versus extract. **Plan** — roles and invites. **Stack** and
-**Settings** — locale, keys, and invisible infrastructure.
+**Maps** — 2D providers and a 3D globe. **Media** and **Authoring** — watch versus extract. **Plan** (Admin) — roles and invites. **Stack** (Admin) shows export-wizard infra nodes. On the React and Angular
+proofs, when Docker is running, it also loads live seeded `orders` rows from
+a generated API — the walkthrough is in article 6. **Settings** — does what Settings ususally does: it is the place where roles, BYOK, and all the header states are set.
 
-Map engine switching and the authoring sphere are left for articles
-5 and 6.
+<!-- DAS- 188 SUGGESTED: Stack tab teaser
+**Stack** (Admin) shows export-wizard infra nodes. On the React and Angular
+proofs, when Docker is running, it also loads live seeded `orders` rows from
+a generated API — the walkthrough is in article 6.
+-->
 
 ## Next
 

@@ -6,8 +6,8 @@ Two modes are supported:
 
 | Mode | Command | URL | Use when |
 |------|---------|-----|----------|
-| **Dev** | `npm run docker:dev` | http://localhost:4200 | Active development with hot reload |
-| **App** | `npm run docker:app` | http://localhost:8080 | Quick run of a production-style build |
+| **Dev** | `npm run docker:dev` | <http://localhost:4200> | Active development with hot reload |
+| **App** | `npm run docker:app` | <http://localhost:8080> | Quick run of a production-style build |
 
 Both modes include the **Angular client** and **NestJS API**. Project data is stored **in memory** inside the server process (same as native `npm start`); restarting the container clears unsaved in-memory state unless you add external persistence later.
 
@@ -32,10 +32,10 @@ npm run docker:dev
 ```
 
 | Service | URL |
-|---------|-----|
-| Builder UI | http://localhost:4200 |
-| API (direct) | http://localhost:3000/api |
-| Health | http://localhost:3000/api/health |
+| --------- | ----- |
+| Builder UI | <http://localhost:4200> |
+| API (direct) | <http://localhost:3000/api> |
+| Health | <http://localhost:3000/api/health> |
 
 The Angular dev server proxies `/api/*` to the NestJS server (same as native dev).
 
@@ -66,8 +66,8 @@ npm run docker:app
 
 | Service | URL |
 |---------|-----|
-| Builder UI + API | http://localhost:8080 |
-| Health (via nginx) | http://localhost:8080/api/health |
+| Builder UI + API | <http://localhost:8080> |
+| Health (via nginx) | <http://localhost:8080/api/health> |
 
 Stop:
 
@@ -118,10 +118,52 @@ curl http://localhost:8080/api/health    # app profile
 
 ---
 
+## Backend parity databases and servers (separate from builder dev)
+
+The **builder dev** profiles above (`dev`, `app`) run only the Angular client
+and in-memory Nest API. The **backend parity stack** (DAS-185) lives in
+`docker/compose.backends.yml`, included from the root compose file.
+
+| Command | What starts |
+| --------- | ------------- |
+| `npm run parity:db:up` | Four seeded DB containers + Supabase gateway |
+| `npm run parity:servers:up` | Four generated server containers (after `parity:generate`) |
+| `npm run parity:down` | Stop parity services |
+
+Connection strings: `docker/seed/connection.env`. Full guide:
+[Backend parity stack](./44-backend-parity-stack.md).
+
+These containers do **not** replace the builder API on :3000; they validate
+exported server/database code against real engines.
+
+<!-- DAS- 188 SUGGESTED: Backend parity compose (new section before Files)
+---
+
+## Backend parity databases and servers (separate from builder dev)
+
+The **builder dev** profiles above (`dev`, `app`) run only the Angular client
+and in-memory Nest API. The **backend parity stack** (DAS-185) lives in
+`docker/compose.backends.yml`, included from the root compose file.
+
+| Command | What starts |
+|---------|-------------|
+| `npm run parity:db:up` | Four seeded DB containers + Supabase gateway |
+| `npm run parity:servers:up` | Four generated server containers (after `parity:generate`) |
+| `npm run parity:down` | Stop parity services |
+
+Connection strings: `docker/seed/connection.env`. Full guide:
+[Backend parity stack](./44-backend-parity-stack.md).
+
+These containers do **not** replace the builder API on :3000; they validate
+exported server/database code against real engines.
+-->
+
+---
+
 ## Files
 
 | File | Purpose |
-|------|---------|
+| ------ | --------- |
 | `Dockerfile.dev` | Dev image (Node 22, npm 11, `npm start`) |
 | `Dockerfile` | Multi-stage production-style image (build + nginx + Node) |
 | `docker-compose.yml` | Compose profiles `dev` and `app` |
@@ -134,7 +176,7 @@ curl http://localhost:8080/api/health    # app profile
 ## Native vs containers
 
 | | Native (`npm start`) | Dev container | App container |
-|--|---------------------|---------------|---------------|
+| -- | --------------------- | --------------- | --------------- |
 | Node on host | Required | Not required | Not required |
 | Hot reload | Yes | Yes | No (rebuild image) |
 | Default UI port | 4200 | 4200 | 8080 |
@@ -147,7 +189,7 @@ You can use either workflow; CI still validates native `npm run verify` and `npm
 ## Troubleshooting
 
 | Symptom | Fix |
-|---------|-----|
+| --------- | ----- |
 | Port already in use | Stop native `npm start` or change compose port mapping |
 | Dev container stuck on compile | Wait for first boot; check logs with `docker compose --profile dev logs -f` |
 | Changes not reloading | Polling is enabled; on Linux ensure bind mount is writable |

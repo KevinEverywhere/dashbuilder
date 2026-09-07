@@ -23,7 +23,7 @@ Users browse **Components** to learn a single component; **Meta components** to 
 ## Compositions (10)
 
 | Story | Covers |
-|-------|--------|
+| ------- | -------- |
 | Operations KPI dashboard | Time preset, date range, KPI, line chart, table, detail, skeleton, timer, status badge |
 | Analytics & reporting dashboard | Date range, tabs, collapsible, bar/line/pie charts, table, detail, metric chip |
 | Admin & settings dashboard | All form inputs, role gate, invite, role assign, grid, flex, modal |
@@ -34,6 +34,11 @@ Users browse **Components** to learn a single component; **Meta components** to 
 | Data platform panel | Env, four databases, four API servers |
 | Navigation & layout shell | npm accordion, link lists, accordion-link-list + layout grid/flex/collapsible |
 | **Component coverage audit** | Matrix proving 100% palette + npm atom inclusion |
+| **Full-stack orders (live API)** | Infra env/postgres/server + live fetch of seeded `orders` via parity stack (React→Next :53103, Angular→Nest :53101). Requires `parity:db:up` and `parity:servers:up`. Mount: `tools/storybook-shared/full-stack-orders-demo.ts` |
+
+<!-- DAS- 188 SUGGESTED: add row to compositions table
+| **Full-stack orders (live API)** | Infra env/postgres/server + live fetch of seeded `orders` via parity stack (React→Next :53103, Angular→Nest :53101). Requires `parity:db:up` and `parity:servers:up`. Mount: `tools/storybook-shared/full-stack-orders-demo.ts` |
+-->
 
 ## Implementation
 

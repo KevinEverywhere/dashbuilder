@@ -7,6 +7,8 @@ Full guide: **[docs/44-backend-parity-stack.md](../../docs/44-backend-parity-sta
 Run everything from the repository root.
 
 ```bash
+npm run parity:verify      # one command — starts builder if needed, then full check
+
 npm run parity:db:up        # seeded PostgreSQL, MySQL, MongoDB, Supabase
 npm run parity:check:db     # assert seeded rows, base users, scope columns
 
@@ -28,6 +30,7 @@ npm run parity:check        # everything, including the documented matrix
 | `check-servers.mjs` | Asserts each generated server serves the seeded rows. |
 | `check-promises.mjs` | Compares the documented server × database matrix against reality. |
 | `check-generated-typecheck.mjs` | Compiles the emitted database modules against the real driver typings, plain and scoped. |
+| `run-full-check.mjs` | Orchestrates builder API + Docker + `parity:check` (`npm run parity:verify`). |
 
 ## Rules this harness follows
 

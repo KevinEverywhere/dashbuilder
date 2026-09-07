@@ -55,6 +55,27 @@ Or, merely view a demo:
 npm run demo:weather
 ```
 
+Or prove exported server and database code against Docker:
+
+```bash
+npm run parity:db:up && npm run start:server   # second terminal for generate/up
+npm run parity:generate && npm run parity:servers:up
+npm run proof:react   # Stack tab → live seeded orders when parity is up
+```
+
+<!-- D-AS-188 SUGGESTED: Optional fourth path (Kevin — promote if you want it)
+Or prove exported server and database code against Docker:
+
+```bash
+npm run parity:db:up && npm run start:server   # second terminal for generate/up
+npm run parity:generate && npm run parity:servers:up
+npm run proof:react   # Stack tab → live seeded orders when parity is up
+```
+
+Four databases seed in Docker; generated Nest, Express, Next, and Nuxt apps
+serve the same `orders` rows on ports 53101–53104.
+-->
+
 ## Next
 
 The articles are short, and each has a different focus.

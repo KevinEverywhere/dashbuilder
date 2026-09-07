@@ -49,6 +49,12 @@ See **[Planned Tickets](./11-planned-tickets.md)** for the full Jira ticket list
 37. [Destination Atlas proof apps](./43-destination-atlas-proof-apps.md) — DAS-120 consumer demos (five runtimes)
 38. [Backend parity stack](./44-backend-parity-stack.md) — one seeded container per promised database and server (DAS-185)
 
+<!-- DAS- 188 SUGGESTED: capabilities table additions (docs/README.md)
+| Backend parity stack (Docker + parity:check) | Shipped (DAS-185, DAS-186) |
+| Full-stack live API demos (Storybook + Atlas Stack) | Shipped (DAS-187) |
+| Docs/articles sync for servers, databases, APIs | In progress (DAS-188) |
+-->
+
 ## Active work
 
 See [Planned Tickets](./11-planned-tickets.md) for the full backlog.
@@ -58,7 +64,7 @@ Recently closed: DAS-112–115 (framework Storybook alignment, Controls/Interact
 ## Current capabilities (at a glance)
 
 | Capability | Status |
-|------------|--------|
+| ------------ | -------- |
 | Visual builder (palette, canvas, inspector, save/load) | Shipped |
 | Bindings + live preview (P0 components) | Shipped |
 | Multi-target export (React/Angular/Vue/Svelte + 4 servers + 4 DBs) | Shipped |
@@ -78,3 +84,6 @@ Recently closed: DAS-112–115 (framework Storybook alignment, Controls/Interact
 | Full taxonomy + page template library | Phase 6 — complete |
 | Phase 7 production hardening | Complete (DAS-50–DAS-54) |
 | Phase 8 component plugins & 3D | Complete (DAS-55–DAS-56) |
+| Backend parity stack (Docker + parity:check) | Shipped (DAS-185, DAS-186) |
+| Full-stack live API demos (Storybook + Atlas Stack) | Shipped (DAS-187) |
+| Docs/articles sync for servers, databases, APIs | In progress (DAS-188) |

@@ -22,7 +22,34 @@ Open <http://localhost:6007>. You land on **Getting Started → Start here**.
 
 ![One Components page — a data display, isolated.](graphics/02-components.png)
 
-**Catalog / Meta components** are made up of multiple components. These ten recipes provide a preview of the Dashboard Atlas, which is created using all of the components.
+**Catalog / Meta components** are made up of multiple components. These dashboard recipes provide a preview of the Dashboard Atlas, which is created using all of the components.
+
+The Meta sidebar has **nine dashboard recipes** (operations KPI, analytics,
+admin settings, news, media authoring, WASM lab, VR/3D gallery, data platform,
+navigation shell), a **Component coverage audit**, and **Full-stack orders
+(live API)** — UI → generated server → seeded PostgreSQL `orders`.
+
+Open **Catalog → Meta components → Full-stack orders (live API)** in React
+Storybook (`npm run storybook:react`, port 6007) or Angular Storybook
+(port 6009). Requires the parity stack (`parity:db:up`, `start:server`,
+`parity:generate`, `parity:servers:up`). React Storybook proxies to the
+Next.js container (:53103); Angular Storybook to Nest (:53101).
+
+<!-- DAS -188 SUGGESTED: Meta catalog count + live API story
+The Meta sidebar has **nine dashboard recipes** (operations KPI, analytics,
+admin settings, news, media authoring, WASM lab, VR/3D gallery, data platform,
+navigation shell), a **Component coverage audit**, and **Full-stack orders
+(live API)** — UI → generated server → seeded PostgreSQL `orders`.
+
+Open **Catalog → Meta components → Full-stack orders (live API)** in React
+Storybook (`npm run storybook:react`, port 6007) or Angular Storybook
+(port 6009). Requires the parity stack (`parity:db:up`, `start:server`,
+`parity:generate`, `parity:servers:up`). React Storybook proxies to the
+Next.js container (:53103); Angular Storybook to Nest (:53101).
+
+Suggested revision for the sentence above: replace "These ten recipes" with
+"These dashboard recipes" and add a sentence pointing at the live API story.
+-->
 
 ![One Meta recipe — diagram, preview, XML.](graphics/03-meta.png)
 

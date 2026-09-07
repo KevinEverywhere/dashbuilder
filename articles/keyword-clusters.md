@@ -23,7 +23,7 @@ closing lines.
 **Primary cluster:** cross-framework dashboard components
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | cross-framework dashboard components |
 | Secondary | single source of truth, component factory, React Vue Angular Svelte, web components, export source code, local development, npm |
 | Long-tail | build dashboard components for any framework; one component model multiple frameworks; alternative to framework lock-in |
@@ -36,7 +36,7 @@ closing lines.
 **Primary cluster:** cross-framework components
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | cross-framework components |
 | Secondary | components that travel, React, Angular, Vue, Svelte, W3C custom elements, web components, standalone export, npm packages, page-embed widgets, dashboard |
 | Long-tail | export same component to React and Vue; import dashboard component into existing app; multi-framework component library |
@@ -51,9 +51,9 @@ closing lines.
 **Primary cluster:** dashboard component builder
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | dashboard component builder |
-| Secondary | visual builder, canvas, palette, inspector, preview, export wizard, composite component, AI assist, NestJS, Angular builder, local API, no cloud required |
+| Secondary | visual builder, canvas, palette, inspector, preview, export wizard, composite component, AI assist, NestJS, Angular builder, local API, no cloud required, backend parity stack, Docker PostgreSQL, generated NestJS Express Next Nuxt export |
 | Long-tail | drag and drop dashboard builder export code; export React dashboard from builder; save component to library |
 | Placement | Title/subtitle: “dashboard component factory.” Getting Started: Web Components React Angular Vue Svelte picker. Export section: full composite vs single node vs selection neighborhood |
 
@@ -66,11 +66,18 @@ closing lines.
 **Primary cluster:** Storybook component catalog
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | Storybook component catalog |
-| Secondary | Storybook React, Storybook Vue, Storybook Angular, Storybook Svelte, web components catalog, component stories, meta components, recipes, styling modes, design tokens, `--rd-*` tokens |
+| Secondary | Storybook React, Storybook Vue, Storybook Angular, Storybook Svelte, web components catalog, component stories, meta components, recipes, styling modes, design tokens,  `--rd-*` tokens |
+| full-stack Storybook demo, live API meta story, backend parity, data platform panel |
 | Long-tail | Storybook five frameworks one sidebar; isolated component preview React Vue; dashboard components in Storybook |
 | Placement | Open with five catalogs / ports 6006–6010. Styling section: minimal tokens themed + Tailwind CSS Modules MUI |
+| Meta section: nine dashboard recipes + Full-stack orders (live API) when parity Docker is up |
+
+<!-- D-AS-188 SUGGESTED: Meta components SEO addendum
+| Secondary (add) | full-stack Storybook demo, live API meta story, backend parity, data platform panel |
+| Placement (add) | Meta section: nine dashboard recipes + Full-stack orders (live API) when parity Docker is up |
+-->
 
 **Caption hooks:** same sidebar every runtime; KPI isolated; meta recipe dashboard
 
@@ -81,7 +88,7 @@ closing lines.
 **Primary cluster:** dashboard demo app
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | dashboard demo app |
 | Secondary | Destination Atlas, proof app, functional demo, workbench, component source panel, KPI dashboard, data table, filter to detail, runtime matrix, Storybook port, thirty cities |
 | Long-tail | full dashboard example React Angular Vue; component library demo application; see component source code in demo app |
@@ -96,7 +103,7 @@ closing lines.
 **Primary cluster:** dashboard maps and media components
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | dashboard maps and media components |
 | Secondary | Leaflet, MapLibre, Google Maps, geo map component, Three.js globe, 360 video, ffmpeg.wasm, browser video extract, YouTube embed, Vue proof, provider choice |
 | Long-tail | react leaflet vs maplibre dashboard; three.js globe markers; ffmpeg wasm browser trim video; 360 equirectangular crop |
@@ -113,7 +120,7 @@ closing lines.
 **Primary cluster:** dashboard BYOK and roles
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | dashboard BYOK and roles |
 | Secondary | bring your own key, API keys browser vault, Google Maps API key, MapTiler, i18n locale, multilingual dashboard, role gate viewer editor admin, invisible infrastructure, Stack tab, Nest Express Next Nuxt |
 | Long-tail | store API keys encrypted in browser dashboard; BYOK Google Maps React app; dashboard role based access editor admin |
@@ -128,11 +135,16 @@ closing lines.
 **Primary cluster:** export to multiple frameworks
 
 | Role | Terms |
-|------|--------|
+| ------ | -------- |
 | Primary | export to multiple frameworks |
 | Secondary | one canvas five runtimes, React Angular Vue Svelte web components, five proof apps, one foundation five implementations, standalone zip, npm install rosettadash, purposeful mixing, migration embed React in Svelte |
 | Long-tail | same dashboard export React or Vue; web components proof native custom elements; embed React component in Svelte app |
-| Placement | H2 “One foundation, five implementations” (not IR). Proof table with ports. Mixing section: Svelte-only, Vue-only, CE-only |
+| Placement | H2 “One foundation, five implementations” (not IR). Proof table with ports. Mixing section: Svelte-only, Vue-only, CE-only, npm command appendix — Backend parity stack subsection |
+
+<!-- D-AS-188 SUGGESTED: parity commands SEO addendum
+| Secondary (add) | parity:db:up, backend parity stack, generated server Docker, full-stack demo commands |
+| Placement (add) | npm command appendix — Backend parity stack subsection |
+-->
 
 **Caption hooks:** export target picker; runtime matrix; Svelte shell embedded React
 
@@ -141,7 +153,7 @@ closing lines.
 ## Cross-article matrix (quick reference)
 
 | Article | Primary cluster | Main frameworks to name |
-|---------|-----------------|---------------------------|
+| --------- | ----------------- | --------------------------- |
 | 00 | cross-framework dashboard components | all five + npm |
 | 01 | cross-framework components | all five + custom elements |
 | 02 | dashboard component builder | picker lists all five |
@@ -178,7 +190,7 @@ Only if Kevin wants tighter search alignment without sounding like SEO
 spam:
 
 | Article | Current | Optional SEO-aligned H1 |
-|---------|---------|-------------------------|
+| --------- | --------- | ------------------------- |
 | 01 | RosettaDash: Components that Travel | Cross-Framework Dashboard Components That Travel |
 | 02 | The Builder: The Dashboard Component Factory | Dashboard Component Builder: Canvas, Preview, Export |
 | 03 | Storybook: Making Sense of the Pieces | Storybook Component Catalog for Five Runtimes |
