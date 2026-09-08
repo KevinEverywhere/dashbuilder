@@ -9,9 +9,11 @@ const props = withDefaults(
     allowedRoles?: string[];
     statusText?: string;
     hiddenStatusText?: string;
+    hideWhenDenied?: boolean;
   }>(),
   {
     allowedRoles: () => ['admin'],
+    hideWhenDenied: false,
   },
 );
 </script>
@@ -23,6 +25,7 @@ const props = withDefaults(
     :allowed-roles="allowedRoles"
     :status-text="statusText"
     :hidden-status-text="hiddenStatusText ?? `This section is hidden for ${roleLabel(props.currentRole)} role.`"
+    :hide-when-denied="hideWhenDenied"
   >
     <slot />
   </RoleGate>

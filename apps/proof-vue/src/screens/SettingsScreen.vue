@@ -16,6 +16,7 @@ import BoundTextareaInput from '../components/BoundTextareaInput.vue';
 import AtlasContextControls from '../components/AtlasContextControls.vue';
 import Collapsible from '../components/Collapsible.vue';
 import RoleGatePanel from '../components/RoleGatePanel.vue';
+import NewsFeedAdminSection from '../components/NewsFeedAdminSection.vue';
 import ThemeToggle from '../components/ThemeToggle.vue';
 import { useConsumerSecrets } from '../composables/use-consumer-secrets';
 import type { ThemePreference } from '../composables/use-theme-preference';
@@ -117,6 +118,14 @@ function submitFeedback() {
         @update:selected-id="emit('update:selectedId', $event)"
       />
     </div>
+
+    <Collapsible
+      panel-title="News feeds (admin)"
+      panel-summary="Google News RSS cache refresh"
+      class="da-byok-collapsible"
+    >
+      <NewsFeedAdminSection :user-role="userRole" />
+    </Collapsible>
 
     <div
       ref="integrationsRef"

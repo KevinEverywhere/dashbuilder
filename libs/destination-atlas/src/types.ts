@@ -128,15 +128,16 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
     description: 'Flat YouTube embeds; 360° destinations route to Authoring (library autoload + extract).',
   },
   {
+    id: 'intel',
+    label: 'News',
+    description:
+      'Destination-scoped headlines from Google News RSS via the builder API (~24h cache).',
+  },
+  {
     id: 'authoring',
     label: 'Authoring',
     description:
       'Upload source video (flat or 360°); record trim range; preview crop or sphere POV; ffmpeg.wasm extract.',
-  },
-  {
-    id: 'intel',
-    label: 'Intel',
-    description: 'Hidden route stub — not in nav (redirects to About).',
   },
   {
     id: 'plan',
@@ -160,7 +161,7 @@ export const DESTINATION_ATLAS_SCREENS: DestinationAtlasScreen[] = [
   },
 ];
 
-/** Screens shown in the proof-app tab bar. Intel and Views stay in the catalog but are hidden (DAS-164). */
+/** Screens shown in the proof-app tab bar. Views stays hidden (DAS-164); News (intel) is visible. */
 export const DESTINATION_ATLAS_NAV_SCREENS = DESTINATION_ATLAS_SCREENS.filter((screen) =>
   atlasScreenVisibleInNav(screen.id),
 );

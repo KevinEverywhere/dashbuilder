@@ -1,21 +1,29 @@
 <script module lang="ts">
-  export const INTEL_SOURCE = `<IntelScreen userRole={userRole} newsQuery={newsQuery}>
+  export const INTEL_SOURCE = `<IntelScreen userRole={userRole} selectedId={selectedId} newsQuery={newsQuery}>
   <NewsSearchBox />
   <NewsResultsTable rows={filteredArticles} />
 </IntelScreen>`;
 </script>
 
 <script lang="ts">
+  import {
+    destinationNewsLabel,
+    fetchAtlasNews,
+    formatNewsFeedBanner,
+    newsArticleToTableRow,
+    type NewsFeedResult,
+  } from '@destination-atlas';
   import NewsArticleDetail from '@rosettadash/svelte/visual/news/article-detail';
   import NewsRegionSelect from '@rosettadash/svelte/visual/news/region-select';
   import NewsResultsTable from '@rosettadash/svelte/visual/news/results-table';
   import NewsSearchBox from '@rosettadash/svelte/visual/news/search-box';
   import RoleGatePanel from '../components/RoleGatePanel.svelte';
-  import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
+  import { REGION_OPTIONS } from '../lib/atlas-utils';
   import type { AtlasUserRole } from '../lib/roles';
 
   let {
     userRole,
+    selectedId,
     newsQuery,
     newsRegion,
     selectedArticleId,
@@ -24,6 +32,7 @@
     onSelectedArticleIdChange,
   }: {
     userRole: AtlasUserRole;
+    selectedId: string;
     newsQuery: string;
     newsRegion: string;
     selectedArticleId: string;
@@ -32,28 +41,42 @@
     onSelectedArticleIdChange?: (id: string) => void;
   } = $props();
 
-  const filtered = $derived(
-    MOCK_NEWS.filter((article) => {
-      const matchesQuery =
-        !newsQuery || article.headline.toLowerCase().includes(newsQuery.toLowerCase());
-      const matchesRegion = !newsRegion || article.region === newsRegion;
-      return matchesQuery && matchesRegion;
-    }),
-  );
+  let feedResult = $state<NewsFeedResult | null>(null);
 
-  const selectedArticle = $derived(filtered.find((a) => a.id === selectedArticleId));
+  $effect(() => {
+    const q = newsQuery;
+    const region = newsRegion;
+    const dest = selectedId;
+    void fetchAtlasNews({ q, region, destinationId: dest }).then((result) => {
+      feedResult = result;
+    });
+  });
+
+  const articles = $derived(feedResult?.articles ?? []);
+  const destinationLabel = $derived(destinationNewsLabel(selectedId));
+  const selectedArticle = $derived(articles.find((a) => a.id === selectedArticleId));
 </script>
 
 <section class="da-panel">
-  <h2>Intel</h2>
-  <p>Hidden route — not in Destination Atlas nav. Palette news-discovery demo for source parity.</p>
+  <h2>News</h2>
+  <p>
+    Destination-scoped headlines from Google News RSS via the builder API (~24h cache).
+    {#if destinationLabel} Active destination: {destinationLabel}.{/if}
+  </p>
+  {#if feedResult}
+    <p class="da-parity-banner da-parity-banner--{feedResult.source}" role="status">
+      {formatNewsFeedBanner(feedResult, selectedId)}
+    </p>
+  {:else}
+    <p class="da-note" role="status">Loading news…</p>
+  {/if}
 
   <RoleGatePanel
-    gateLabel="Palette demo"
+    gateLabel="News search tools"
     currentRole={userRole}
     allowedRoles={['editor', 'admin']}
-    statusText="Editor palette demo"
-    hiddenStatusText="Intel search is hidden for Viewer role."
+    hideWhenDenied
+    statusText="Search and region filters enabled"
   >
     <div class="da-stack da-stack--2">
       <NewsSearchBox value={newsQuery} onSearch={(value) => onNewsQueryChange?.(value)} />
@@ -70,22 +93,32 @@
   <div class="da-intel-layout">
     <NewsResultsTable
       title="News results"
-      rows={filtered.map((article) => ({
-        id: article.id,
-        headline: article.headline,
-        source: article.source,
-        published: article.published,
-      }))}
+      rows={articles.map(newsArticleToTableRow)}
       selectedRowId={selectedArticleId}
+      linkHeadlines={userRole === 'viewer'}
       onRowSelect={(id) => onSelectedArticleIdChange?.(id)}
     />
-    {#if selectedArticle}
-      <NewsArticleDetail
-        headline={selectedArticle.headline}
-        source={selectedArticle.source}
-        published={selectedArticle.published}
-        summary={selectedArticle.summary}
-      />
-    {/if}
+    <RoleGatePanel
+      gateLabel="Article detail"
+      currentRole={userRole}
+      allowedRoles={['editor', 'admin']}
+      hideWhenDenied
+      statusText="Full article summaries"
+    >
+      <NewsArticleDetail title="Article detail">
+        {#if selectedArticle}
+          <div class="da-detail-body">
+            <p><strong>{selectedArticle.headline}</strong></p>
+            <p>{selectedArticle.source} · {selectedArticle.region} · {selectedArticle.publishedAt}</p>
+            <p>{selectedArticle.summary}</p>
+            {#if selectedArticle.url}
+              <p><a href={selectedArticle.url} target="_blank" rel="noreferrer">Read source</a></p>
+            {/if}
+          </div>
+        {:else}
+          <p class="da-detail-body">Select a headline to read the summary.</p>
+        {/if}
+      </NewsArticleDetail>
+    </RoleGatePanel>
   </div>
 </section>

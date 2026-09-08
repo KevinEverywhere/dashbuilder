@@ -1,13 +1,21 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RoleGate } from '@rosettadash/react/domain/role-gate';
 import { NewsArticleDetail } from '@rosettadash/react/visual/news/article-detail';
 import { NewsRegionSelect } from '@rosettadash/react/visual/news/region-select';
 import { NewsResultsTable } from '@rosettadash/react/visual/news/results-table';
 import { NewsSearchBox } from '@rosettadash/react/visual/news/search-box';
+import {
+  destinationNewsLabel,
+  fetchAtlasNews,
+  formatNewsFeedBanner,
+  newsArticleToTableRow,
+  type NewsArticle,
+  type NewsFeedResult,
+} from '@destination-atlas';
 import type { AtlasContext } from '../state/useDestinationAtlasState';
-import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
+import { REGION_OPTIONS } from '../lib/atlas-utils';
 
-export const INTEL_SOURCE = `<IntelScreen userRole={userRole} newsQuery={newsQuery}>
+export const INTEL_SOURCE = `<IntelScreen userRole={userRole} selectedId={selectedId} newsQuery={newsQuery}>
   <RoleGate currentRole={userRole} allowedRoles={['editor', 'admin']}>
     <NewsSearchBox value={newsQuery} onSearch={setNewsQuery} />
     <NewsRegionSelect value={newsRegion} />
@@ -24,10 +32,13 @@ type Props = Pick<
   | 'setNewsRegion'
   | 'selectedArticleId'
   | 'setSelectedArticleId'
->;
+> & {
+  selectedId: string;
+};
 
 export function IntelScreen({
   userRole,
+  selectedId,
   newsQuery,
   setNewsQuery,
   newsRegion,
@@ -35,33 +46,57 @@ export function IntelScreen({
   selectedArticleId,
   setSelectedArticleId,
 }: Props) {
-  const filtered = useMemo(
-    () =>
-      MOCK_NEWS.filter((article) => {
-        const matchesQuery =
-          !newsQuery ||
-          article.headline.toLowerCase().includes(newsQuery.toLowerCase()) ||
-          article.summary.toLowerCase().includes(newsQuery.toLowerCase());
-        const matchesRegion = !newsRegion || article.region === newsRegion;
-        return matchesQuery && matchesRegion;
-      }),
-    [newsQuery, newsRegion],
-  );
+  const [feedResult, setFeedResult] = useState<NewsFeedResult | null>(null);
 
-  const selected = filtered.find((article) => article.id === selectedArticleId) ??
-    MOCK_NEWS.find((article) => article.id === selectedArticleId);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchAtlasNews({
+      q: newsQuery,
+      region: newsRegion,
+      destinationId: selectedId,
+    }).then((result) => {
+      if (!cancelled) {
+        setFeedResult(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [newsQuery, newsRegion, selectedId]);
+
+  const articles = feedResult?.articles ?? [];
+  const selected = useMemo(
+    () => articles.find((article) => article.id === selectedArticleId),
+    [articles, selectedArticleId],
+  );
+  const destinationLabel = destinationNewsLabel(selectedId);
 
   return (
     <section className="da-panel">
-      <h2>Intel</h2>
-      <p>Hidden route — not in Destination Atlas nav. Palette news-discovery demo for source parity.</p>
+      <h2>News</h2>
+      <p>
+        Destination-scoped headlines from Google News RSS via the builder API (~24h cache).
+        {destinationLabel ? ` Active destination: ${destinationLabel}.` : null}
+      </p>
+      {feedResult ? (
+        <p
+          className={`da-parity-banner da-parity-banner--${feedResult.source}`}
+          role="status"
+        >
+          {formatNewsFeedBanner(feedResult, selectedId)}
+        </p>
+      ) : (
+        <p className="da-note" role="status">
+          Loading news…
+        </p>
+      )}
       <div className="da-stack">
         <RoleGate
-          label="Palette demo tools"
+          label="News search tools"
           currentRole={userRole}
           allowedRoles={['editor', 'admin']}
+          hideWhenDenied
           statusText="Search and region filters enabled"
-          hiddenStatusText="Viewer role can browse headlines only — switch to Editor to search and filter."
         >
           <div className="da-stack da-stack--2">
             <NewsSearchBox
@@ -81,34 +116,21 @@ export function IntelScreen({
         </RoleGate>
         <NewsResultsTable
           title="News results"
-          rows={filtered.map((article) => ({
-            id: article.id,
-            headline: article.headline,
-            source: article.source,
-            region: article.region,
-            published: article.published,
-          }))}
+          rows={articles.map(newsArticleToTableRow)}
           selectedRowId={selectedArticleId}
+          linkHeadlines={userRole === 'viewer'}
           onRowSelect={userRole === 'viewer' ? undefined : setSelectedArticleId}
         />
         <RoleGate
           label="Article detail"
           currentRole={userRole}
           allowedRoles={['editor', 'admin']}
+          hideWhenDenied
           statusText="Full article summaries"
-          hiddenStatusText="Article summaries are hidden for Viewer — headlines remain visible above."
         >
           <NewsArticleDetail title="Article detail">
             {selected ? (
-              <div className="da-detail-body">
-                <p>
-                  <strong>{selected.headline}</strong>
-                </p>
-                <p>
-                  {selected.source} · {selected.region} · {selected.published}
-                </p>
-                <p>{selected.summary}</p>
-              </div>
+              <ArticleBody article={selected} />
             ) : (
               <p className="da-detail-body">Select a headline to read the summary.</p>
             )}
@@ -116,5 +138,26 @@ export function IntelScreen({
         </RoleGate>
       </div>
     </section>
+  );
+}
+
+function ArticleBody({ article }: { article: NewsArticle }) {
+  return (
+    <div className="da-detail-body">
+      <p>
+        <strong>{article.headline}</strong>
+      </p>
+      <p>
+        {article.source} · {article.region} · {article.publishedAt}
+      </p>
+      <p>{article.summary}</p>
+      {article.url ? (
+        <p>
+          <a href={article.url} target="_blank" rel="noreferrer">
+            Read source
+          </a>
+        </p>
+      ) : null}
+    </div>
   );
 }

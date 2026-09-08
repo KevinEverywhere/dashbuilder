@@ -171,6 +171,7 @@ function openSetting(field: SettingFieldTarget | 'theme' | 'ai') {
               <IntelScreen
                 v-else-if="atlas.screen.value === 'intel'"
                 :user-role="atlas.userRole.value"
+                :selected-id="atlas.selectedId.value"
                 :news-query="atlas.newsQuery.value"
                 :news-region="atlas.newsRegion.value"
                 :selected-article-id="atlas.selectedArticleId.value"

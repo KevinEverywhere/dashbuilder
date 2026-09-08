@@ -9,7 +9,8 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "../web-components/src/types/ffmpeg.d.ts"
+    "../web-components/src/types/ffmpeg.d.ts",
+    "../web-components/src/types/vite-raw.d.ts"
   ],
   "exclude": [
     "src/**/*.spec.ts",

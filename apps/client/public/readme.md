@@ -246,10 +246,11 @@ and returns seeded rows:
 | Nuxt | `node:22-bookworm-slim` | 53104 | `nuxt` 3, `pg` |
 
 ```bash
-npm run start:server        # the builder API does the generating
-npm run parity:generate     # exporter output → .parity/servers/<target>
-npm run parity:servers:up   # boot all four generated servers
-npm run parity:check        # seeds + servers + the documented matrix
+npm run parity:verify              # full check (one command)
+npm run parity:generate:live       # builder API + generate
+npm run parity:stack:proof:react   # live Stack demo
+npm run parity:servers:up          # boot all four generated servers
+npm run parity:check               # seeds + servers + the documented matrix
 ```
 
 > `npm run parity:check:promises` compares the documented server × database
@@ -443,6 +444,13 @@ Example body:
 | `npm start` | Serve client and server |
 | `npm run proof:web-components` | Destination Atlas WC proof (port 4310) |
 | `npm run proof:react` | Destination Atlas React proof (port 4311) |
+| `npm run proof:react:live` | Builder API + React proof (news, admin refresh) |
+| `npm run proof:*:live` | Same for any proof runtime (`:angular`, `:vue`, …) |
+| `npm run storybook:react:live` | Builder API + React Storybook (full-stack news) |
+| `npm run storybook:*:live` | Same for any Storybook catalog |
+| `npm run parity:stack:proof:react` | Parity stack + React proof (live Stack tab) |
+| `npm run parity:stack:storybook:react` | Parity stack + React Storybook (live orders) |
+| `npm run parity:generate:live` | Builder API + `parity:generate` (one terminal) |
 | `npm run proof:angular` | Destination Atlas Angular proof (port 4312) |
 | `npm run proof:vue` | Destination Atlas Vue proof (port 4313) |
 | `npm run proof:svelte` | Destination Atlas Svelte proof (port 4314) |
@@ -458,9 +466,14 @@ Example body:
 | `npm run parity:check:exporters` | Verify all 16 server × database combinations generate and compile (no Docker needed) |
 | `npm run parity:seed` | Regenerate `docker/seed/**` from the preview content |
 | `npm run parity:down` | Stop the parity stack |
-| `npm run verify` | Lint + typecheck + unit tests |
+| `npm run verify` | Lint + typecheck + unit tests + live-script wiring |
+| `npm run test:orchestration` | node:test for dev orchestration scripts |
+| `npm run parity:check:live-scripts` | Assert `:live` / `:stack:*` package.json wiring |
+| `npm run smoke:live-scripts` | Wiring check + manual smoke checklist (print) |
 | `npm run e2e` | Playwright E2E tests |
 | `npm run verify:all` | verify + e2e |
+| `npm run verify:master` | verify:all + parity:verify + smoke:live-scripts |
+| `npm run parity:verify` | Docker parity integration (also in verify:master) |
 | `npm run setup:e2e` | Install Playwright Chromium (required once) |
 | `npm run build` | Build client, server, and runtime packages |
 | `npm run sync:readme` | Copy this README into `apps/client/public/readme.md` |

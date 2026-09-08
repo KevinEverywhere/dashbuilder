@@ -10,6 +10,7 @@
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.d.ts",
-    "../web-components/src/types/ffmpeg.d.ts"
+    "../web-components/src/types/ffmpeg.d.ts",
+    "../web-components/src/types/vite-raw.d.ts"
   ]
 }

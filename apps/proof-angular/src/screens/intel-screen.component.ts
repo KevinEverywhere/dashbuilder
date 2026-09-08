@@ -1,6 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  destinationNewsLabel,
+  fetchAtlasNews,
+  formatNewsFeedBanner,
+  newsArticleToTableRow,
+  type NewsArticle,
+  type NewsFeedResult,
+} from '@destination-atlas';
 import { NewsArticleDetail } from '@rosettadash/angular/visual/news/article-detail';
-import { MOCK_NEWS, REGION_OPTIONS } from '../lib/atlas-utils';
+import { REGION_OPTIONS } from '../lib/atlas-utils';
 import { AtlasStateService } from '../services/atlas-state.service';
 import { RoleGatePanelComponent } from '../components/role-gate-panel.component';
 import { DaBoundSelectInputComponent } from '../components/proof-form-fields.component';
@@ -12,16 +20,31 @@ import { DaBoundSelectInputComponent } from '../components/proof-form-fields.com
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="da-panel">
-      <h2>Intel</h2>
-      <p>Hidden route — not in Destination Atlas nav. Palette news-discovery demo for source parity.</p>
+      <h2>News</h2>
+      <p>
+        Destination-scoped headlines from Google News RSS via the builder API (~24h cache).
+        @if (destinationLabel()) {
+          Active destination: {{ destinationLabel() }}.
+        }
+      </p>
+      @if (feedResult(); as result) {
+        <p
+          class="da-parity-banner da-parity-banner--{{ result.source }}"
+          role="status"
+        >
+          {{ feedBanner() }}
+        </p>
+      } @else {
+        <p class="da-note" role="status">Loading news…</p>
+      }
 
       <div class="da-stack">
         <da-role-gate-panel
-          [gateLabel]="'Palette demo tools'"
+          [gateLabel]="'News search tools'"
           [currentRole]="atlas.userRole()"
           [allowedRoles]="['editor', 'admin']"
+          [hideWhenDenied]="true"
           statusText="Search and region filters enabled"
-          hiddenStatusText="Viewer role can browse headlines only — switch to Editor to search and filter."
         >
           <div class="da-stack da-stack--2">
             <section class="rd-news-search-box">
@@ -50,7 +73,12 @@ import { DaBoundSelectInputComponent } from '../components/proof-form-fields.com
         </da-role-gate-panel>
 
         <section class="rd-news-results-table">
-          <header class="rd-table__header"><span>News results</span></header>
+          <header class="rd-table__header">
+            <span>News results</span>
+            @if (tableRows().length) {
+              <span class="rd-table__count">{{ tableRows().length }} articles</span>
+            }
+          </header>
           <table class="rd-table">
             <thead>
               <tr>
@@ -61,13 +89,27 @@ import { DaBoundSelectInputComponent } from '../components/proof-form-fields.com
               </tr>
             </thead>
             <tbody>
-              @for (article of filteredArticles(); track article.id) {
+              @for (article of tableRows(); track article.id) {
                 <tr
                   [class.rd-table__row--selected]="article.id === atlas.selectedArticleId()"
-                  [class.da-table-row--clickable]="canSelectRows()"
-                  (click)="selectArticle(article.id)"
+                  class="da-table-row--clickable"
+                  (click)="openArticle(article)"
                 >
-                  <td>{{ article.headline }}</td>
+                  <td>
+                    @if (article.url && !canSelectRows()) {
+                      <a
+                        [href]="article.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="rd-news-results-table__link"
+                        (click)="$event.stopPropagation()"
+                      >
+                        {{ article.headline }}
+                      </a>
+                    } @else {
+                      {{ article.headline }}
+                    }
+                  </td>
                   <td>{{ article.source }}</td>
                   <td>{{ article.region }}</td>
                   <td>{{ article.published }}</td>
@@ -81,15 +123,18 @@ import { DaBoundSelectInputComponent } from '../components/proof-form-fields.com
           [gateLabel]="'Article detail'"
           [currentRole]="atlas.userRole()"
           [allowedRoles]="['editor', 'admin']"
+          [hideWhenDenied]="true"
           statusText="Full article summaries"
-          hiddenStatusText="Article summaries are hidden for Viewer — headlines remain visible above."
         >
           <rd-news-article-detail title="Article detail">
             @if (selectedArticle(); as article) {
               <div class="da-detail-body">
                 <p><strong>{{ article.headline }}</strong></p>
-                <p>{{ article.source }} · {{ article.region }} · {{ article.published }}</p>
+                <p>{{ article.source }} · {{ article.region }} · {{ article.publishedAt }}</p>
                 <p>{{ article.summary }}</p>
+                @if (article.url) {
+                  <p><a [href]="article.url" target="_blank" rel="noreferrer">Read source</a></p>
+                }
               </div>
             } @else {
               <p class="da-detail-body">Select a headline to read the summary.</p>
@@ -104,36 +149,53 @@ export class IntelScreenComponent {
   readonly atlas = inject(AtlasStateService);
 
   readonly regionOptions = REGION_OPTIONS;
+  readonly feedResult = signal<NewsFeedResult | null>(null);
 
-  readonly filteredArticles = computed(() => {
-    const query = this.atlas.newsQuery().toLowerCase();
-    const region = this.atlas.newsRegion();
-    return MOCK_NEWS.filter((article) => {
-      const matchesQuery =
-        !query ||
-        article.headline.toLowerCase().includes(query) ||
-        article.summary.toLowerCase().includes(query);
-      const matchesRegion = !region || article.region === region;
-      return matchesQuery && matchesRegion;
-    });
+  readonly destinationLabel = computed(() => destinationNewsLabel(this.atlas.selectedId()));
+
+  readonly articles = computed<NewsArticle[]>(() => this.feedResult()?.articles ?? []);
+
+  readonly tableRows = computed(() => this.articles().map(newsArticleToTableRow));
+
+  readonly feedBanner = computed(() => {
+    const result = this.feedResult();
+    return result ? formatNewsFeedBanner(result, this.atlas.selectedId()) : '';
   });
 
   readonly selectedArticle = computed(() => {
     const id = this.atlas.selectedArticleId();
-    return (
-      this.filteredArticles().find((article) => article.id === id) ??
-      MOCK_NEWS.find((article) => article.id === id) ??
-      null
-    );
+    return this.articles().find((article) => article.id === id) ?? null;
   });
+
+  constructor() {
+    effect(() => {
+      const query = this.atlas.newsQuery();
+      const region = this.atlas.newsRegion();
+      const destinationId = this.atlas.selectedId();
+      void fetchAtlasNews({ q: query, region, destinationId }).then((result) => {
+        this.feedResult.set(result);
+      });
+    });
+  }
+
+  openArticle(article: ReturnType<typeof newsArticleToTableRow>): void {
+    if (this.canSelectRows()) {
+      this.atlas.selectedArticleId.set(article.id);
+      return;
+    }
+    if (article.url) {
+      window.open(article.url, '_blank', 'noopener,noreferrer');
+    }
+  }
 
   canSelectRows(): boolean {
     return this.atlas.userRole() !== 'viewer';
   }
 
   selectArticle(id: string): void {
-    if (this.canSelectRows()) {
-      this.atlas.selectedArticleId.set(id);
+    const article = this.tableRows().find((row) => row.id === id);
+    if (article) {
+      this.openArticle(article);
     }
   }
 }

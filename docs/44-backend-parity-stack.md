@@ -33,9 +33,12 @@ Worth stating plainly, because it shapes the design:
 ## Quick start
 
 ```bash
-npm run parity:db:up        # PostgreSQL, MySQL, MongoDB, Supabase — seeded
-npm run parity:check:db     # assert seeded rows, base users, scope columns
-npm run parity:down         # stop everything
+npm run parity:verify              # full check (one command)
+npm run parity:generate:live       # builder API + generate
+npm run parity:stack:proof:react   # live Stack demo
+npm run parity:db:up               # PostgreSQL, MySQL, MongoDB, Supabase — seeded
+npm run parity:check:db            # assert seeded rows, base users, scope columns
+npm run parity:down                # stop everything
 ```
 
 The compose services live in `docker/compose.backends.yml`, which the root
@@ -168,8 +171,7 @@ with `tsc` rather than an esbuild-based runner because its dependency injection
 reads emitted decorator metadata, which esbuild drops.
 
 ```bash
-npm run start:server        # the builder API does the generating
-npm run parity:generate
+npm run parity:generate:live
 npm run parity:servers:up
 npm run parity:check:servers
 ```

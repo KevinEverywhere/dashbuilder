@@ -111,74 +111,50 @@ Without the server you will see errors in the toolbar or a stuck loading state.
 Separate from the builder dev loop: **seeded databases in Docker** and
 **generated server apps** that prove export output serves real rows.
 
-| Step | Command | Notes |
-| ------ | --------- | ------- |
-| 1 | `npm run parity:db:up` | Postgres :55432, MySQL :53306, Mongo :57017, Supabase :54321 |
-| 2 | `npm run start:server` | Builder API :3000 — **blocks the terminal**; use a second shell for steps 3–4 |
-| 3 | `npm run parity:generate` | Calls export API; writes `.parity/servers/` |
-| 4 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
-| 5 | `npm run parity:check` | Seeds + servers + documented matrix |
+**One command (full verify):** `npm run parity:verify`
 
-Full reference: [Backend parity stack](./44-backend-parity-stack.md).
+**Live UI demos (one terminal each):**
 
-**Live UI demos (DAS-187):** React proof Stack → Next; Angular proof Stack →
-Nest; Storybook **Full-stack orders (live API)**. Proof dev servers proxy
-`/parity-api` to the matching host port.
+| Command | Opens |
+| ------- | ----- |
+| `npm run parity:stack:proof:react` | React proof Stack → Next :53103 |
+| `npm run parity:stack:proof:angular` | Angular proof Stack → Nest :53101 |
+| `npm run parity:stack:storybook:react` | Storybook full-stack orders → Next |
+| `npm run parity:stack:storybook:angular` | Storybook full-stack orders → Nest |
 
----
+**Builder API + Destination Atlas news:** `npm run proof:react:live` (swap
+`:react` for any proof runtime). **Builder API + Storybook news:**
+`npm run storybook:react:live`.
 
-## Backend parity stack (optional)
+**Generate only (builder API orchestrated):** `npm run parity:generate:live`
 
-Separate from the builder dev loop: **seeded databases in Docker** and
-**generated server apps** that prove export output serves real rows.
+Low-level steps when you need them individually:
 
 | Step | Command | Notes |
 | ------ | --------- | ------- |
 | 1 | `npm run parity:db:up` | Postgres :55432, MySQL :53306, Mongo :57017, Supabase :54321 |
-| 2 | `npm run start:server` | Builder API :3000 — **blocks the terminal**; use a second shell for steps 3–4 |
-| 3 | `npm run parity:generate` | Calls export API; writes `.parity/servers/` |
-| 4 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
-| 5 | `npm run parity:check` | Seeds + servers + documented matrix |
+| 2 | `npm run parity:generate` | Requires builder API on :3000 |
+| 3 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
+| 4 | `npm run parity:check` | Seeds + servers + documented matrix |
 
 Full reference: [Backend parity stack](./44-backend-parity-stack.md).
 
-**Live UI demos (DAS-187):** React proof Stack → Next; Angular proof Stack →
-Nest; Storybook **Full-stack orders (live API)**. Proof dev servers proxy
-`/parity-api` to the matching host port.
-
-<!-- DAS- 188 SUGGESTED: Backend parity stack (optional section)
----
-
-## Backend parity stack (optional)
-
-Separate from the builder dev loop: **seeded databases in Docker** and
-**generated server apps** that prove export output serves real rows.
-
-| Step | Command | Notes |
-|------|---------|-------|
-| 1 | `npm run parity:db:up` | Postgres :55432, MySQL :53306, Mongo :57017, Supabase :54321 |
-| 2 | `npm run start:server` | Builder API :3000 — **blocks the terminal**; use a second shell for steps 3–4 |
-| 3 | `npm run parity:generate` | Calls export API; writes `.parity/servers/` |
-| 4 | `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
-| 5 | `npm run parity:check` | Seeds + servers + documented matrix |
-
-Full reference: [Backend parity stack](./44-backend-parity-stack.md).
-
-**Live UI demos (DAS-187):** React proof Stack → Next; Angular proof Stack →
-Nest; Storybook **Full-stack orders (live API)**. Proof dev servers proxy
-`/parity-api` to the matching host port.
--->
+Proof dev servers proxy `/parity-api` to the matching host port and
+`/builder-api` to the builder API.
 
 ---
 
 ## Quality checks before commit
 
 ```bash
-npm run verify         # lint + typecheck + unit tests (no browser)
+npm run verify         # lint + typecheck + unit tests + live-script wiring
+npm run test:orchestration   # orchestration node:test only
+npm run smoke:live-scripts   # wiring + manual smoke checklist
 npm run e2e            # Playwright — starts its own servers on :4201 / :3001
 npm run e2e            # Playwright (starts server + client on :4201/:3001)
 npm run e2e:fresh      # bypass Nx cache — use once after setup:e2e if failures persist
 npm run verify:all     # verify + e2e
+npm run verify:master  # verify:all + parity:verify + smoke:live-scripts
 ```
 
 E2E uses **ports 4201 and 3001** so it can run while `npm start` is still on 4200/3000. E2E starts dedicated `serve-e2e` Nx targets so it does not block on the dev `serve` lock.

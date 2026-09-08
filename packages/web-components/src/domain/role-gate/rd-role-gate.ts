@@ -19,7 +19,7 @@ export class RdRoleGateElement extends RosettaAtomElement {
   static readonly tagName = RD_ROLE_GATE_TAG;
 
   static get observedAttributes(): string[] {
-    return ['label', 'allowed-roles', 'status-text', 'current-role', 'hidden-status-text'];
+    return ['label', 'allowed-roles', 'status-text', 'current-role', 'hidden-status-text', 'hide-when-denied'];
   }
 
   protected buildMarkup(): string {
@@ -30,6 +30,9 @@ export class RdRoleGateElement extends RosettaAtomElement {
     const currentRole = this.readAttr('current-role');
     const hasRoleContext = currentRole.length > 0;
     const visible = !hasRoleContext || roles.length === 0 || roles.includes(currentRole);
+    if (!visible && this.readBoolAttr('hide-when-denied')) {
+      return '';
+    }
     const modifier = visible ? 'rd-role-gate--visible' : 'rd-role-gate--hidden';
     const statusText = visible ? status : hiddenStatus;
     return `

@@ -106,9 +106,10 @@ if (failures.length > 0) {
   }
   console.error(
     '\nGenerate and start the apps first:\n' +
-      '  npm run start:server        # the builder API does the generating\n' +
-      '  npm run parity:generate\n' +
+      '  npm run parity:generate:live\n' +
       '  npm run parity:servers:up\n' +
+      '\nOr one terminal for a live demo:\n' +
+      '  npm run parity:stack:proof:react\n' +
       '\nFirst boot installs dependencies inside each container, so allow a few\n' +
       'minutes or raise the window with --timeout <ms>.',
   );

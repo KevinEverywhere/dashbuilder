@@ -173,6 +173,7 @@ export function App() {
               {atlas.screen === 'intel' ? (
                 <IntelScreen
                   userRole={atlas.userRole}
+                  selectedId={atlas.selectedId}
                   newsQuery={atlas.newsQuery}
                   setNewsQuery={atlas.setNewsQuery}
                   newsRegion={atlas.newsRegion}

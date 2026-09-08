@@ -36,10 +36,6 @@ Users browse **Components** to learn a single component; **Meta components** to 
 | **Component coverage audit** | Matrix proving 100% palette + npm atom inclusion |
 | **Full-stack orders (live API)** | Infra env/postgres/server + live fetch of seeded `orders` via parity stack (React→Next :53103, Angular→Nest :53101). Requires `parity:db:up` and `parity:servers:up`. Mount: `tools/storybook-shared/full-stack-orders-demo.ts` |
 
-<!-- DAS- 188 SUGGESTED: add row to compositions table
-| **Full-stack orders (live API)** | Infra env/postgres/server + live fetch of seeded `orders` via parity stack (React→Next :53103, Angular→Nest :53101). Requires `parity:db:up` and `parity:servers:up`. Mount: `tools/storybook-shared/full-stack-orders-demo.ts` |
--->
-
 ## Implementation
 
 - Definitions: `tools/storybook-shared/meta-compositions/composition-definitions.ts`

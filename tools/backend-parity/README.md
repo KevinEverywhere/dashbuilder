@@ -7,13 +7,16 @@ Full guide: **[docs/44-backend-parity-stack.md](../../docs/44-backend-parity-sta
 Run everything from the repository root.
 
 ```bash
-npm run parity:verify      # one command — starts builder if needed, then full check
+npm run parity:verify      # one command — full check
+
+npm run parity:generate:live   # builder API + generate (one terminal)
+npm run parity:stack:proof:react
+npm run parity:stack:storybook:react
 
 npm run parity:db:up        # seeded PostgreSQL, MySQL, MongoDB, Supabase
 npm run parity:check:db     # assert seeded rows, base users, scope columns
 
-npm run start:server        # the builder API does the generating
-npm run parity:generate     # exporter output → .parity/servers/<target>
+npm run parity:generate     # exporter output → .parity/servers/<target> (API must be up)
 npm run parity:servers:up   # boot the four generated servers
 npm run parity:check        # everything, including the documented matrix
 ```
@@ -31,8 +34,44 @@ npm run parity:check        # everything, including the documented matrix
 | `check-promises.mjs` | Compares the documented server × database matrix against reality. |
 | `check-generated-typecheck.mjs` | Compiles the emitted database modules against the real driver typings, plain and scoped. |
 | `run-full-check.mjs` | Orchestrates builder API + Docker + `parity:check` (`npm run parity:verify`). |
+| `check-live-scripts.mjs` | Asserts `:live`, `:stack:*`, and `parity:generate:live` wiring (`npm run parity:check:live-scripts`; part of `verify`). |
+| `builder-process.mjs` | Start/reuse builder API for one-shot scripts (`ensureBuilderApi`). |
 
-## Rules this harness follows
+## Tests and smoke
+
+**Full gate (before merge):**
+
+```bash
+npm run verify:master
+```
+
+Runs, in order: `verify:all` (lint, typecheck, unit tests, e2e),
+`parity:verify` (Docker), `smoke:live-scripts` (wiring + manual
+checklist printout). Requires Docker and `npm run setup:e2e`.
+
+**Automated (in `npm run verify`, no Docker):**
+
+```bash
+npm run test:orchestration      # node:test — argv parsing, builder lifecycle
+npm run parity:check:live-scripts   # package.json + Nx project wiring
+```
+
+**Full parity integration (Docker):**
+
+```bash
+npm run parity:verify   # also runs check-live-scripts first
+```
+
+**Manual smoke (before merge):**
+
+```bash
+npm run smoke:live-scripts
+```
+
+Prints five commands to run once locally (`proof:react:live`,
+`storybook:react:live`, both `parity:stack:*` demos, `parity:generate:live`).
+Ctrl+C each when satisfied.
+
 
 **Row data is never written twice.** `orders` and `news_articles` rows come
 from `packages/ui-primitives/preview-content.json`, the same file the builder
@@ -66,7 +105,8 @@ Set `PARITY_BUILDER_API` if your builder is not on `:3000`.
 - Docker with Compose v2
 - `npx nx build core` — `parity-composites.mjs` loads the compiled core package
 - The builder API running (`npm run start:server`) for `parity:generate` and
-  `parity:check:promises`
+  `parity:check:promises`, or use `npm run parity:generate:live` /
+  `npm run parity:verify`
 
 ## Credentials
 

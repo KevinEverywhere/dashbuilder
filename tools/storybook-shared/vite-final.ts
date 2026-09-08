@@ -5,6 +5,7 @@ import { mergeConfig, type AliasOptions, type UserConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { ffmpegCoreVitePlugin, wasmIsolationHeaders } from '../vite/ffmpeg-core-vite-plugin.mjs';
 import { parityApiProxy } from '../vite/parity-api-proxy.ts';
+import { builderApiProxy } from '../vite/builder-api-proxy.ts';
 
 const workspaceRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -82,9 +83,10 @@ export async function rosettadashViteFinal(
     ],
     server: {
       headers: wasmIsolationHeaders(),
-      proxy: options.parityServerPort
-        ? parityApiProxy(options.parityServerPort)
-        : undefined,
+      proxy: {
+        ...(options.parityServerPort ? parityApiProxy(options.parityServerPort) : {}),
+        ...builderApiProxy(),
+      },
     },
     preview: {
       headers: wasmIsolationHeaders(),

@@ -2,6 +2,8 @@
 
 The builder in RosettaDash is written in Angular with NestJS handling the API work. When you export, the same layout can leave as React, Angular, Vue, Svelte, or W3C custom elements. You choose the target at export time; the canvas does not change. The first article introduced that idea. This article shows how it works in the repo: the five Destination Atlas proofs, and the one proof (Svelte) that deliberately embeds another framework in some of its screens.
 
+![Choose a framework and take a spin.](graphics/take-a-soin.png)
+
 ## One foundation, five implementations
 
 Compose on the canvas, fix validation errors, then export. Before
@@ -17,19 +19,17 @@ The default download is standalone source. Drop the zip into a
 project, set environment variables, and run. You do not need to
 install `@rosettadash/*` to ship what you just exported. If you
 prefer npm instead, install the packages for the framework you
-already use and import a typed component — for example a key
-performance indicator (KPI) card:
+already use and import a typed component.
 
 ```bash
-npm install @rosettadash/core @rosettadash/vue
+npm install @rosettadash/vue
 # or: @rosettadash/react |
 #     @rosettadash/angular |
 #     @rosettadash/svelte |
 #     @rosettadash/web-components
 ```
 
-Everything runs on your machine. The generated files live in your
-tree.
+Everything runs on your machine. The generated files live in your tree.
 
 ![Export target picker — same canvas, choice of framework at export time.](graphics/01-ir.png)
 
@@ -37,11 +37,6 @@ tree.
 
 Destination Atlas ships five times — same thirty cities, same screen
 names, one shared library consumed by every proof app.
-
-<!-- DAS- 188 SUGGESTED: replace Five proofs paragraph above
-Destination Atlas ships five times — same thirty cities, same screen
-names, one shared library consumed by every proof app.
--->
 
 | Runtime | Command | Port |
 | --------- | --------- | ------ |
@@ -51,16 +46,9 @@ names, one shared library consumed by every proof app.
 | Vue | `npm run proof:vue` | 4313 |
 | Svelte | `npm run proof:svelte` | 4314 |
 
-Open **About** in any proof. The matrix lists Package, Proof app, and Storybook; the current row is marked “You are here.” Article 4 introduced the matrix. Here the point is sameness: switch runtimes and the product should feel like the same app.
+Open **About** in any proof. The matrix lists Package, Proof app, and Storybook; the current row, which references the framework being used, is marked “You are here.”
 
 ![About runtime matrix — Package, Proof app, Storybook. You are here.](graphics/02-matrix.png)
-
-**Vue** is Vue throughout — native single-file components, same tabs,
-no embedded React or Angular on its screens.
-
-**Web Components** stays on custom elements throughout — Map, Globe,
-Media, and Authoring use `rd-*` tags, not a nested React or Vue
-tree.
 
 ## Mixing on purpose
 
@@ -74,17 +62,11 @@ Authoring is native Svelte — EquirectSphereViewport, FlatVideoViewport, and Wa
 
 That is a realistic pattern: reuse what already works, wire it in one app frame, and document the bridge. Storybook showed each piece alone; Destination Atlas shows them together.
 
-![Purposeful mix — Svelte shell with an embedded Vue Globe screen.](graphics/03-mix.png)
+![Purposeful mix — Svelte shell with an embedded Vue Globe screen.](graphics/authoring.png)
 
 The smaller card demos do the same at widget scale: a React host page,
 a Vue host page, a custom-element 360° tour — each launched with an
 `npm run demo:*` script from the repo root.
-
-<!-- DAS -188 SUGGESTED: replace demos sentence above
-The smaller card demos do the same at widget scale: a React host page,
-a Vue host page, a custom-element 360° tour — each launched with an
-`npm run demo:*` script from the repo root.
--->
 
 ![A demo widget on a host page — npm import at card scale.](graphics/04-demo.png)
 
@@ -96,11 +78,6 @@ Clone the repo. Run the proof for the framework you use day to day, or run `npm 
 
 Run these from the cloned repo root. Each command starts a dev server;
 open the URL in your browser.
-
-<!-- DAS -188 SUGGESTED: replace subsection intro above
-Run these from the cloned repo root. Each command starts a dev server;
-open the URL in your browser.
--->
 
 ### Builder and API
 
@@ -117,41 +94,25 @@ you only need one side.
 
 ### Backend parity stack (optional)
 
-Proves exported server code against seeded databases in Docker. Requires
-**two terminals** — `start:server` blocks the first.
+Proves exported server code against seeded databases in Docker.
 
 | Command | Purpose |
 | --------- | --------- |
-| `npm run parity:db:up` | PostgreSQL :55432, MySQL :53306, Mongo :57017, Supabase gateway :54321 |
-| `npm run start:server` | Builder API :3000 (terminal A — keep running) |
-| `npm run parity:generate` | Regenerate runnable server apps from export output |
-| `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
-| `npm run parity:check` | Assert seeds, servers, and documented matrix |
+| `npm run parity:verify` | Full check — builder, Docker DBs, generate, servers, matrix |
+| `npm run parity:stack:proof:react` | Live Stack demo — React proof → Next (:53103) |
+| `npm run parity:stack:proof:angular` | Live Stack demo — Angular proof → Nest (:53101) |
+| `npm run parity:stack:storybook:react` | Storybook full-stack orders → Next (:53103) |
+| `npm run parity:stack:storybook:angular` | Storybook full-stack orders → Nest (:53101) |
+| `npm run parity:generate:live` | Regenerate `.parity/servers/` only (builder API up) |
 | `npm run parity:down` | Stop parity containers |
+
+Low-level steps (`parity:db:up`, `parity:generate`, `parity:servers:up`)
+still exist when you need them individually. Live demos use the
+`:stack:*` scripts so you do not juggle terminals.
 
 Live full-stack demos: React proof Stack → Next; Angular proof Stack → Nest;
 Storybook **Full-stack orders (live API)**. Same `orders` seed data in every
 database; generated servers on ports 53101–53104.
-
-<!-- DAS -188 SUGGESTED: Backend parity stack (insert as new subsection)
-### Backend parity stack (optional)
-
-Proves exported server code against seeded databases in Docker. Requires
-**two terminals** — `start:server` blocks the first.
-
-| Command | Purpose |
-| --------- | --------- |
-| `npm run parity:db:up` | PostgreSQL :55432, MySQL :53306, Mongo :57017, Supabase gateway :54321 |
-| `npm run start:server` | Builder API :3000 (terminal A — keep running) |
-| `npm run parity:generate` | Regenerate runnable server apps from export output |
-| `npm run parity:servers:up` | Nest :53101, Express :53102, Next :53103, Nuxt :53104 |
-| `npm run parity:check` | Assert seeds, servers, and documented matrix |
-| `npm run parity:down` | Stop parity containers |
-
-Live full-stack demos: React proof Stack → Next; Angular proof Stack → Nest;
-Storybook **Full-stack orders (live API)**. Same `orders` seed data in every
-database; generated servers on ports 53101–53104.
--->
 
 ### Destination Atlas proofs
 
@@ -182,12 +143,6 @@ One catalog per runtime (ports 6006–6010). All share the same sidebar;
 ### Card demos
 
 Standalone widget demos — eleven card-scale hosts (ports 4320–4331):
-
-<!-- DAS- 188 SUGGESTED: replace Card demos intro above
-### Card demos
-
-Standalone widget demos — eleven card-scale hosts (ports 4320–4331):
--->
 
 | Command | Runtime | URL |
 | --------- | --------- | ------ |

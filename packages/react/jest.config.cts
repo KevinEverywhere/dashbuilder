@@ -4,6 +4,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '\\?raw$': '<rootDir>/../web-components/jest-raw-loader.cjs',
   },
   transformIgnorePatterns: ['/node_modules/(?!three/)'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'html'],

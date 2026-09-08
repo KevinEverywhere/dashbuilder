@@ -61,12 +61,10 @@ you picked on Welcome, not every engine at once.
 
 The repo ships a **parity stack** that compiles with real drivers and serves seeded rows from Docker. It pairs with the **database and server you chose on Welcome** (see Getting Started above).
 
-**Once per machine** — `start:server` blocks its terminal; use a second shell
-for generate and Docker:
+**Once per machine** — generate export output with the builder API up:
 
 ```bash
-npm run start:server          # terminal A — builder API :3000
-npm run parity:generate       # terminal B — after API is up
+npm run parity:generate:live
 ```
 
 **Match your Welcome picks** — compose profiles and check flags:
@@ -89,31 +87,16 @@ npm run parity:generate       # terminal B — after API is up
 **Example — React + PostgreSQL + Next.js** (idiomatic React full stack):
 
 ```bash
-docker compose --profile postgres --profile server-next up -d
 npm run parity:check:db -- --only postgres
 npm run parity:check:servers -- --only next
 curl http://127.0.0.1:53103/api/orders
 ```
 
-<!-- DAS -188 SUGGESTED: replace check commands in example above
-npm run parity:check:db -- --only postgres
-npm run parity:check:servers -- --only next
-curl http://127.0.0.1:53103/api/orders
--->
-
 Swap the two compose profiles and `--only` values for your stack. The
 generated app reads the same seeded `orders` table as builder preview.
 Storybook and Destination Atlas Stack tabs can fetch that live API when
 parity is up (articles 3 and 6). The compose profiles and ports in the
 tables above are the full matrix for Welcome stacks.
-
-<!-- DAS -188 SUGGESTED: replace closing sentences above (after example)
-Swap the two compose profiles and `--only` values for your stack. The
-generated app reads the same seeded `orders` table as builder preview.
-Storybook and Destination Atlas Stack tabs can fetch that live API when
-parity is up (articles 3 and 6). The compose profiles and ports in the
-tables above are the full matrix for Welcome stacks.
--->
 
 ## Composite components
 
@@ -121,13 +104,6 @@ A **composite component** is a group of components that work as a unit.
 You can save it, version it, export it as a page or a module. The weather
 widget demo is that idea at card scale. Destination Atlas, later in this
 series, is the same idea at app scale.
-
-<!-- DAS -188 SUGGESTED: replace Composite components paragraph above
-A **composite component** is a group of components that work as a unit.
-You can save it, version it, export it as a page or a module. The weather
-widget demo is that idea at card scale. Destination Atlas, later in this
-series, is the same idea at app scale.
--->
 
 ## Next
 

@@ -49,14 +49,11 @@ export interface ParityOrdersResult {
 }
 
 export const PARITY_STACK_SETUP_COMMANDS = [
-  'npm run parity:db:up',
-  'npm run start:server',
-  'npm run parity:generate',
-  'npm run parity:servers:up',
+  'npm run parity:stack:proof:react',
 ] as const;
 
 export function parityStackSetupHint(): string {
-  return `Start the local parity stack (${PARITY_STACK_SETUP_COMMANDS.join(' → ')}). See docs/44-backend-parity-stack.md.`;
+  return `Start the local parity stack (${PARITY_STACK_SETUP_COMMANDS[0]} or parity:stack:proof:angular). See docs/44-backend-parity-stack.md.`;
 }
 
 function readViteParityApiUrl(): string | undefined {

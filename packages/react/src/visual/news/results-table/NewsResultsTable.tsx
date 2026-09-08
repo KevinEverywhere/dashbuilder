@@ -2,6 +2,7 @@ import { forwardRef, type CSSProperties, type ReactNode } from 'react';
 
 export interface NewsResultsRow {
   id: string;
+  url?: string;
   [key: string]: string | number | undefined;
 }
 
@@ -18,6 +19,8 @@ export interface NewsResultsTableProps {
   columns?: NewsResultsColumn[];
   selectedRowId?: string;
   onRowSelect?: (rowId: string) => void;
+  /** Headlines open the publisher URL. Default false when `onRowSelect` is set. */
+  linkHeadlines?: boolean;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -41,6 +44,35 @@ function cellValue(row: NewsResultsRow, column: NewsResultsColumn): string {
   return String(raw);
 }
 
+function openArticleUrl(url: string | undefined): void {
+  if (!url) {
+    return;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+function renderCell(
+  row: NewsResultsRow,
+  column: NewsResultsColumn,
+  linkHeadlines: boolean,
+): ReactNode {
+  const value = cellValue(row, column);
+  if (column.key === 'headline' && row.url && linkHeadlines) {
+    return (
+      <a
+        href={row.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rd-news-results-table__link"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {value}
+      </a>
+    );
+  }
+  return value;
+}
+
 /** @rosettadash/react/visual/news/results-table — visual.news.results-table */
 export const NewsResultsTable = forwardRef<HTMLElement, NewsResultsTableProps>(function NewsResultsTable(
   props,
@@ -50,6 +82,7 @@ export const NewsResultsTable = forwardRef<HTMLElement, NewsResultsTableProps>(f
   const rootClass = ['rd-news-results-table', 'rd-table', className].filter(Boolean).join(' ');
   const columns = props.columns?.length ? props.columns : DEFAULT_COLUMNS;
   const rows = props.rows ?? [];
+  const linkHeadlines = props.linkHeadlines ?? !props.onRowSelect;
 
   return (
     <section ref={ref as React.RefObject<HTMLElement>} className={rootClass} style={style} data-testid="rd-news-results-table">
@@ -74,25 +107,34 @@ export const NewsResultsTable = forwardRef<HTMLElement, NewsResultsTableProps>(f
           <tbody>
             {rows.map((row) => {
               const selected = props.selectedRowId === row.id;
+              const interactive = Boolean(props.onRowSelect || (linkHeadlines && row.url));
               return (
                 <tr
                   key={row.id}
                   className={[
                     'rd-table__row',
                     selected ? 'rd-table__row--selected' : '',
-                    props.onRowSelect ? 'rd-table__row--interactive' : '',
+                    interactive ? 'rd-table__row--interactive' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                   aria-selected={selected || undefined}
-                  onClick={props.onRowSelect ? () => props.onRowSelect?.(row.id) : undefined}
+                  onClick={() => {
+                    if (props.onRowSelect) {
+                      props.onRowSelect(row.id);
+                      return;
+                    }
+                    if (linkHeadlines && row.url) {
+                      openArticleUrl(row.url);
+                    }
+                  }}
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
                       className={column.align ? `rd-table__cell--${column.align}` : undefined}
                     >
-                      {cellValue(row, column)}
+                      {renderCell(row, column, linkHeadlines)}
                     </td>
                   ))}
                 </tr>

@@ -7,6 +7,8 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { resolve, sep } from 'node:path';
 import { ffmpegCoreVitePlugin, wasmIsolationHeaders } from '../../tools/vite/ffmpeg-core-vite-plugin.mjs';
 import { rosettadashAliasEntries } from '../../tools/storybook-shared/vite-final';
+import { parityApiProxy } from '../../tools/vite/parity-api-proxy.ts';
+import { builderApiProxy } from '../../tools/vite/builder-api-proxy.ts';
 
 const sveltePackageRoot = resolve(__dirname, '../../packages/svelte');
 const sveltePackage = JSON.parse(
@@ -124,6 +126,10 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     headers: wasmIsolationHeaders(),
+    proxy: {
+      ...parityApiProxy(53102),
+      ...builderApiProxy(),
+    },
   },
   preview: {
     port: 4314,

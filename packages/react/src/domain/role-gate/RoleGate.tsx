@@ -7,6 +7,8 @@ export interface RoleGateProps {
   currentRole?: string;
   statusText?: string;
   hiddenStatusText?: string;
+  /** When denied, render nothing instead of a hidden-status message. */
+  hideWhenDenied?: boolean;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -32,6 +34,10 @@ export const RoleGate = forwardRef<HTMLElement, RoleGateProps>(function RoleGate
     !hasRoleContext ||
     allowedRoles.length === 0 ||
     roleGateAllowsRole(allowedRoles, props.currentRole ?? '');
+
+  if (!visible && props.hideWhenDenied) {
+    return null;
+  }
 
   const rootClass = [
     'rd-role-gate',

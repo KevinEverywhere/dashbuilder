@@ -186,6 +186,7 @@
             {:else if atlas.screen === 'intel'}
               <IntelScreen
                 userRole={atlas.userRole}
+                selectedId={atlas.selectedId}
                 newsQuery={atlas.newsQuery}
                 newsRegion={atlas.newsRegion}
                 selectedArticleId={atlas.selectedArticleId}

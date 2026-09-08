@@ -7,6 +7,8 @@ export interface RoleGateProps {
   currentRole?: string;
   statusText?: string;
   hiddenStatusText?: string;
+  /** When denied, render nothing instead of a hidden-status message. */
+  hideWhenDenied?: boolean;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export const RoleGate = defineComponent({
     currentRole: { type: String as PropType<string | undefined>, default: undefined },
     statusText: { type: String as PropType<string | undefined>, default: undefined },
     hiddenStatusText: { type: String as PropType<string | undefined>, default: undefined },
+    hideWhenDenied: { type: Boolean as PropType<boolean | undefined>, default: undefined },
   },
   slots: Object as SlotsType<{ default?: () => VNode[] }>,
   setup(props, { slots, attrs }) {
@@ -38,6 +41,11 @@ export const RoleGate = defineComponent({
         !hasRoleContext ||
         allowedRoles.length === 0 ||
         roleGateAllowsRole(allowedRoles, props.currentRole ?? '');
+
+      if (!visible && props.hideWhenDenied) {
+        return null;
+      }
+
       const rootClass = [
         'rd-role-gate',
         visible ? 'rd-role-gate--visible' : 'rd-role-gate--hidden',

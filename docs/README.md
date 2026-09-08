@@ -49,12 +49,6 @@ See **[Planned Tickets](./11-planned-tickets.md)** for the full Jira ticket list
 37. [Destination Atlas proof apps](./43-destination-atlas-proof-apps.md) — DAS-120 consumer demos (five runtimes)
 38. [Backend parity stack](./44-backend-parity-stack.md) — one seeded container per promised database and server (DAS-185)
 
-<!-- DAS- 188 SUGGESTED: capabilities table additions (docs/README.md)
-| Backend parity stack (Docker + parity:check) | Shipped (DAS-185, DAS-186) |
-| Full-stack live API demos (Storybook + Atlas Stack) | Shipped (DAS-187) |
-| Docs/articles sync for servers, databases, APIs | In progress (DAS-188) |
--->
-
 ## Active work
 
 See [Planned Tickets](./11-planned-tickets.md) for the full backlog.

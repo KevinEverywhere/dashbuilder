@@ -30,26 +30,38 @@ navigation shell), a **Component coverage audit**, and **Full-stack orders
 (live API)** — UI → generated server → seeded PostgreSQL `orders`.
 
 Open **Catalog → Meta components → Full-stack orders (live API)** in React
-Storybook (`npm run storybook:react`, port 6007) or Angular Storybook
-(port 6009). Requires the parity stack (`parity:db:up`, `start:server`,
-`parity:generate`, `parity:servers:up`). React Storybook proxies to the
-Next.js container (:53103); Angular Storybook to Nest (:53101).
+Storybook (port 6007) or Angular Storybook (port 6009). One command boots
+Docker DBs, generates server apps, starts parity containers, and opens
+Storybook. Be sure to have Docker open if you are testing parity code.
 
-<!-- DAS -188 SUGGESTED: Meta catalog count + live API story
-The Meta sidebar has **nine dashboard recipes** (operations KPI, analytics,
-admin settings, news, media authoring, WASM lab, VR/3D gallery, data platform,
-navigation shell), a **Component coverage audit**, and **Full-stack orders
-(live API)** — UI → generated server → seeded PostgreSQL `orders`.
+```bash
+npm run parity:stack:storybook:react
+# or: npm run parity:stack:storybook:angular
+```
 
-Open **Catalog → Meta components → Full-stack orders (live API)** in React
-Storybook (`npm run storybook:react`, port 6007) or Angular Storybook
-(port 6009). Requires the parity stack (`parity:db:up`, `start:server`,
-`parity:generate`, `parity:servers:up`). React Storybook proxies to the
-Next.js container (:53103); Angular Storybook to Nest (:53101).
+React Storybook proxies to the Next.js container (:53103); Angular
+Storybook to Nest (:53101).
 
-Suggested revision for the sentence above: replace "These ten recipes" with
-"These dashboard recipes" and add a sentence pointing at the live API story.
--->
+The Meta sidebar also has **Full-stack news (live API)** — news
+discovery UI → RosettaDash builder `GET /api/news` → Google News RSS
+ingest with about a 24-hour cache. Destination-scoped lookup uses the
+active destination id (default demo: Tokyo).
+
+Open **Catalog → Meta components → Full-stack news (live API)** in any
+runtime Storybook. One command starts the builder API and Storybook:
+
+```bash
+npm run storybook:react:live
+# ports: builder :3000/api, Storybook :6007 (swap runtime as needed)
+```
+
+Storybook dev proxy maps `/builder-api` → builder `:3000`. A green
+status line and a headline table mean live RSS is flowing. If the
+builder is down, Destination Atlas and this story fall back to cached
+travel headlines with real publisher URLs — not placeholder links.
+
+The static **News discovery flow** recipe above still uses mock rows
+for layout and Controls. **Full-stack news** is the end-to-end proof.
 
 ![One Meta recipe — diagram, preview, XML.](graphics/03-meta.png)
 

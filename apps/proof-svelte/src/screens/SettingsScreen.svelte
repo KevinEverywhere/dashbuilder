@@ -17,6 +17,7 @@
   import AtlasContextControls from '../components/AtlasContextControls.svelte';
   import Collapsible from '../components/Collapsible.svelte';
   import RoleGatePanel from '../components/RoleGatePanel.svelte';
+  import NewsFeedAdminSection from '../components/NewsFeedAdminSection.svelte';
   import ThemeToggle from '../components/ThemeToggle.svelte';
   import { useConsumerSecrets } from '../lib/consumer-secrets.svelte';
   import type { ThemePreference } from '../lib/theme-preference.svelte';
@@ -123,6 +124,14 @@
       onSelectedIdChange={onSelectedIdChange}
     />
   </div>
+
+  <Collapsible
+    panelTitle="News feeds (admin)"
+    panelSummary="Google News RSS cache refresh"
+    class="da-byok-collapsible"
+  >
+    <NewsFeedAdminSection {userRole} />
+  </Collapsible>
 
   <div
     bind:this={integrationsRef}

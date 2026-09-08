@@ -44,10 +44,7 @@ export const PARITY_SERVER_CONTAINERS = [
 ] as const;
 
 export const PARITY_STACK_COMMANDS = [
-  'npm run parity:db:up',
-  'npm run start:server',
-  'npm run parity:generate',
-  'npm run parity:servers:up',
+  'npm run parity:stack:storybook:react',
 ] as const;
 
 /** Short blurb for palette group guides and catalog assumptions. */
@@ -66,7 +63,7 @@ export function parityStackGuideParagraph(): string {
   return (
     `Local parity stack (${PARITY_STACK_GUIDE}): ${dbLines}. ` +
     `Generated server containers map to host ${serverPorts} (internal :8080). ` +
-    `Start with ${PARITY_STACK_COMMANDS.slice(0, 2).join(' then ')}; ` +
+    `Start with ${PARITY_STACK_COMMANDS[0]} (or parity:stack:storybook:angular); ` +
     `connection strings live in docker/seed/connection.env.`
   );
 }

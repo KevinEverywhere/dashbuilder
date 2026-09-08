@@ -6,6 +6,6 @@
     "module": "esnext",
     "target": "es2022"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/types/vite-raw.d.ts"],
   "exclude": ["src/**/*.spec.ts"]
 }

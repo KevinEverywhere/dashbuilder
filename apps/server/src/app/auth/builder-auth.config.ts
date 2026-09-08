@@ -7,7 +7,7 @@ export function getBuilderApiKey(): string | undefined {
   return key && key.length > 0 ? key : undefined;
 }
 
-const PUBLIC_ROUTE_SUFFIXES = ['/health', '/auth/config', '/auth/login'];
+const PUBLIC_ROUTE_SUFFIXES = ['/health', '/auth/config', '/auth/login', '/news'];
 
 export function isPublicBuilderRoute(path: string): boolean {
   const normalized = path.split('?')[0];

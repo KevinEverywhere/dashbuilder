@@ -8,6 +8,8 @@ import {
 } from '@rosettadash/core';
 import {
   DEFAULT_APP_LOCALES,
+  fetchNewsAdminStatus,
+  refreshNewsCache,
   DEFAULT_WORLD_EQUIRECT_URL,
   DESTINATION_ATLAS_NAV_SCREENS,
   DESTINATION_ATLAS_SCREENS,
@@ -18,6 +20,7 @@ import {
 import { resetAuthoringWiring, wireAuthoringPipeline } from './authoring-wiring.js';
 import { destinationListMarkup, scrollDestinationListToSelection } from './geo-explorer.js';
 import { createDestinationAtlasState } from './lib/atlas-state.js';
+import { ensureIntelFeed } from './lib/intel-feed.js';
 import { getConsumerSecrets, subscribeSecrets } from './lib/consumer-secrets.js';
 import { formatRegionLabel, localizedDestinationName } from './atlas-utils.js';
 import { resolveMapLocationQuery } from './lib/map-location.js';
@@ -380,6 +383,31 @@ function bindLocaleSelect(root: ParentNode): void {
 
 function wireSettings(root: HTMLElement): void {
   bindLocaleSelect(root);
+  void fetchNewsAdminStatus().then((status) => {
+    const statusEl = root.querySelector<HTMLElement>('[data-ref="news-admin-status"]');
+    if (!statusEl) {
+      return;
+    }
+    if (!status) {
+      statusEl.textContent = 'Could not read news admin status — is the builder API running?';
+      return;
+    }
+    statusEl.textContent = `Cached articles: ${status.articleCount} · Last fetch: ${
+      status.fetchedAt ? new Date(status.fetchedAt).toLocaleString() : 'never'
+    } · TTL: ${Math.round(status.cacheTtlMs / 3_600_000)}h · Feeds: ${status.feeds.length}`;
+  });
+  root.querySelector('[data-ref="news-admin-refresh"]')?.addEventListener('click', () => {
+    const messageEl = root.querySelector<HTMLElement>('[data-ref="news-admin-message"]');
+    void refreshNewsCache().then((status) => {
+      if (messageEl) {
+        messageEl.hidden = false;
+        messageEl.textContent = status
+          ? 'News cache refreshed from RSS feeds.'
+          : 'Could not refresh news cache.';
+      }
+      render();
+    });
+  });
   root.querySelector('[data-ref="settings-role"]')?.addEventListener('value-change', (event) => {
     atlas.setUserRole((event as CustomEvent<{ value: string }>).detail.value as typeof atlas.userRole);
   });
@@ -656,6 +684,16 @@ function render(): void {
     return;
   }
   atlas.reconcileRoute();
+  if (atlas.screen === 'intel') {
+    ensureIntelFeed(
+      {
+        q: atlas.newsQuery,
+        region: atlas.newsRegion,
+        destinationId: atlas.selectedId,
+      },
+      () => render(),
+    );
+  }
   ensureShell(root);
   updateChrome(root);
 

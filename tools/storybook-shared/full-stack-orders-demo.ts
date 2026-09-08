@@ -152,7 +152,7 @@ export function mountFullStackOrdersDemo(
     statusEl.textContent =
       `Offline — could not reach ${result.apiUrl}` +
       (result.error ? ` (${result.error}).` : '.') +
-      ` Run ${PARITY_STACK_COMMANDS.join(' then ')}.`;
+      ` Run ${PARITY_STACK_COMMANDS[0]}.`;
     rowsEl.innerHTML = renderOrderRows([]);
   });
 

@@ -37,13 +37,13 @@ npm start
 Open <http://localhost:4200>, pick a framework, compose something small,
 export it, and open the zip in Cursor.
 
-Or run a proof app, Destination Atlas in one of the frameworks:
+To run a proof app, Destination Atlas, in one of the frameworks:
 
 ```bash
 npm run proof:react
 ```
 
-Or, view the components in Storybook:
+Or, view the isolated components in Storybook:
 
 ```bash
 npm run storybook:angular
@@ -55,26 +55,11 @@ Or, merely view a demo:
 npm run demo:weather
 ```
 
-Or prove exported server and database code against Docker:
+Or prove exported server and database code against Docker (requires Docker to be running):
 
 ```bash
-npm run parity:db:up && npm run start:server   # second terminal for generate/up
-npm run parity:generate && npm run parity:servers:up
-npm run proof:react   # Stack tab → live seeded orders when parity is up
+npm run parity:stack:proof:react
 ```
-
-<!-- D-AS-188 SUGGESTED: Optional fourth path (Kevin — promote if you want it)
-Or prove exported server and database code against Docker:
-
-```bash
-npm run parity:db:up && npm run start:server   # second terminal for generate/up
-npm run parity:generate && npm run parity:servers:up
-npm run proof:react   # Stack tab → live seeded orders when parity is up
-```
-
-Four databases seed in Docker; generated Nest, Express, Next, and Nuxt apps
-serve the same `orders` rows on ports 53101–53104.
--->
 
 ## Next
 

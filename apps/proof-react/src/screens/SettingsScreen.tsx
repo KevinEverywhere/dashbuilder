@@ -9,6 +9,7 @@ import { AtlasContextControls } from '../components/AtlasContextControls';
 import { ThemeToggle, type ThemePreference } from '../lib/theme';
 import { roleLabel } from '../lib/roles';
 import { isSettingFieldTarget } from '../lib/settings-highlight';
+import { NewsFeedAdminSection } from '../components/NewsFeedAdminSection';
 
 export const SETTINGS_SOURCE = `<SettingsScreen>
   <header><h2>Settings</h2><ThemeToggle /></header>
@@ -127,6 +128,14 @@ export function SettingsScreen({
           highlightField={settingFieldHighlight}
         />
       </div>
+
+      <Collapsible
+        title="News feeds (admin)"
+        summary="Google News RSS cache refresh"
+        className="da-byok-collapsible"
+      >
+        <NewsFeedAdminSection userRole={userRole} />
+      </Collapsible>
 
       <div
         ref={integrationsRef}

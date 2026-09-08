@@ -9,3 +9,4 @@ export * from './data/authoring-360-sources.js';
 export * from './data/attributions.js';
 export * from './data/destination-media.js';
 export * from './data/parity-stack.js';
+export * from './data/news-feed.js';

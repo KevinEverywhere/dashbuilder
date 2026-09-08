@@ -6,9 +6,10 @@ import { HealthController } from './health.controller';
 import { ExportModule } from './export/export.module';
 import { PreviewModule } from './preview/preview.module';
 import { ProjectsModule } from './projects/projects.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
-  imports: [AuthModule, ProjectsModule, PreviewModule, ExportModule],
+  imports: [AuthModule, ProjectsModule, PreviewModule, ExportModule, NewsModule],
   controllers: [AppController, HealthController],
   providers: [AppService],
 })

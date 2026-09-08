@@ -1,5 +1,6 @@
 import { defineRosettaElement, readNumber, readString } from '../../../lib/element-utils.js';
-import { applyShadowMount, ensureShadowBase, loadShadowPairForTag } from '../../../lib/shadow-base.js';
+import { applyShadowMount, ensureShadowBase } from '../../../lib/shadow-base.js';
+import { geoMapShadowCss, geoMapShadowHtml } from './rd-geo-map.shadow.js';
 import { createGeoMapAdapter } from './providers/create-adapter.js';
 import { parseGeoMapCenter } from './parse-center.js';
 import { parseGeoMapMarkers } from './parse-markers.js';
@@ -54,7 +55,12 @@ export class RdGeoMapElement extends HTMLElement {
     }
     this.syncMarkersFromAttribute();
     this.resourcesReady = this.mountShadow();
-    void this.resourcesReady.then(() => this.ensureMap());
+    void this.resourcesReady
+      .then(() => this.ensureMap())
+      .catch((error) => {
+        console.error('[rd-geo-map] shadow mount failed', error);
+        this.showMountError();
+      });
   }
 
   disconnectedCallback(): void {
@@ -157,17 +163,22 @@ export class RdGeoMapElement extends HTMLElement {
     };
   }
 
-  private async mountShadow(): Promise<void> {
+  private mountShadow(): Promise<void> {
     const root = this.shadowRoot;
     if (!root || root.querySelector('[data-ref="canvas"]')) {
+      return Promise.resolve();
+    }
+    applyShadowMount(root, { html: geoMapShadowHtml, css: geoMapShadowCss });
+    return Promise.resolve();
+  }
+
+  private showMountError(): void {
+    const root = this.shadowRoot;
+    if (!root) {
       return;
     }
-    const pair = await loadShadowPairForTag(
-      DB_GEO_MAP_TAG,
-      './rd-geo-map.html',
-      './rd-geo-map.css',
-    );
-    applyShadowMount(root, pair);
+    root.innerHTML =
+      '<p class="rd-geo-map__mount-error">Map UI failed to load. Refresh the page.</p>';
   }
 
   private showError(message: string): void {

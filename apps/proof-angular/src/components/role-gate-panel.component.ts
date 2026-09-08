@@ -16,8 +16,8 @@ import { roleAllows, roleLabel, type AtlasUserRole } from '../lib/roles';
         }
         <ng-content />
       </section>
-    } @else {
-      <p class="rd-role-gate__status">{{ hiddenMessage() }}</p>
+    } @else if (!hideWhenDenied()) {
+      <p class="rd-role-gate__status rd-role-gate__status--hidden">{{ hiddenMessage() }}</p>
     }
   `,
 })
@@ -27,6 +27,7 @@ export class RoleGatePanelComponent {
   readonly allowedRoles = input<string[]>(['admin']);
   readonly statusText = input<string>();
   readonly hiddenStatusText = input<string>();
+  readonly hideWhenDenied = input(false);
 
   readonly allowed = computed(() => roleAllows(this.currentRole(), this.allowedRoles()));
 

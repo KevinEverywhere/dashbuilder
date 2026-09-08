@@ -15,12 +15,30 @@ export function loadTextResource(relativePath: string, baseUrl: string): Promise
     if (relativePath.endsWith('.css')) {
       fetchUrl.searchParams.set('raw', '');
     }
-    const response = await fetch(fetchUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to load ${fetchUrl.href}: ${response.status}`);
+
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const response = await fetch(fetchUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${fetchUrl.href}: ${response.status}`);
+        }
+        return response.text();
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+        }
+      }
     }
-    return response.text();
-  })();
+
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(`Failed to load ${fetchUrl.href}`);
+  })().catch((error) => {
+    textCache.delete(cacheKey);
+    throw error;
+  });
 
   textCache.set(cacheKey, promise);
   return promise;

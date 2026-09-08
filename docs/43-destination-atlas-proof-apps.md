@@ -62,7 +62,7 @@ The WC npm package now ships **41 generated atoms** plus existing CE hosts (geo-
 | **Stack** | Infra demo + live parity API | infra/* read-only panel; seeded `orders` from idiomatic parity server — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135), [DAS-187](https://planetkevin.atlassian.net/browse/DAS-187) |
 | **Settings** | App locale + integrations | AppLanguageSelect; consumer BYOK vault — [DAS-135](https://planetkevin.atlassian.net/browse/DAS-135) |
 
-**Nav (DAS-164):** Intel and Views stay in the route catalog for deep links but are **hidden from the tab bar**; `/intel` and `/views` redirect to About. AI provider keys live under Settings only.
+**Nav (DAS-164):** **Views** stays in the route catalog for deep links but is **hidden from the tab bar**; `/views` redirects to About. **News** (`/intel`) is visible in the tab bar. AI provider keys live under Settings only.
 
 ### About page & scroll policy
 

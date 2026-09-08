@@ -24,9 +24,9 @@ describe('destination atlas routes', () => {
     expect(legacyAtlasPathRedirect('/scout')).toBe('/settings');
   });
 
-  it('redirects hidden Views and Intel paths to About', () => {
+  it('redirects hidden Views path to About', () => {
     expect(legacyAtlasPathRedirect('/views')).toBe('/');
-    expect(legacyAtlasPathRedirect('/intel')).toBe('/');
+    expect(legacyAtlasPathRedirect('/intel')).toBeNull();
   });
 
   it('derives maps panel from nested paths', () => {
@@ -43,8 +43,8 @@ describe('destination atlas routes', () => {
     expect(legacyAtlasPathRedirect('/maps/map')).toBe('/maps');
   });
 
-  it('hides Intel and Views from the nav', () => {
-    expect(atlasScreenVisibleInNav('intel')).toBe(false);
+  it('shows News (intel) in nav but hides Views', () => {
+    expect(atlasScreenVisibleInNav('intel')).toBe(true);
     expect(atlasScreenVisibleInNav('views')).toBe(false);
     expect(atlasScreenVisibleInNav('settings')).toBe(true);
     expect(atlasScreenVisibleInNav('about')).toBe(true);

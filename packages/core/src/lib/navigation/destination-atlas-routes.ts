@@ -44,7 +44,7 @@ const SCREEN_BY_PATH = new Map(
 export const DEFAULT_DESTINATION_ATLAS_SCREEN: DestinationAtlasScreenId = 'about';
 
 /** Screens that remain in code but are not shown in Destination Atlas nav (DAS-164). */
-export const DESTINATION_ATLAS_NAV_HIDDEN_SCREEN_IDS = ['intel', 'views'] as const;
+export const DESTINATION_ATLAS_NAV_HIDDEN_SCREEN_IDS = ['views'] as const;
 
 export function atlasScreenVisibleInNav(screenId: DestinationAtlasScreenId): boolean {
   return !(DESTINATION_ATLAS_NAV_HIDDEN_SCREEN_IDS as readonly string[]).includes(screenId);
@@ -81,7 +81,7 @@ export function legacyAtlasPathRedirect(pathname: string): string | null {
   if (normalized === '/scout') {
     return '/settings';
   }
-  if (normalized === '/views' || normalized === '/intel') {
+  if (normalized === '/views') {
     return '/';
   }
   return null;

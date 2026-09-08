@@ -13,7 +13,9 @@ import {
   TRAVEL_INTEREST_VENN,
   TRAVEL_JOURNEY_SANKEY,
   destinationHasFlatVideo,
+  destinationNewsLabel,
   destinationThumbnailUrl,
+  formatNewsFeedBanner,
   formatVisitorCount,
   getDestinationById,
   isEquirectDestination,
@@ -36,12 +38,12 @@ import {
   CLIENT_ROUTER_MODE_OPTIONS,
   type ClientRouterMode,
 } from '@rosettadash/core';
-import { renderAuthoringCameraControlsMarkup } from './authoring-camera-controls.js';
+import { ensureIntelFeed, getIntelFeedResult } from './lib/intel-feed.js';
 import { renderAuthoringPlaybackBarMarkup } from './authoring-playback-bar.js';
 import { sankeyChartMarkup, vennChartMarkup } from './charts.js';
 import { geoExplorerMarkup } from './geo-explorer.js';
 import {
-  MOCK_NEWS,
+  MOCK_DESTINATIONS,
   REGION_OPTIONS,
   TIME_PRESETS,
   aggregateVisitorTrend,
@@ -623,29 +625,55 @@ export function renderAuthoring(atlas: AtlasState): string {
 }
 
 export function renderIntel(atlas: AtlasState): string {
-  const filtered = MOCK_NEWS.filter((article) => {
-    const q = atlas.newsQuery.toLowerCase();
-    const matchesQuery = !q || article.headline.toLowerCase().includes(q) || article.summary.toLowerCase().includes(q);
-    const matchesRegion = !atlas.newsRegion || article.region === atlas.newsRegion;
-    return matchesQuery && matchesRegion;
-  });
-  const selected = filtered.find((a) => a.id === atlas.selectedArticleId) ?? filtered[0];
+  const feed = getIntelFeedResult();
+  const articles = feed?.articles ?? [];
+  const selected = articles.find((a) => a.id === atlas.selectedArticleId);
   const regionOptions = [{ value: '', label: 'All regions' }, ...REGION_OPTIONS];
-  return `
-    <section class="da-panel">
-      <h2>Intel</h2>
-      <p>Hidden route — not in Destination Atlas nav. Palette news-discovery demo for source parity.</p>
-      <div class="da-stack">
-        <rd-role-gate label="Palette demo tools" status-text="Editor access" hidden-status-text="Filters require Editor or Admin." allowed-roles='["editor","admin"]' current-role="${attr(atlas.userRole)}">
+  const destinationLabel = destinationNewsLabel(atlas.selectedId);
+  const rows = articles.map((article) => ({
+    id: article.id,
+    headline: article.headline,
+    source: article.source,
+    region: article.region,
+    published: article.publishedAt,
+    url: article.url,
+  }));
+  const statusMarkup = feed
+    ? `<p class="da-parity-banner da-parity-banner--${feed.source}" role="status">${escapeHtml(formatNewsFeedBanner(feed, atlas.selectedId))}</p>`
+    : `<p class="da-note" role="status">Loading news…</p>`;
+  const canEditNews = atlas.userRole === 'editor' || atlas.userRole === 'admin';
+  const searchToolsMarkup = canEditNews
+    ? `<rd-role-gate label="News search tools" status-text="Search and region filters enabled" allowed-roles='["editor","admin"]' current-role="${attr(atlas.userRole)}" hide-when-denied>
           <rd-news-search-box label="Search" placeholder="Search news…" value="${attr(atlas.newsQuery)}" data-ref="news-search"></rd-news-search-box>
           <rd-news-region-select label="Region" placeholder="All regions" options='${jsonAttr(regionOptions)}' value="${attr(atlas.newsRegion)}" data-ref="news-region"></rd-news-region-select>
-        </rd-role-gate>
-        <rd-flex-layout direction="row" gap="16">
-          <rd-news-results-table title="News results" rows='${jsonAttr(filtered)}' data-ref="news-table"></rd-news-results-table>
-          <rd-news-article-detail title="${attr(selected?.headline ?? 'Article')}">
-            ${selected ? `<p>${escapeHtml(selected.summary)}</p><p><em>${escapeHtml(selected.source)} · ${escapeHtml(selected.published)}</em></p>` : ''}
+        </rd-role-gate>`
+    : '';
+  const articleDetailMarkup = canEditNews
+    ? `<rd-role-gate label="Article detail" status-text="Full article summaries" allowed-roles='["editor","admin"]' current-role="${attr(atlas.userRole)}" hide-when-denied>
+          <rd-news-article-detail title="Article detail">
+            ${
+              selected
+                ? `<div class="da-detail-body"><p><strong>${escapeHtml(selected.headline)}</strong></p><p>${escapeHtml(selected.source)} · ${escapeHtml(selected.region)} · ${escapeHtml(selected.publishedAt)}</p><p>${escapeHtml(selected.summary)}</p>${
+                    selected.url
+                      ? `<p><a href="${escapeHtml(selected.url)}" target="_blank" rel="noreferrer">Read source</a></p>`
+                      : ''
+                  }</div>`
+                : '<p class="da-detail-body">Select a headline to read the summary.</p>'
+            }
           </rd-news-article-detail>
-        </rd-flex-layout>
+        </rd-role-gate>`
+    : '';
+  return `
+    <section class="da-panel">
+      <h2>News</h2>
+      <p>Destination-scoped headlines from Google News RSS via the builder API (~24h cache).${
+        destinationLabel ? ` Active destination: ${escapeHtml(destinationLabel)}.` : ''
+      }</p>
+      ${statusMarkup}
+      <div class="da-stack">
+        ${searchToolsMarkup}
+        <rd-news-results-table title="News results" rows='${jsonAttr(rows)}' link-headlines="${canEditNews ? 'false' : 'true'}" data-ref="news-table"></rd-news-results-table>
+        ${articleDetailMarkup}
       </div>
     </section>`;
 }
@@ -831,6 +859,14 @@ export function renderSettings(atlas: AtlasState, theme: ThemePreference): strin
           </div>
         </div>
       </div>
+      <rd-collapsible class="da-byok-collapsible" title="News feeds (admin)" summary="Google News RSS cache refresh">
+        <rd-role-gate label="News feeds (admin)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can refresh the cached Google News RSS ingest" hidden-status-text="News feed administration is restricted to Admin.">
+          <p class="da-note">Builder API ingests free Google News RSS feeds and caches results for about 24 hours.</p>
+          <p class="da-note" data-ref="news-admin-status">Loading news admin status…</p>
+          <button type="button" class="rd-button" data-ref="news-admin-refresh">Refresh news cache</button>
+          <p class="da-byok-save-msg" data-ref="news-admin-message" hidden></p>
+        </rd-role-gate>
+      </rd-collapsible>
       <div data-ref="integrations" class="${atlas.highlightTarget === 'integrations' ? 'rd-highlight-target' : ''}">
         <rd-collapsible class="da-byok-collapsible" title="Integration keys (BYOK)" summary="Google Maps, MapTiler, optional keys"${atlas.integrationsOpen ? ' open' : ''}>
           <rd-role-gate label="Integration keys (BYOK)" current-role="${attr(atlas.userRole)}" allowed-roles='["admin"]' status-text="Admin can manage API keys for maps, integrations, and Stack" hidden-status-text="Integration keys are read-only for ${attr(roleLabel(atlas.userRole as AtlasUserRole))}. Switch to Admin to configure BYOK.">

@@ -84,12 +84,10 @@ The export target matrix currently tests **all** UI × server file combinations 
 - AI readiness gate on Welcome continue
 - Server exporters for non-Node stacks (Python, Java, Azure Functions)
 
-<!-- DAS- 188 SUGGESTED: clarify out-of-scope vs parity stack
 **Note (DAS-188):** Welcome still does not ping live databases. The
 **backend parity stack** (`docs/44-backend-parity-stack.md`) and Destination
 Atlas Stack tab (React/Angular) **do** prove live connectivity when Docker is
 up — that is validation infrastructure, not Welcome UX.
--->
 
 ---
 

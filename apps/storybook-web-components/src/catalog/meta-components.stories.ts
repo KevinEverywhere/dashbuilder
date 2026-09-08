@@ -5,6 +5,7 @@ import {
   mountMetaCompositionCoverage,
 } from '../../../../tools/storybook-shared/meta-compositions/mount-meta-composition.js';
 import { metaCompositionStoryConfig } from '../../../../tools/storybook-shared/meta-compositions/meta-composition-story-config.ts';
+import { mountFullStackNewsDemo } from '../../../../tools/storybook-shared/full-stack-news-demo.ts';
 import { storybookAggregateStoryParameters } from '../../../../tools/storybook-shared/storybook-actions.ts';
 import '../../../../tools/storybook-shared/meta-compositions/meta-composition-styles.css';
 import '../../../../tools/storybook-shared/palette-catalog/palette-demo-styles.css';
@@ -56,6 +57,11 @@ export const WasmComputeLab = compositionStory('wasm-compute-lab');
 export const Vr3dGallery = compositionStory('vr-3d-gallery');
 export const DataPlatformPanel = compositionStory('data-platform');
 export const NavigationLayoutShell = compositionStory('navigation-shell');
+
+export const FullStackNewsLive: Story = {
+  name: 'Full-stack news (live API)',
+  render: () => mountFullStackNewsDemo({ destinationId: 'tokyo' }),
+};
 
 export const ComponentCoverageAudit: Story = {
   name: 'Component coverage audit',

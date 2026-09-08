@@ -136,28 +136,6 @@ Connection strings: `docker/seed/connection.env`. Full guide:
 These containers do **not** replace the builder API on :3000; they validate
 exported server/database code against real engines.
 
-<!-- DAS- 188 SUGGESTED: Backend parity compose (new section before Files)
----
-
-## Backend parity databases and servers (separate from builder dev)
-
-The **builder dev** profiles above (`dev`, `app`) run only the Angular client
-and in-memory Nest API. The **backend parity stack** (DAS-185) lives in
-`docker/compose.backends.yml`, included from the root compose file.
-
-| Command | What starts |
-|---------|-------------|
-| `npm run parity:db:up` | Four seeded DB containers + Supabase gateway |
-| `npm run parity:servers:up` | Four generated server containers (after `parity:generate`) |
-| `npm run parity:down` | Stop parity services |
-
-Connection strings: `docker/seed/connection.env`. Full guide:
-[Backend parity stack](./44-backend-parity-stack.md).
-
-These containers do **not** replace the builder API on :3000; they validate
-exported server/database code against real engines.
--->
-
 ---
 
 ## Files

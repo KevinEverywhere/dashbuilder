@@ -17,7 +17,7 @@ export async function assertBuilderApi(apiBase) {
   } catch (error) {
     throw new Error(
       `Could not reach the builder API at ${healthUrl}.\n` +
-        `Start it in another terminal: npm run start:server\n\n` +
+        `Start it with: npm run start:server (or npm run proof:react:live / npm run storybook:react:live)\n\n` +
         `Underlying error: ${error.message}`,
     );
   }
@@ -57,8 +57,7 @@ function wrongServiceError(apiBase, healthUrl, body, health) {
       `${apiBase}/export/* will not work.\n\n` +
       `Fix:\n` +
       `  1. Stop the other process on that port (e.g. docker stop plantcast-web-dev)\n` +
-      `  2. npm run start:server\n` +
-      `  3. npm run parity:generate\n\n` +
+      `  2. npm run parity:generate:live\n\n` +
       `Or point parity at a builder you started elsewhere:\n` +
       `  PARITY_BUILDER_API=http://127.0.0.1:<port>/api npm run parity:generate\n\n` +
       (preview ? `Response preview: ${preview}` : ''),

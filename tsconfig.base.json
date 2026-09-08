@@ -21,6 +21,9 @@
       "@destination-atlas": [
         "./libs/destination-atlas/src/index.ts"
       ],
+      "@destination-atlas/destinations": [
+        "./libs/destination-atlas/src/data/destinations.ts"
+      ],
       "@rosettadash/core": [
         "./packages/core/src/index.ts"
       ],

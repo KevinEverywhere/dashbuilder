@@ -6,11 +6,6 @@ Destination Atlas provides information about thirty cities, five per inhabited c
 
 Five proof apps share one Destination Atlas library and the same screen names. This article uses the Angular proof:
 
-<!-- DAS -188 SUGGESTED: replace opening sentence above
-Five proof apps share one Destination Atlas library and the same screen
-names. This article uses the Angular proof:
--->
-
 ```bash
 npm run proof:angular
 ```
@@ -27,7 +22,7 @@ The workbench layout appears again in the Maps and Settings articles.
 
 ![Workbench — preview on the left, component source on the right.](graphics/01-workbench.png)
 
-## Three screens that establish the product
+## About, Overview, and Destinations
 
 **About.** Why the demo exists, and a matrix of the five runtimes: package, proof command, and Storybook port. The current row is marked “You are here.”
 
@@ -48,21 +43,21 @@ Those three screens are the focus of this article, on one runtime.
 
 ## The remaining tabs
 
-The other tabs are named here and covered in later articles.
+The other tabs are named here and covered in later articles. Important to remember is that these merely demonstrate functionality. You can use the code freely on your own projects as you please, which means taking over the look and feel.
 
-**Maps** — 2D providers and a 3D globe. **Media** and **Authoring** — watch versus extract. **Plan** (Admin) — roles and invites. **Stack** (Admin) shows export-wizard infra nodes. On the React and Angular
-proofs, when Docker is running, it also loads live seeded `orders` rows from
-a generated API — the walkthrough is in article 6. **Settings** — does what Settings ususally does: it is the place where roles, BYOK, and all the header states are set.
+**Maps**: presented in 2D maps and a 3D globe, data-bound to the current destination;
+**Media** is a simple YouTube player, playing videos of the current destination;
+**Authoring** lets you select 360 media and create a video from a rectangular portion of it;
+**Plan** (Admin) — for planning a trip, create details, team members, assign roles;
+**Stack** (Admin) shows export-wizard infra nodes. On the React and Angular proofs, when Docker is running, it also loads live seeded `orders` rows from a generated API — the walkthrough is in article 6.
+**Settings** — does what Settings ususally does: it is the place where roles, BYOK, providers, and all the header states are set.
+**News** — destination-scoped travel headlines from Google News RSS via
+the builder API (~24h cache).
 
-<!-- DAS- 188 SUGGESTED: Stack tab teaser
-**Stack** (Admin) shows export-wizard infra nodes. On the React and Angular
-proofs, when Docker is running, it also loads live seeded `orders` rows from
-a generated API — the walkthrough is in article 6.
--->
+Optional graphic after Destinations: capture the News tab with a
+destination selected (`graphics/05-news.png`). React proof on :4311 is
+a good default.
 
 ## Next
 
-Destination Atlas is a product: a shared city list that other
-screens can use. The next articles cover the pages where most
-component libraries struggle — maps, globes, media, and a local
-extract pipeline.
+The next article deals with moving elements: 2D and 3D maps, 2D and 3D videos, and extracting media with JavaScript.
