@@ -45,18 +45,18 @@ Details: [Public API](docs/34-public-component-api.md) · [Styling](docs/35-styl
 
 ## Install from npm
 
-Packages live on [npm under `@rosettadash`](https://www.npmjs.com/org/rosettadash). This checkout and the registry are both **0.1.3**:
+Packages live on [npm under `@rosettadash`](https://www.npmjs.com/org/rosettadash). This checkout and the registry are both **0.1.4**:
 
 | Package | Version |
 |---------|---------|
-| [`@rosettadash/core`](https://www.npmjs.com/package/@rosettadash/core) | **0.1.3** |
-| [`@rosettadash/web-components`](https://www.npmjs.com/package/@rosettadash/web-components) | **0.1.3** |
-| [`@rosettadash/react`](https://www.npmjs.com/package/@rosettadash/react) | **0.1.3** |
-| [`@rosettadash/angular`](https://www.npmjs.com/package/@rosettadash/angular) | **0.1.3** |
-| [`@rosettadash/vue`](https://www.npmjs.com/package/@rosettadash/vue) | **0.1.3** |
-| [`@rosettadash/svelte`](https://www.npmjs.com/package/@rosettadash/svelte) | **0.1.3** |
+| [`@rosettadash/core`](https://www.npmjs.com/package/@rosettadash/core) | **0.1.4** |
+| [`@rosettadash/web-components`](https://www.npmjs.com/package/@rosettadash/web-components) | **0.1.4** |
+| [`@rosettadash/react`](https://www.npmjs.com/package/@rosettadash/react) | **0.1.4** |
+| [`@rosettadash/angular`](https://www.npmjs.com/package/@rosettadash/angular) | **0.1.4** |
+| [`@rosettadash/vue`](https://www.npmjs.com/package/@rosettadash/vue) | **0.1.4** |
+| [`@rosettadash/svelte`](https://www.npmjs.com/package/@rosettadash/svelte) | **0.1.4** |
 
-Framework packages pin `"@rosettadash/web-components": "0.1.3"` to match this release.
+Framework packages pin `"@rosettadash/web-components": "0.1.4"` to match this release.
 
 ```bash
 npm install @rosettadash/core @rosettadash/react
@@ -341,11 +341,11 @@ npm run publish:npm:product         # thin unscoped landing page (README + LICEN
 
 After a successful publish:
 
-1. Tag the commit: `git tag v0.1.3` (match the version you published).
-2. Push the tag: `git push origin v0.1.3`.
-3. Optional GitHub Release: `gh release create v0.1.3 --title "v0.1.3" --generate-notes`.
+1. Tag the commit: `git tag v0.1.4` (match the version you published).
+2. Push the tag: `git push origin v0.1.4`.
+3. Optional GitHub Release: `gh release create v0.1.4 --title "v0.1.4" --generate-notes`.
 
-This checkout and npm are aligned at **0.1.3** for all six scoped packages. The unscoped landing page is `rosettadash@0.1.3` after `npm run publish:npm:product`.
+This checkout and npm are aligned at **0.1.4** for all six scoped packages. The unscoped landing page is `rosettadash@0.1.4` after `npm run publish:npm:product`.
 
 ## Monorepo
 
@@ -458,7 +458,7 @@ Example body:
 | `npm run pack:consumer` | Build and pack the six scoped npm packages |
 | `npm run publish:npm:dry-run` | Pack, then `npm publish --dry-run` (no registry write) |
 | `npm run publish:npm` | Pack and publish the six scoped packages `--access public` |
-| `npm run publish:npm:product` | Thin unscoped `rosettadash@0.1.3` landing page (README + LICENSE) |
+| `npm run publish:npm:product` | Thin unscoped `rosettadash@0.1.4` landing page (README + LICENSE) |
 | `npm run parity:db:up` | Start the four seeded database containers |
 | `npm run parity:generate` | Write real exporter output to `.parity/servers/<target>` |
 | `npm run parity:servers:up` | Start the four generated server containers |

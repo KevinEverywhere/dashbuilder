@@ -307,7 +307,7 @@ function patchProjectJson(entryPoints) {
 function patchPackageJson(subpaths) {
   const rel = 'packages/web-components/package.json';
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-  pkg.dependencies['@rosettadash/core'] = '0.1.2';
+  pkg.dependencies['@rosettadash/core'] = '0.1.4';
   const exports = { '.': pkg.exports['.'] };
   for (const subpath of subpaths.sort()) {
     if (subpath === 'browser/media') {

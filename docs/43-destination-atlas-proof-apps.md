@@ -4,7 +4,7 @@
 **Research:** [DAS-126](https://planetkevin.atlassian.net/browse/DAS-126)  
 **Gap WC components:** [DAS-127](https://planetkevin.atlassian.net/browse/DAS-127) app-language-select · [DAS-128](https://planetkevin.atlassian.net/browse/DAS-128) geo-map · [DAS-129](https://planetkevin.atlassian.net/browse/DAS-129) youtube-embed
 
-Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.3` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for all 30
+Five **identical** Nx apps under `apps/` prove `@rosettadash/*@0.1.4` npm installs outside Storybook. Each app is **Destination Atlas** — current and historic information about world locations. Shared library: **30 cities** (five per inhabited continent) with **10-year** visitor guesstimates (`2015–2024`). Media is YouTube-only. Authoring autoloads Commons 360 stills encoded as short clips for all 30
 cities (MP4s ship in `libs/destination-atlas/media/authoring-360/`,
 ~15 MB; `npm install` links them via `authoring:link-360`).
 
@@ -151,7 +151,7 @@ Component props: `provider`, `tile-url`, `api-key`, `center`, `zoom`, `markers`,
 ## Install (consumer)
 
 ```bash
-npm install @rosettadash/core@0.1.3 @rosettadash/web-components@0.1.3 @rosettadash/react@0.1.3
+npm install @rosettadash/core@0.1.4 @rosettadash/web-components@0.1.4 @rosettadash/react@0.1.4
 # … angular, vue, svelte as needed
 ```
 

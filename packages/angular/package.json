@@ -1,6 +1,6 @@
 {
   "name": "@rosettadash/angular",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "RosettaDash Angular runtime — same import paths as @rosettadash/web-components. Storybook: github.com/KevinEverywhere/rosettadash (port 6009).",
   "author": "Kevin Ready <kevin@planetkevin.com>",
   "type": "module",
@@ -341,8 +341,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@rosettadash/core": "0.1.3",
-    "@rosettadash/web-components": "0.1.3",
+    "@rosettadash/core": "0.1.4",
+    "@rosettadash/web-components": "0.1.4",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
