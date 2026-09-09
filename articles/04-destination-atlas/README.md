@@ -2,7 +2,7 @@
 
 Destination Atlas provides information about thirty cities, five per inhabited continent, using every component in RosettaDash at least once. You browse places, look at trends, open a map, watch a video, and more. The app is a functional demo built around component workflows.
 
-![Destination Atlas awaits.](graphics/destination-atlas-intro.png)
+![Destination Atlas awaits.](graphics/wide-destination-atlas-intro.png)
 
 Five proof apps share one Destination Atlas library and the same screen names. This article uses the Angular proof:
 

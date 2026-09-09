@@ -2,7 +2,7 @@
 
 The builder in RosettaDash is written in Angular with NestJS handling the API work. When you export, the same layout can leave as React, Angular, Vue, Svelte, or W3C custom elements. You choose the target at export time; the canvas does not change. The first article introduced that idea. This article shows how it works in the repo: the five Destination Atlas proofs, and the one proof (Svelte) that deliberately embeds another framework in some of its screens.
 
-![Choose a framework and take a spin.](graphics/take-a-soin.png)
+![Choose a framework and take a spin.](graphics/wide-authoring.png)
 
 ## One foundation, five implementations
 

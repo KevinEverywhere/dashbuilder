@@ -1,6 +1,6 @@
 # Maps, Globes, Media, and WASM
 
-![Where the magic begins to happen.](graphics/sorcery.png)
+![Where the magic begins to happen.](graphics/wide-sorcery.png)
 
 Article 4 stayed on familiar ground: About, Overview, Destinations.
 This article goes deeper into geo and media, where screens come alive, and it has two parts: maps and globes, then working with media.

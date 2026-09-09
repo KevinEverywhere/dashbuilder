@@ -1,6 +1,6 @@
 # News and Settings including BYOK, Roles, i18n, Stack, and Details
 
-![News for all, even editors.](graphics/intro.png)
+![News for all, even editors.](graphics/wide-intro.png)
 The ideas for setting up a newsfeed or choosing which settings are important or desired for you to set in your app are your own. Changing source and destination on any example or component will make it yours and useful for your projects. For Destination Atlas, we wanted a newsfeed relevant to the selected destination. We wanted to expose enough of BYOK inclusion to inspire thought for how it could apply to your needs.
 
 ## News

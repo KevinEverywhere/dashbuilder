@@ -1,6 +1,6 @@
 # Storybook: Making Sense of the Pieces
 
-![Storybook should simplify everything.](graphics/storybook-intro.png)
+![Storybook should simplify everything.](graphics/wide-storybook-intro.png)
 
 Storybook simplifies. It lets people know how to work with shared assets. RosettaDash ships with five Storybook catalogs, one for each framework. The ports are 6006 (Web Components), 6007 (React), 6008 (Vue), 6009 (Angular), 6010 (Svelte). The header says `RosettaDash · {runtime} catalog`.
 
